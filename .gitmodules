@@ -1,0 +1,4 @@
+[submodule "sops"]
+	path = sops
+	url = https://git.azey.net/azey/nixos-sops
+	branch = main
