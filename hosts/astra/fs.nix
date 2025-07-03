@@ -41,27 +41,31 @@ with lib; {
     #options = ["noexec"];
   };
 
-  fileSystems."/keys" = { #TODO
+  fileSystems."/keys" = {
+    #TODO
     device = "nvme/keys";
     fsType = "zfs";
     neededForBoot = true;
     #options = ["noexec" "nodev"];
   };
 
-  fileSystems."/secrets" = { #TODO
+  fileSystems."/secrets" = {
+    #TODO
     device = "nvme/keys/nixos-secrets";
     fsType = "zfs";
     neededForBoot = true;
     #options = ["noexec" "nodev"];
   };
 
-  fileSystems."/var/lib/microvms" = { #TODO
+  fileSystems."/var/lib/microvms" = {
+    #TODO
     device = "nvme/microvm";
     fsType = "zfs";
     #options = ["noexec" "nodev"];
   };
 
-  fileSystems."/vm" = { #TODO
+  fileSystems."/vm" = {
+    #TODO
     device = "nvme/microvm/vm-data";
     fsType = "zfs";
     #options = ["noexec" "nodev"];
@@ -70,12 +74,14 @@ with lib; {
   fileSystems."/etc/nixos" = {
     device = "nvme/nix/nixos";
     fsType = "zfs";
+    neededForBoot = true;
     #options = ["noexec" "nodev"];
   };
 
   fileSystems."/nix" = {
     device = "nvme/nix";
     fsType = "zfs";
+    neededForBoot = true;
   };
 
   fileSystems."/var/log" = {

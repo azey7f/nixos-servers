@@ -13,6 +13,10 @@ in {
   options.az.server.net.frr = with azLib.opt; {
     enable = optBool false;
     ospf.enable = optBool false;
+    extraInterfaces = mkOption {
+      type = with types; listOf str;
+      default = [];
+    };
   };
 
   config = mkIf cfg.enable {
@@ -23,34 +27,36 @@ in {
         ! FRR Configuration
         !
         hostname ${config.networking.hostName}
-               log syslog
-               service password-encryption
-               service integrated-vtysh-config
-               !
+        	log syslog
+        	service password-encryption
+        	service integrated-vtysh-config
+        !
         ! OSPF
         !
         key chain lan
         	key 0
-               	key-string ${config.sops.placeholder.ospf-key}
-               	cryptographic-algorithm hmac-sha-256
+        	key-string ${config.sops.placeholder.ospf-key}
+        	cryptographic-algorithm hmac-sha-256
         !
-        interface ${net.interface}
-               	ip ospf area 0.0.0.0
-               	ip ospf authentication key-chain lan
-               	ipv6 ospf6 area 0.0.0.0
-               	ipv6 ospf6 authentication keychain lan
-        !
+        ${lib.strings.concatMapStrings (iface: ''
+          interface ${iface}
+          	ip ospf area 0.0.0.0
+          	ip ospf authentication key-chain lan
+          	ipv6 ospf6 area 0.0.0.0
+          	ipv6 ospf6 authentication keychain lan
+          !
+        '') ([net.interface] ++ cfg.extraInterfaces)}
         router ospf
-               	ospf router-id ${ipv4.address}
-               	redistribute static
-               	redistribute kernel
-               	redistribute connected
+        	ospf router-id ${ipv4.address}
+        	redistribute static
+        	redistribute kernel
+        	redistribute connected
         !
         router ospf6
-               	ospf6 router-id ${ipv4.address}
-               	redistribute static
-               	redistribute kernel
-               	redistribute connected
+        	ospf6 router-id ${ipv4.address}
+        	redistribute static
+        	redistribute kernel
+        	redistribute connected
         !
         end
       '';

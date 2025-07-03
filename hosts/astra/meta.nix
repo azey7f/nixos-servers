@@ -1,15 +1,35 @@
 {
   lib,
   config,
+  outputs,
   ...
 }:
-with lib; {
-  networking.hostName = "astra";
+with lib; let
+  cluster = outputs.infra.clusters.${config.networking.domain};
+in {
   networking.hostId = "a6b703c2";
-  networking.domain = "azey.net";
   system.stateVersion = config.system.nixos.release; # root is on tmpfs, this should be fine
 
+  az.svc.tayga = {
+    # NAT64
+    enable = true;
+    ipv6.subnet = "${cluster.publicSubnet}:6464";
+  };
+
+  az.svc.k3s = {
+    metallb.enable = true;
+  };
+
   az.server = {
+    kubernetes = {
+      enable = true;
+      ca.jwk = {
+        x = "m76tuf5IsBLD9vZlTqJI_HH7rO2FcdlKOTjxnMOHk7o";
+        y = "xqWf32Zi5aX-rBgYG_tj9cH8T1wW8kcAqSup1KqAHD0";
+        kid = "tgOkfY-nZ5mT-gjD7nKCpxu9NWWZNoCMBfaPBa_RrF4";
+      };
+    };
+
     net = {
       interface = "eno1";
 
@@ -21,12 +41,12 @@ with lib; {
         vbr-trusted = {
           enable = true;
           ipv4 = "172.20.0.1/24";
-          ipv6 = "2001:470:59b6:a39d::/64";
+          ipv6 = ["${cluster.publicSubnet}:a39d::/64"];
         };
         vbr-untrusted = {
           enable = true;
           ipv4 = "172.20.1.1/24";
-          ipv6 = "2001:470:59b6:d857::/64";
+          ipv6 = ["${cluster.publicSubnet}:d857::/64"];
         };
       };
 
@@ -36,11 +56,7 @@ with lib; {
         subnetSize = 24;
       };
 
-      ipv6 = {
-        publicAddress = "2001:470:59b6::2"; #TODO
-        address = "fd95:3a23:dd1f::2";
-        #gateway = "fd95:3a23:dd1f::1";
-      };
+      # ipv6 configured automatically from ../../infra.nix
     };
   };
 }

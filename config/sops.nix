@@ -19,8 +19,6 @@ in {
   };
 
   config = mkIf cfg.enable {
-    #TODO: users.users.microvm.extraGroups = ["keys"]; # allow access to sops secrets
-
     systemd.services."create-sops-symlink" = {
       script = ''
         mkdir -p /root/.config/sops/age
@@ -35,7 +33,7 @@ in {
     };
 
     #sops.validateSopsFiles = false;
-    sops.defaultSopsFile = "${cfg.path}/${config.networking.hostName}/default.yaml";
+    sops.defaultSopsFile = "${cfg.path}/${azLib.reverseFQDN config.networking.fqdn}/default.yaml";
     sops.age.keyFile = cfg.keyPath;
     sops.keepGenerations = 0; # don't delete old gens on `nixos-rebuild switch`, see https://github.com/astro/microvm.nix/issues/239
 

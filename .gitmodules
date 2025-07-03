@@ -1,3 +1,7 @@
+[submodule "core"]
+	path = core
+	url = https://git.azey.net/azey/nixos-core
+	branch = main
 [submodule "sops"]
 	path = sops
 	url = https://git.azey.net/azey/nixos-sops

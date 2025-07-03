@@ -33,10 +33,12 @@ with lib; {
     };
   };
 
-  /*services.samba-wsdd = { #TODO
+  /*
+    services.samba-wsdd = { #TODO
     enable = true;
     openFirewall = false;
     hostname = config.networking.domain;
     interface = "vbr-trusted";
-  };*/
+  };
+  */
 }
