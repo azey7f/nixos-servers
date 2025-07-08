@@ -22,7 +22,8 @@ with lib; {
   az.server = {
     power.ignoreKeys = true;
 
-    disks.standbyOnBoot = {
+    /*
+      disks.standbyOnBoot = {
       enable = true;
       disks = [
         "/dev/disk/by-id/ata-WDC_WD102KRYZ-01A5AB0_VCG675TN"
@@ -31,6 +32,7 @@ with lib; {
         "/dev/disk/by-id/ata-WDC_WD102KRYZ-01A5AB0_VCGH2EZM"
       ];
     };
+    */
   };
 
   /*

@@ -1,1 +1,0 @@
-{azLib, ...}: {imports = azLib.scanPath ./.;}

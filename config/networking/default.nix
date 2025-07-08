@@ -87,11 +87,11 @@ in {
     ipv6 = {
       address = mkOption {
         type = with types; listOf str;
-        default = ["${cluster.publicSubnet}::${toString (config.az.server.id + 2)}"];
+        default = [];
       };
       gateway = mkOption {
         type = types.str;
-        default = "${cluster.publicSubnet}::1";
+        default = "";
       };
     };
   };
@@ -193,7 +193,7 @@ in {
                 ConfigureWithoutCarrier = "yes";
               };
               /*
-                address = [
+              address = [
                 "${svc.ipv4.pool.address}/${toString svc.ipv4.pool.prefixLength}"
                 "${svc.ipv6.pool.address}/${toString svc.ipv6.pool.prefixLength}"
                 #"${svc.ipv4.router.address}/32"
@@ -262,24 +262,28 @@ in {
             networkConfig = {
               DHCP = "no";
               IPv6AcceptRA = "no";
-              DHCPServer = "yes";
+              DHCPServer =
+                if (conf.ipv4 != null)
+                then "yes"
+                else "no";
               IPv6SendRA = "yes";
               ConfigureWithoutCarrier = "yes";
             };
             dhcpServerConfig = {
               EmitRouter = "yes";
               EmitTimezone = "yes";
+              PoolOffset = 128;
               #EmitDNS = "yes";
               #DNS = ipv4.address;
             };
             /*
-              ipv6SendRAConfig = {
+            ipv6SendRAConfig = {
               EmitDNS = "yes";
-              DNS = "2606:4700:4700::64"; #ipv6.address; # TODO
+              DNS = #ipv6.address;
             };
             */
             ipv6Prefixes = map (Prefix: {inherit Prefix;}) conf.ipv6;
-            address = (lists.optional (conf.ipv4 != null) conf.ipv4) ++ conf.ipv6;
+            address = (lists.optional (conf.ipv4 != null) conf.ipv4) ++ map (ip: "${ip}/64") conf.ipv6;
             linkConfig.RequiredForOnline = "routable";
           })
         cfg.bridges)

@@ -32,8 +32,6 @@ with lib; {
     disks.zfs.enable = mkDefault true;
     disks.sataMaxPerf = mkDefault true; #hotswap
 
-    microvm.enable = mkDefault true;
-
     net = {
       enable = mkDefault true;
       frr.enable = mkDefault true;

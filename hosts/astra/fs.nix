@@ -20,7 +20,11 @@ with lib; {
 
     ### ZFS CONFIG ###
     zfs.extraPools = ["hdd"];
-    zfs.requestEncryptionCredentials = ["nvme" "hdd" "archive"];
+    zfs.requestEncryptionCredentials = [
+      "nvme"
+      "hdd"
+      #"archive"
+    ];
     kernelParams = ["zfs.zfs_arc_max=8589934592"]; # 8G
   };
 
@@ -67,6 +71,13 @@ with lib; {
   fileSystems."/vm" = {
     #TODO
     device = "nvme/microvm/vm-data";
+    fsType = "zfs";
+    #options = ["noexec" "nodev"];
+  };
+
+  fileSystems."/var/lib/rancher/rke2" = {
+    #TODO
+    device = "nvme/rke2";
     fsType = "zfs";
     #options = ["noexec" "nodev"];
   };

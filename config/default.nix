@@ -9,10 +9,10 @@ with lib; {
   imports = azLib.scanPath ./.;
 
   options.az.server = {
-    # server index in outputs.infra.clusters.*.servers
+    # server index in outputs.infra.clusters.*.nodes
     id = mkOption {
       type = types.ints.unsigned;
-      default = lists.findFirstIndex (server: server == config.networking.hostName) null (builtins.attrNames outputs.infra.clusters.${config.networking.domain}.servers);
+      default = lists.findFirstIndex (server: server == config.networking.hostName) null (builtins.attrNames outputs.infra.clusters.${config.networking.domain}.nodes);
     };
   };
 }

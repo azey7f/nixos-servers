@@ -1,0 +1,109 @@
+{
+  pkgs,
+  config,
+  lib,
+  azLib,
+  ...
+}:
+with lib; let
+  cfg = config.az.svc.rke2.forgejo;
+  domain = config.az.server.rke2.baseDomain;
+in {
+  options.az.svc.rke2.forgejo = with azLib.opt; {
+    enable = optBool false;
+  };
+
+  config = mkIf cfg.enable {
+    az.server.rke2.manifests."app-forgejo" = [
+      {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChart";
+        metadata = {
+          name = "forgejo";
+          namespace = "kube-system";
+        };
+        spec = {
+          targetNamespace = "app-forgejo";
+          createNamespace = true;
+
+          chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
+
+          valuesContent = builtins.toJSON {
+            redis-cluster.enabled = false;
+            postgresql-ha.enabled = false;
+            redis.enabled = true;
+            postgresql.enabled = true;
+
+            global.storageClass = "default";
+            global.namespaceOverride = "app-forgejo";
+            clusterDomain = config.networking.domain;
+            persistence.enabled = true;
+
+            httpRoute.enabled = false; # created manually
+
+	    gitea.admin = {
+	      username = "";
+	      password = "";
+	    };
+            gitea.config = {
+              database.DB_TYPE = "postgres";
+              indexer = {
+                ISSUE_INDEXER_TYPE = "bleve";
+                REPO_INDEXER_ENABLED = true;
+              };
+
+              session.COOKIE_SECURE = true;
+              service.DISABLE_REGISTRATION = true;
+
+              server = rec {
+                DOMAIN = "git.${domain}";
+                ROOT_URL = "https://git.${domain}/";
+              };
+
+              actions = {
+                ENABLED = true;
+                DEFAULT_ACTIONS_URL = "https://code.forgejo.org";
+              };
+
+              ui = {
+                DEFAULT_THEME = "forgejo-dark";
+              };
+
+              repository = {
+                ENABLE_PUSH_CREATE_USER = true;
+                ENABLE_PUSH_CREATE_ORG = true;
+              };
+
+              /*
+              mailer = { # TODO
+                ENABLED = true;
+                SMTP_ADDR = "mail.${domain}";
+                FROM = "git@${domain}";
+                USER = "git@${domain}";
+              };
+              */
+            };
+          };
+        };
+      }
+    ];
+
+    az.svc.rke2.envoyGateway.httpRoutes = [
+      {
+        name = "forgejo";
+        namespace = "app-forgejo";
+        hostnames = ["git.${domain}"];
+        rules = [
+          {
+            backendRefs = [
+              {
+                name = "forgejo-http";
+                port = 3000;
+              }
+            ];
+          }
+        ];
+      }
+    ];
+  };
+}
