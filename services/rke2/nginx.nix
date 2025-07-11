@@ -114,5 +114,13 @@ in {
         csp = "strict";
       }
     ];
+
+    az.svc.rke2.authelia.rules = [
+      {
+        domain = [config.az.server.rke2.baseDomain];
+        methods = ["GET" "HEAD"];
+        policy = "bypass";
+      }
+    ];
   };
 }

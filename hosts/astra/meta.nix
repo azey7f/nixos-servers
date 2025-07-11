@@ -14,17 +14,26 @@ in {
     envoyGateway = {
       enable = true;
       addresses = {
-        ipv4 = "10.33.1.2";
+        ipv4 = "10.33.1.1";
         ipv6 = "${cluster.publicSubnet}:fc6a::1";
       };
     };
     certManager.enable = true;
-    frp.enable = true;
+    frp = {
+      enable = true;
+      remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my cursent connection for living in the middle of nowhere reasons
+    };
 
     nameserver.enable = true;
 
+    lldap.enable = true;
+    authelia.enable = true;
+
     nginx.enable = true;
+    searxng.enable = true;
     forgejo.enable = true;
+    navidrome.enable = true;
+    feishin.enable = true;
   };
 
   az.server = rec {
@@ -77,16 +86,14 @@ in {
       frr.ospf.enable = true;
       dontSetGateways = true;
 
-      /*
-           vlans = {
-             trusted = {
-        enable = true;
-        id = 10;
-        createBridge = true;
-        addresses = ["10.33.10.2/24" "${cluster.publicSubnet}:10::2/64"];
+      vlans = {
+        trusted = {
+          enable = true;
+          id = 10;
+          createBridge = true;
+          addresses = ["10.33.10.2/24" "${cluster.publicSubnet}:10::2/64"];
+        };
       };
-           };
-      */
 
       bridges = {
         # libvirt bridges

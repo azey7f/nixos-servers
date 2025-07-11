@@ -59,7 +59,7 @@ in {
           namespace = "kube-system";
         };
         # TODO: remove operator.replicas wherever I get multiple nodes
-	# TODO: use builtins.toJSON for valuesContent
+        # TODO: use builtins.toJSON for valuesContent
         spec.valuesContent = ''
           operator:
             replicas: 1

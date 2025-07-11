@@ -100,7 +100,7 @@ in {
           createNamespace = true;
           chart = "openebs";
           repo = "https://openebs.github.io/openebs";
-	  # TODO: use builtins.toJSON for valueContent
+          # TODO: use builtins.toJSON for valueContent
           valuesContent = ''
             engines:
               local:
@@ -124,7 +124,10 @@ in {
       {
         apiVersion = "storage.k8s.io/v1";
         kind = "StorageClass";
-        metadata.name = "default";
+        metadata = {
+          name = "default";
+          annotations."storageclass.kubernetes.io/is-default-class" = "true";
+        };
         provisioner = "zfs.csi.openebs.io";
         parameters = {
           fstype = "zfs";

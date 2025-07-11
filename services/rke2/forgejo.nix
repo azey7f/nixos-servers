@@ -34,17 +34,16 @@ in {
             redis.enabled = true;
             postgresql.enabled = true;
 
-            global.storageClass = "default";
             global.namespaceOverride = "app-forgejo";
             clusterDomain = config.networking.domain;
             persistence.enabled = true;
 
             httpRoute.enabled = false; # created manually
 
-	    gitea.admin = {
-	      username = "";
-	      password = "";
-	    };
+            gitea.admin = {
+              username = "";
+              password = "";
+            };
             gitea.config = {
               database.DB_TYPE = "postgres";
               indexer = {
@@ -103,6 +102,13 @@ in {
             ];
           }
         ];
+      }
+    ];
+
+    az.svc.rke2.authelia.rules = [
+      {
+        domain = ["git.${domain}"];
+        policy = "bypass";
       }
     ];
   };

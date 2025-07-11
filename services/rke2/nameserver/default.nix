@@ -38,7 +38,6 @@ in {
           namespace = "app-nameserver";
         };
         spec = {
-          storageClassName = "default";
           accessModes = ["ReadWriteOnce"];
           resources.requests.storage = "10Mi"; # just keys & journal
         };
