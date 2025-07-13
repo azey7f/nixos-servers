@@ -8,9 +8,11 @@
 }:
 with lib; let
   cfg = config.az.svc.rke2.nginx;
+  domain = config.az.server.rke2.baseDomain;
 in {
   options.az.svc.rke2.nginx = with azLib.opt; {
     enable = optBool false;
+    repo = optStr "https://git.${domain}/infra/${domain}";
   };
 
   config = mkIf cfg.enable {
@@ -28,9 +30,28 @@ in {
           name = "nginx-cm";
           namespace = "app-nginx";
         };
-        data."index.html" = ''
-          <h2>temp test site</h2>
-          :3
+        data."default.conf" = ''
+          server {
+          	listen 8080 default_server;
+          	listen [::]:8080 default_server;
+
+          	root /srv/current/static;
+
+          	index ________________none;
+
+          	rewrite ^(?<path>.*)/__autoindex\.json$	$path/			last;
+          	rewrite ^(?<path>.*)/$			$path/index.html	last;
+
+          	autoindex on;
+          	autoindex_exact_size on;
+          	autoindex_format json;
+
+          	location / {
+          		limit_except GET HEAD OPTIONS {
+          			deny all;
+          		}
+          	}
+          }
         '';
       }
       {
@@ -49,16 +70,47 @@ in {
             seccompProfile.type = "RuntimeDefault";
             runAsUser = 65532;
             runAsGroup = 65532;
+            fsGroup = 65532;
           };
 
           template.spec.containers = [
+            {
+              name = "git-sync";
+              image = "registry.k8s.io/git-sync/git-sync:v4.4.2"; # TODO: is there any way to use latest?
+              args = [
+                "--repo=${cfg.repo}"
+                "--depth=1"
+                "--period=300s"
+                "--link=current"
+                "--root=/srv"
+              ];
+              volumeMounts = [
+                {
+                  name = "nginx-srv";
+                  mountPath = "/srv";
+                }
+                {
+                  name = "nginx-cm";
+                  mountPath = "/etc/nginx/conf.d";
+                }
+              ];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
+            }
             {
               name = "nginx";
               image = "nginxinc/nginx-unprivileged";
               volumeMounts = [
                 {
+                  name = "nginx-srv";
+                  mountPath = "/srv";
+                  readOnly = true;
+                }
+                {
                   name = "nginx-cm";
-                  mountPath = "/usr/share/nginx/html";
+                  mountPath = "/etc/nginx/conf.d";
                 }
               ];
               securityContext = {
@@ -75,11 +127,15 @@ in {
                 name = "nginx-cm";
                 items = [
                   {
-                    key = "index.html";
-                    path = "index.html";
+                    key = "default.conf";
+                    path = "default.conf";
                   }
                 ];
               };
+            }
+            {
+              name = "nginx-srv";
+              emptyDir = {};
             }
           ];
         };
@@ -123,13 +179,19 @@ in {
           }
         ];
         csp = "strict";
+        customCSP = {
+          worker-src = ["'self'" "blob:"];
+          script-src = ["'self'" "blob:"];
+          style-src = ["'self'" "'unsafe-inline'"]; # CSS in JS on a static page, there shouldn't be any XSS attack vectors anyways
+        };
+        responseHeaders.x-robots-tag = "all";
       }
     ];
 
     az.svc.rke2.authelia.rules = [
       {
-        domain = [config.az.server.rke2.baseDomain];
-        methods = ["GET" "HEAD"];
+        domain = ["${domain}"];
+        methods = ["GET" "HEAD" "OPTIONS"];
         policy = "bypass";
       }
     ];
