@@ -7,6 +7,7 @@
 }:
 with lib; let
   cfg = config.az.svc.rke2.envoyGateway;
+  domain = config.az.server.rke2.baseDomain;
 in {
   options.az.svc.rke2.envoyGateway = with azLib.opt; {
     enable = optBool false;
@@ -238,13 +239,14 @@ in {
               sectionName = "https";
             }
           ];
+          hostnames = ["*.${domain}"];
           rules = [
             {
               filters = [
                 {
                   type = "RequestRedirect";
                   requestRedirect = {
-                    hostname = config.az.server.rke2.baseDomain;
+                    hostname = domain;
                     path = {
                       type = "ReplaceFullPath";
                       replaceFullPath = "/";
@@ -264,7 +266,7 @@ in {
       {
         name = "http";
         protocol = "HTTP";
-        port = 80;
+        port = 8080; # 80 doesn't work - possibly because of pod security? idk
         allowedRoutes.namespaces.from = "Same";
       }
       {

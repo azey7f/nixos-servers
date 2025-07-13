@@ -238,6 +238,8 @@ in {
       }
 
       # https://www.authelia.com/integration/proxies/envoy/#secure-gateway
+      # replaced w/ per-route policies because of the HTTP->HTTPS redirect + https://github.com/envoyproxy/gateway/issues/5384
+      /*
       {
         apiVersion = "gateway.envoyproxy.io/v1alpha1";
         kind = "SecurityPolicy";
@@ -300,6 +302,7 @@ in {
           ];
         };
       }
+      */
     ];
 
     az.svc.rke2.envoyGateway.httpRoutes = [
@@ -343,5 +346,71 @@ in {
     sops.secrets."rke2/authelia/cnpg-passwd" = {
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
     };
+
+    az.server.rke2.manifests."envoy-gateway-routes" = lib.lists.flatten (builtins.map (route: [
+        {
+          apiVersion = "gateway.envoyproxy.io/v1alpha1";
+          kind = "SecurityPolicy";
+          metadata = {
+            name = "authelia-extauth-${route.name}";
+            namespace = route.namespace;
+          };
+          spec = {
+            targetRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "HTTPRoute";
+                name = route.name;
+              }
+            ];
+            extAuth = {
+              http = {
+                path = "/api/authz/ext-authz/";
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "authelia";
+                    namespace = "app-authelia";
+                    port = 80;
+                  }
+                ];
+              };
+              failOpen = false;
+              headersToExtAuth = [
+                "X-Forwarded-Proto"
+                "Authorization"
+                "Proxy-Authorization"
+                "Accept"
+                "Cookie"
+              ];
+            };
+          };
+        }
+        {
+          apiVersion = "gateway.networking.k8s.io/v1beta1";
+          kind = "ReferenceGrant";
+          metadata = {
+            name = "envoy-extauth-${route.name}";
+            namespace = "app-authelia";
+          };
+          spec = {
+            from = [
+              {
+                group = "gateway.envoyproxy.io";
+                kind = "SecurityPolicy";
+                namespace = route.namespace;
+              }
+            ];
+            to = [
+              {
+                group = "";
+                kind = "Service";
+              }
+            ];
+          };
+        }
+      ])
+      config.az.svc.rke2.envoyGateway.httpRoutes);
   };
 }

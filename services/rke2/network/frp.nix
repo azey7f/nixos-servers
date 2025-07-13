@@ -66,7 +66,7 @@ in {
                   name = "http";
                   type = "tcp";
                   localIP = cfg.localIP;
-                  localPort = 80;
+                  localPort = 8080;
                   remotePort = 80;
                 }
                 {
