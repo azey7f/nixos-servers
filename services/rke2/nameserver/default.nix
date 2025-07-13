@@ -44,15 +44,24 @@ in {
       }
       {
         apiVersion = "v1";
-        kind = "ConfigMap";
+        kind = "Secret";
         metadata = {
-          name = "knot-cm";
+          name = "knot-config";
           namespace = "app-nameserver";
         };
-        data = {
+        stringData = {
           "${revDomain}.zone" = import ./zones/${revDomain}.nix args;
           "knot.conf" = import ./config.nix args;
         };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "rfc2136-tsig";
+          namespace = "cert-manager";
+        };
+        stringData.secret = config.sops.placeholder."rke2/nameserver/tsig-secret";
       }
       {
         apiVersion = "apps/v1";
@@ -65,6 +74,14 @@ in {
           replicas = 1; # hidden master, doesn't need HA
           selector.matchLabels.app = "knot";
           template.metadata.labels.app = "knot";
+
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65532;
+            runAsGroup = 65532;
+            fsGroup = 65532;
+          };
           template.spec.containers = [
             {
               name = "knot";
@@ -72,51 +89,37 @@ in {
               command = ["knotd" "-c" "/config/knot.conf"];
               volumeMounts = [
                 {
+                  name = "knot-rundir";
+                  mountPath = "/rundir";
+                }
+                {
                   name = "knot-data";
                   mountPath = "/storage";
                 }
                 {
-                  name = "knot-cm";
+                  name = "knot-config";
                   mountPath = "/config";
-                }
-                {
-                  name = "sops-secrets-rendered";
-                  mountPath = "/secrets";
                   readOnly = true;
                 }
               ];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
             }
           ];
           template.spec.volumes = [
+            {
+              name = "knot-rundir";
+              emptyDir.sizeLimit = "100Mi";
+            }
             {
               name = "knot-data";
               persistentVolumeClaim.claimName = "knot-data";
             }
             {
-              name = "knot-cm";
-              configMap = {
-                name = "knot-cm";
-                items = [
-                  {
-                    key = "${revDomain}.zone";
-                    path = "${revDomain}.zone";
-                  }
-                  {
-                    key = "knot.conf";
-                    path = "knot.conf";
-                  }
-                ];
-              };
-            }
-            {
-              # since all nodes run off the same flake,
-              # this is possible (and *should* be safe)
-              # TODO: make sure this actually works well with multiple nodes
-              name = "sops-secrets-rendered";
-              hostPath = {
-                path = "/run/secrets/rendered/rke2/nameserver";
-                type = "Directory";
-              };
+              name = "knot-config";
+              secret.secretName = "knot-config";
             }
           ];
         };
@@ -124,26 +127,9 @@ in {
     ];
 
     sops.secrets."rke2/nameserver/tsig-secret" = {
+      # ACME
       # cluster-wide
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
     };
-    sops.templates."rke2/nameserver/acme.conf".content = ''
-      key:
-        - id: acme
-          algorithm: hmac-sha256
-          secret: ${config.sops.placeholder."rke2/nameserver/tsig-secret"}
-    '';
-
-    sops.templates."rke2/nameserver/tsig-secret.yaml".file = (pkgs.formats.yaml {}).generate "tsig-secret.yaml" {
-      apiVersion = "v1";
-      kind = "Secret";
-      metadata = {
-        name = "rfc2136-tsig";
-        namespace = "cert-manager";
-      };
-      data.secret = config.sops.placeholder."rke2/nameserver/tsig-secret";
-    };
-
-    systemd.tmpfiles.settings."10-rke2"."${config.az.server.rke2.manifestDir}/app-nameserver-tsig-secret.yaml"."L+".argument = "/run/secrets/rendered/rke2/nameserver/tsig-secret.yaml";
   };
 }

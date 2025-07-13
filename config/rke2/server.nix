@@ -59,31 +59,23 @@ in {
           namespace = "kube-system";
         };
         # TODO: remove operator.replicas wherever I get multiple nodes
-        # TODO: use builtins.toJSON for valuesContent
-        spec.valuesContent = ''
-          operator:
-            replicas: 1
-          ipv6:
-            enabled: true
-          kubeProxyReplacement: true
-          k8sServiceHost: api.${config.networking.domain}
-          k8sServicePort: 8443
-          tunnelProtocol: ""
-          ${
-            if top.bgp.enable
-            then ''
-              bgpControlPlane:
-                enabled: true
-            ''
-            else ''
-              l2announcements:
-                enabled: true
-                leaseDuration: 10s
-                leaseRenewDeadline: 5s
-                leaseRetryPeriod: 1s
-            ''
-          }
-        '';
+        spec.valuesContent = builtins.toJSON {
+          operator.replicas = 1;
+          ipv6.enabled = true;
+          kubeProxyReplacement = true;
+          k8sServiceHost = "api.${config.networking.domain}";
+          k8sServicePort = 8443;
+          tunnelProtocol = "";
+          bgpControlPlane = mkIf top.bgp.enable {
+            enabled = true;
+          };
+          l2announcements = mkIf (!top.bgp.enable) {
+            enabled = true;
+            leaseDuration = "10s";
+            leaseRenewDeadline = "5s";
+            leaseRetryPeriod = "1s";
+          };
+        };
         #routingMode: native
         #enableIPv4Masquerade: false
         #enableIPv6Masquerade: false # TODO

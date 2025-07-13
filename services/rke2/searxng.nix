@@ -33,9 +33,45 @@ in {
         spec = {
           targetNamespace = "app-searxng";
           chart = "oci://registry-1.docker.io/bitnamicharts/valkey";
-	  valuesContent = builtins.toJSON {
-	    auth.enabled = false; # TODO
-	  };
+          valuesContent = builtins.toJSON {
+            auth.enabled = false; # TODO
+          };
+        };
+      }
+
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "searxng-config";
+          namespace = "app-searxng";
+        };
+        stringData = {
+          "settings.yml" = builtins.toJSON {
+            use_default_settings = true;
+            server = {
+              base_url = "https://search.${domain}";
+
+              bind_address = "[::]";
+              secret_key = config.sops.placeholder."rke2/searxng/secret-key";
+
+              limiter = true; # TODO: frp probably messes this up
+              public_instance = true;
+              image_proxy = false; # TODO - shitty internet
+            };
+            general = {
+              instance_name = "search.${domain}";
+              contact_url = "mailto:me@${domain}";
+            };
+            ui.theme_args.simple_style = "dark";
+            valkey.url = "valkey://valkey-primary.app-searxng.svc";
+            outgoing = {
+              request_timeout = 5;
+              max_request_timeout = 15;
+              pool_connections = 10000;
+              pool_maxsize = 1000;
+            };
+          };
         };
       }
       {
@@ -49,29 +85,34 @@ in {
           selector.matchLabels.app = "searxng";
           template.metadata.labels.app = "searxng";
 
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65532;
+            runAsGroup = 65532;
+          };
+
           template.spec.containers = [
             {
               name = "searxng";
               image = "docker.io/searxng/searxng";
               volumeMounts = [
                 {
-                  name = "config";
+                  name = "searxng-config";
                   mountPath = "/etc/searxng";
                   readOnly = true;
                 }
               ];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
             }
           ];
           template.spec.volumes = [
             {
-              # since all nodes run off the same flake,
-              # this is possible (and *should* be safe)
-              # TODO: make sure this actually works well with multiple nodes
-              name = "config";
-              hostPath = {
-                path = "/run/secrets/rendered/rke2/searxng";
-                type = "Directory";
-              };
+              name = "searxng-config";
+              secret.secretName = "searxng-config";
             }
           ];
         };
@@ -129,32 +170,6 @@ in {
     sops.secrets."rke2/searxng/secret-key" = {
       # cluster-wide
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-
-    sops.templates."rke2/searxng/settings.yml".file = (pkgs.formats.yaml {}).generate "searxng-settings.yaml" {
-      use_default_settings = true;
-      server = {
-        base_url = "https://search.${domain}";
-
-        bind_address = "[::]";
-        secret_key = config.sops.placeholder."rke2/searxng/secret-key";
-
-        limiter = true; # TODO: frp probably messes this up
-        public_instance = true;
-        image_proxy = false; # TODO - shitty internet
-      };
-      general = {
-        instance_name = "search.${domain}";
-        contact_url = "mailto:me@${domain}";
-      };
-      ui.theme_args.simple_style = "dark";
-      valkey.url = "valkey://valkey-primary.app-searxng.svc";
-      outgoing = {
-        request_timeout = 5;
-        max_request_timeout = 15;
-        pool_connections = 10000;
-        pool_maxsize = 1000;
-      };
     };
   };
 }

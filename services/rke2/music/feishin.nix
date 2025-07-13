@@ -27,6 +27,14 @@ in {
           replicas = 1;
           selector.matchLabels.app = "feishin";
           template.metadata.labels.app = "feishin";
+
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65532;
+            runAsGroup = 65532;
+          };
+
           template.spec.containers = [
             {
               name = "feishin";
@@ -37,6 +45,30 @@ in {
                 SERVER_TYPE = "navidrome";
                 SERVER_URL = "https://navidrome.${domain}";
               };
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
+              volumeMounts = [
+                {
+                  name = "nginx-cache";
+                  mountPath = "/var/cache/nginx";
+                }
+                {
+                  name = "run";
+                  mountPath = "/run";
+                }
+              ];
+            }
+          ];
+          template.spec.volumes = [
+            {
+              name = "nginx-cache";
+              emptyDir.sizeLimit = "100Mi";
+            }
+            {
+              name = "run";
+              emptyDir.sizeLimit = "100Mi";
             }
           ];
         };
@@ -51,13 +83,13 @@ in {
         };
         spec = {
           selector.app = "feishin";
-          # listens on 0.0.0.0:9180 by default, no way to change it seemingly - # TODO: make an issue
+          # listens on 0.0.0.0:80 by default, no way to change it seemingly - # TODO: make an issue
           ipFamilyPolicy = "SingleStack";
           ipFamilies = ["IPv4"];
           ports = [
             {
               name = "feishin";
-              port = 9180;
+              port = 80;
               protocol = "TCP";
             }
           ];
@@ -75,7 +107,7 @@ in {
             backendRefs = [
               {
                 name = "feishin";
-                port = 9180;
+                port = 80;
               }
             ];
           }

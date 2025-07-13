@@ -29,6 +29,16 @@ in {
           chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
 
           valuesContent = builtins.toJSON {
+            podSecurityContext.fsGroup = 1000; # can't push to mirrors w/ 65532
+            containerSecurityContext = {
+              allowPrivilegeEscalation = false;
+              capabilities.drop = ["ALL"];
+              runAsUser = 1000;
+              runAsGroup = 1000;
+              runAsNonRoot = true;
+              seccompProfile.type = "RuntimeDefault";
+            };
+
             redis-cluster.enabled = false;
             postgresql-ha.enabled = false;
             redis.enabled = true;

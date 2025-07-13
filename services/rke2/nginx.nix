@@ -44,16 +44,27 @@ in {
           selector.matchLabels.app = "nginx";
           template.metadata.labels.app = "nginx";
 
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65532;
+            runAsGroup = 65532;
+          };
+
           template.spec.containers = [
             {
               name = "nginx";
-              image = "nginx";
+              image = "nginxinc/nginx-unprivileged";
               volumeMounts = [
                 {
                   name = "nginx-cm";
                   mountPath = "/usr/share/nginx/html";
                 }
               ];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
             }
           ];
 
@@ -88,7 +99,7 @@ in {
           ports = [
             {
               name = "nginx";
-              port = 80;
+              port = 8080;
               protocol = "TCP";
             }
           ];
@@ -106,7 +117,7 @@ in {
             backendRefs = [
               {
                 name = "nginx";
-                port = 80;
+                port = 8080;
               }
             ];
           }

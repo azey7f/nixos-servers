@@ -26,6 +26,12 @@ in {
     az.svc.rke2.cnpg.enable = true;
     az.server.rke2.manifests."app-authelia" = [
       {
+        apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "app-authelia";
+        metadata.labels.name = "app-authelia";
+      }
+      {
         apiVersion = "postgresql.cnpg.io/v1";
         kind = "Cluster";
         metadata = {
@@ -45,6 +51,31 @@ in {
         };
       }
       {
+        apiVersion = "v1";
+        kind = "Secret";
+        type = "kubernetes.io/basic-auth";
+        metadata = {
+          name = "authelia-cnpg-user";
+          namespace = "app-authelia";
+        };
+        data = {
+          username = "YXV0aGVsaWE="; # echo -n authelia | base64
+          password = config.sops.placeholder."rke2/authelia/cnpg-passwd";
+        };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "authelia-misc";
+          namespace = "app-authelia";
+        };
+        data = {
+          lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
+          cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
+        };
+      }
+      {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
@@ -53,12 +84,22 @@ in {
         };
         spec = {
           targetNamespace = "app-authelia";
-          createNamespace = true;
 
           chart = "authelia";
           repo = "https://charts.authelia.com";
 
           valuesContent = builtins.toJSON {
+            pod.securityContext = {
+              container = {
+                runAsNonRoot = true;
+                runAsUser = 65532;
+                runAsGroup = 65532;
+                seccompProfile.type = "RuntimeDefault";
+                capabilities.drop = ["ALL"];
+                allowPrivilegeEscalation = false;
+              };
+              pod.fsGroup = 65532;
+            };
             configMap = {
               theme = "dark";
               default_2fa_method = "totp";
@@ -250,42 +291,5 @@ in {
     sops.secrets."rke2/authelia/cnpg-passwd" = {
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
     };
-    sops.secrets."rke2/authelia/cnpg-passwd-b64" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-
-    # TODO: az.server.rke2.sopsManifests or make .manifests use sops.templates
-    sops.templates."rke2/authelia/misc.yaml".file =
-      (pkgs.formats.yaml {}).generate "authelia-secrets.yaml"
-      {
-        apiVersion = "v1";
-        kind = "Secret";
-        metadata = {
-          name = "authelia-misc";
-          namespace = "app-authelia";
-        };
-        data = {
-          lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
-          cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd-b64";
-        };
-      };
-    sops.templates."rke2/authelia/cnpg.yaml".file =
-      (pkgs.formats.yaml {}).generate "authelia-cnpg-secrets.yaml"
-      {
-        apiVersion = "v1";
-        kind = "Secret";
-        type = "kubernetes.io/basic-auth";
-        metadata = {
-          name = "authelia-cnpg-user";
-          namespace = "app-authelia";
-        };
-        data = {
-          username = "YXV0aGVsaWE="; # echo -n authelia | base64
-          password = config.sops.placeholder."rke2/authelia/cnpg-passwd-b64";
-        };
-      };
-
-    systemd.tmpfiles.settings."10-rke2"."${config.az.server.rke2.manifestDir}/app-authelia-secrets-misc.yaml"."L+".argument = "/run/secrets/rendered/rke2/authelia/misc.yaml";
-    systemd.tmpfiles.settings."10-rke2"."${config.az.server.rke2.manifestDir}/app-authelia-secrets-cnpg.yaml"."L+".argument = "/run/secrets/rendered/rke2/authelia/cnpg.yaml";
   };
 }

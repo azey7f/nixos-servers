@@ -46,6 +46,8 @@ in {
       tokenFile = "/run/secrets/rke2/token";
       serverAddr = "https://api.${config.networking.domain}";
 
+      cisHardening = false; # configured manually
+
       extraFlags = [
         "--node-name=${config.networking.fqdn}"
         "--disable-kube-proxy" # replaced w/ cilium

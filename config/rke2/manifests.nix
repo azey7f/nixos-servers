@@ -35,32 +35,33 @@ in {
   };
 
   config = mkIf cfg.enable (let
-    tmpfiles =
-      (mapAttrs' (name: manifests: let
-          fName = "${name}.yaml";
-        in {
-          name = "${cfg.manifestDir}/${fName}";
-          value."C".argument = "${
-            pkgs.concatText fName (
-              # C+, since rke2 needs to be able to write stuff into helm charts
-              lib.concatMap (x: [
-                yamlDocSeparator
-                ((pkgs.formats.yaml {}).generate "rke2-doc-${name}.yaml" x)
-              ])
-              manifests
-            )
-          }";
-        })
+    manifests =
+      (mapAttrs (name: manifests: "${
+          pkgs.concatText "rke2-manifest-${name}.yaml" (
+            lib.concatMap (x: [
+              yamlDocSeparator
+              ((pkgs.formats.yaml {}).generate "rke2-manifest-doc-${name}.yaml" x)
+            ])
+            manifests
+          )
+        }")
         cfg.manifests)
-      // (mapAttrs' (name: manifest: let
-          fName = "${manifest.name}.yaml";
-        in {
-          name = "${cfg.manifestDir}/${fName}";
-          value."C".argument = "${pkgs.fetchurl {inherit (manifest) url hash;}}";
-        })
-        (lib.attrsets.filterAttrs (n: v: v.enable) cfg.remoteManifests));
+      // (mapAttrs (
+        name: manifest: "${pkgs.fetchurl {inherit (manifest) url hash;}}"
+      ) (lib.attrsets.filterAttrs (n: v: v.enable) cfg.remoteManifests));
   in {
-    systemd.tmpfiles.settings."09-rke2-pre" = mapAttrs (n: v: {"r" = {};}) tmpfiles; # remove before copying
-    systemd.tmpfiles.settings."10-rke2" = tmpfiles;
+    sops.templates =
+      mapAttrs' (name: manifest: {
+        name = "rke2/manifests/${name}.yaml";
+        value.file = manifest;
+      })
+      manifests;
+
+    systemd.tmpfiles.settings."10-rke2" =
+      mapAttrs' (name: manifest: {
+        name = "${cfg.manifestDir}/${name}.yaml";
+        value."L+".argument = "/run/secrets/rendered/rke2/manifests/${name}.yaml";
+      })
+      manifests;
   });
 }

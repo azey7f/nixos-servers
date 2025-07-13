@@ -96,8 +96,9 @@ in {
           namespace = "kube-system";
         };
         spec = {
-          targetNamespace = "openebs";
-          createNamespace = true;
+          targetNamespace = "kube-system";
+          #targetNamespace = "openebs";
+          #createNamespace = true;
           chart = "openebs";
           repo = "https://openebs.github.io/openebs";
           # TODO: use builtins.toJSON for valueContent

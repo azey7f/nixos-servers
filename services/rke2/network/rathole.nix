@@ -99,6 +99,13 @@ in {
           selector.matchLabels.app = "rathole";
           template.metadata.labels.app = "rathole";
 
+          template.spec.securityContext = {
+            allowPrivilegeEscalation = false;
+            capabilities.drop = ["ALL"];
+            runAsNonRoot = true;
+            seccompProfile = "RuntimeDefault";
+          };
+
           template.spec.securityContext.runAsUser = cfg.sopsUid;
           template.spec.containers = [
             {

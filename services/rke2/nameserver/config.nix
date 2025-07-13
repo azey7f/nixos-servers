@@ -9,7 +9,10 @@
   domain = config.az.server.rke2.baseDomain;
   identity = "master-ns.${domain}";
 in ''
-  include: "/secrets/acme.conf"
+  key:
+    - id: acme
+      algorithm: hmac-sha256
+      secret: ${config.sops.placeholder."rke2/nameserver/tsig-secret"}
 
   server:
     identity: "${identity}"

@@ -30,6 +30,11 @@ in {
           valuesContent = builtins.toJSON {
             crds.enabled = true;
             config.enableGatewayAPI = true;
+            extraArgs = [
+              # use local NS directly
+              "--dns01-recursive-nameservers-only"
+              "--dns01-recursive-nameservers=knot.app-nameserver.svc:53"
+            ];
           };
         };
       }
