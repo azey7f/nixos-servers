@@ -121,5 +121,24 @@ in {
         policy = "bypass";
       }
     ];
+    az.svc.rke2.authelia.oidcClients."forgejo" = {
+      client_id = config.sops.placeholder."rke2/forgejo/oidc-id";
+      client_secret = config.sops.placeholder."rke2/forgejo/oidc-secret-digest";
+
+      require_pkce = true;
+      pkce_challenge_method = "S256";
+
+      redirect_uris = ["https://git.${domain}/user/oauth2/authelia/callback"];
+      scopes = ["openid" "email" "profile" "groups"];
+    };
+
+    # TODO: make az.server.clusterWideSecrets or something
+    sops.secrets."rke2/forgejo/oidc-id" = {
+      # cluster-wide
+      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+    };
+    sops.secrets."rke2/forgejo/oidc-secret-digest" = {
+      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+    };
   };
 }

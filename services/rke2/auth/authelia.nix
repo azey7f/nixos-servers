@@ -14,9 +14,25 @@ in {
     enable = optBool false;
     rules = mkOption {
       type = with types;
-        listOf (submodule (value: {
+        listOf (submodule {
           freeformType = with types; attrsOf anything;
           options.policy = optStr "two_factor";
+        });
+      default = [];
+    };
+    oidcClients = mkOption {
+      type = with types;
+        attrsOf (submodule ({name, ...}: {
+          freeformType = with types; attrsOf anything;
+          options = {
+            client_name = optStr name;
+
+            public = optBool false;
+            authorization_policy = optStr "two_factor";
+
+            consent_mode = optStr "pre-configured";
+            pre_configured_consent_duration = optStr "2w";
+          };
         }));
       default = [];
     };
@@ -71,9 +87,14 @@ in {
           namespace = "app-authelia";
         };
         data = {
+          jwk-key = config.sops.placeholder."rke2/authelia/jwk-key";
           lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
           cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
         };
+        stringData = {
+	  storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
+          hmac-secret = config.sops.placeholder."rke2/authelia/hmac-secret";
+	};
       }
       {
         apiVersion = "helm.cattle.io/v1";
@@ -133,6 +154,24 @@ in {
                 };
               };
 
+              identity_providers.oidc = {
+		enabled = true;
+
+		hmac_secret = {
+		  secret_name = "authelia-misc";
+		  path = "hmac-secret";
+		};
+		jwks = [
+		  {
+		    key.path = "/secrets/authelia-misc/jwk-key";
+		    #certificate_chain = ""; # TODO?
+		  }
+		];
+
+                #TODO?: authorization_policies = {};
+                clients = cfg.oidcClients;
+              };
+
               server.endpoints.authz.ext-authz.implementation = "ExtAuthz";
 
               session = {
@@ -167,6 +206,10 @@ in {
                 min_score = 4;
               };
 
+              storage.encryption_key = {
+                secret_name = "authelia-misc";
+                path = "storage-encryption-key";
+              };
               storage.postgres = {
                 enabled = true;
                 address = "tcp://authelia-cnpg-rw.app-authelia.svc:5432";
@@ -284,8 +327,17 @@ in {
       }
     ];
 
-    sops.secrets."rke2/authelia/lldap-passwd" = {
+    sops.secrets."rke2/authelia/hmac-secret" = {
       # cluster-wide
+      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+    };
+    sops.secrets."rke2/authelia/jwk-key" = {
+      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+    };
+    sops.secrets."rke2/authelia/storage-encryption-key" = {
+      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+    };
+    sops.secrets."rke2/authelia/lldap-passwd" = {
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
     };
     sops.secrets."rke2/authelia/cnpg-passwd" = {
