@@ -21,7 +21,7 @@ in {
     certManager.enable = true;
     frp = {
       enable = true;
-      remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my cursent connection for living in the middle of nowhere reasons
+      remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my current connection for living in the middle of nowhere reasons
     };
 
     nameserver.enable = true;

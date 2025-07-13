@@ -92,9 +92,9 @@ in {
           cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
         };
         stringData = {
-	  storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
+          storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
           hmac-secret = config.sops.placeholder."rke2/authelia/hmac-secret";
-	};
+        };
       }
       {
         apiVersion = "helm.cattle.io/v1";
@@ -155,18 +155,18 @@ in {
               };
 
               identity_providers.oidc = {
-		enabled = true;
+                enabled = true;
 
-		hmac_secret = {
-		  secret_name = "authelia-misc";
-		  path = "hmac-secret";
-		};
-		jwks = [
-		  {
-		    key.path = "/secrets/authelia-misc/jwk-key";
-		    #certificate_chain = ""; # TODO?
-		  }
-		];
+                hmac_secret = {
+                  secret_name = "authelia-misc";
+                  path = "hmac-secret";
+                };
+                jwks = [
+                  {
+                    key.path = "/secrets/authelia-misc/jwk-key";
+                    #certificate_chain = ""; # TODO?
+                  }
+                ];
 
                 #TODO?: authorization_policies = {};
                 clients = cfg.oidcClients;
