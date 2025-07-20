@@ -56,7 +56,7 @@ in {
         # https://github.com/cilium/cilium/issues/28985
         # TODO?: make node itself use BGP instead of OSPF
         enable = true;
-        router = "${cluster.publicSubnet}::1";
+        #router = "${cluster.publicSubnet}::1";
       };
 
       storage.zfs = {
@@ -83,10 +83,11 @@ in {
     net = {
       interface = "eno1";
 
-      frr.ospf.enable = true;
-      dontSetGateways = true;
+      #frr.ospf.enable = true;
+      #dontSetGateways = true;
 
-      vlans = {
+      /*
+        vlans = {
         trusted = {
           enable = true;
           id = 10;
@@ -94,14 +95,16 @@ in {
           addresses = ["10.33.10.2/24" "${cluster.publicSubnet}:10::2/64"];
         };
       };
+      */
 
       bridges = {
         # libvirt bridges
-        vbr-trusted = {
-          enable = true;
+        /*
+          vbr-trusted = {
           ipv4 = "172.20.0.1/24";
           ipv6 = ["${cluster.publicSubnet}:a39d::"];
         };
+        */
         /*
         vbr-untrusted = {
           enable = true;
@@ -112,8 +115,10 @@ in {
       };
 
       ipv4 = {
-        address = "10.33.0.2";
-        gateway = "10.33.0.1"; # used for remote unlock only, discovered via OSPF
+        #address = "10.33.0.2";
+        #gateway = "10.33.0.1"; # used for remote unlock only, discovered via OSPF
+        address = "192.168.0.254";
+        gateway = "192.168.0.1";
         subnetSize = 24;
       };
 

@@ -80,6 +80,10 @@ in {
       };
 
       datasets.${cfg.subvol}.type = "zfs_fs";
+      datasets."${cfg.subvol}/local" = {
+        type = "zfs_fs";
+        mountpoint = "/var/local/openebs";
+      };
     };
 
     systemd.tmpfiles.rules = [

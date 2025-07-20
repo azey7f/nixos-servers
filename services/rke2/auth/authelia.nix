@@ -375,14 +375,18 @@ in {
                     port = 80;
                   }
                 ];
+                headersToBackend = [
+                  "remote-*"
+                  "authelia-*"
+                ];
               };
               failOpen = false;
               headersToExtAuth = [
-                "X-Forwarded-Proto"
-                "Authorization"
-                "Proxy-Authorization"
-                "Accept"
-                "Cookie"
+                "x-forwarded-proto"
+                "authorization"
+                "header-authorization"
+                "accept"
+                "cookie"
               ];
             };
           };

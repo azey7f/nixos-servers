@@ -266,7 +266,10 @@ in {
                 if (conf.ipv4 != null)
                 then "yes"
                 else "no";
-              IPv6SendRA = "yes";
+              IPv6SendRA =
+                if (conf.ipv6 != [])
+                then "yes"
+                else "no";
               ConfigureWithoutCarrier = "yes";
             };
             dhcpServerConfig = {

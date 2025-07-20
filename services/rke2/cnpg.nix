@@ -28,10 +28,6 @@ in {
 
           chart = "cloudnative-pg";
           repo = "https://cloudnative-pg.github.io/charts";
-
-          valuesContent =
-            builtins.toJSON {
-            };
         };
       }
     ];
