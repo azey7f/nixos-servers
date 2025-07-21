@@ -8,6 +8,8 @@
 with lib; let
   cfg = config.az.server.disks;
 in {
+  imports = azLib.scanPath ./.;
+
   options.az.server.disks = with azLib.opt; {
     zfs.enable = optBool false;
     sataMaxPerf = optBool false; # necessary for hotswapping

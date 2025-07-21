@@ -64,6 +64,14 @@ in {
       sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
     };
 
+    # file watch limit sysctls #TODO: is this really the best solution?
+    # https://serverfault.com/questions/1137211/failed-to-create-fsnotify-watcher-too-many-open-files
+    boot.kernel.sysctl = {
+      "fs.inotify.max_user_watches" = 2099999999;
+      "fs.inotify.max_user_instances" = 2099999999;
+      "fs.inotify.max_queued_events" = 2099999999;
+    };
+
     # networking
     az.server.net.ipv6.address = [
       "${

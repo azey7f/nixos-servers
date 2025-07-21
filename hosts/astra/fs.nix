@@ -25,7 +25,22 @@ with lib; {
       "hdd"
       #"archive"
     ];
-    kernelParams = ["zfs.zfs_arc_max=8589934592"]; # 8G
+    kernelParams = ["zfs.zfs_arc_max=34359738368"]; # 32Gi
+  };
+
+  ### SANOID ###
+  az.server.disks.sanoid = {
+    enable = true;
+    datasets = {
+      "nvme" = {};
+      "hdd/openebs" = {};
+    };
+
+    syncoid.commands."nvme" = {
+      target = "hdd/backup-nvme";
+      recursive = false;
+      sendOptions = "Rw"; # recursive, raw
+    };
   };
 
   ### MOUNTS ###
@@ -34,7 +49,7 @@ with lib; {
     fsType = "tmpfs";
     options = [
       "defaults"
-      "size=24G" #TODO: shouldn't need to be as big after the refactor
+      "size=8G"
       "mode=755"
     ];
   };
