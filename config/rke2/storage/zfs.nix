@@ -1,4 +1,3 @@
-# TODO
 {
   pkgs,
   config,
@@ -105,25 +104,17 @@ in {
           #createNamespace = true;
           chart = "openebs";
           repo = "https://openebs.github.io/openebs";
-          # TODO: use builtins.toJSON for valueContent
-          valuesContent = ''
-            engines:
-              local:
-                lvm:
-                  enabled: false
-                zfs:
-                  enabled: true
-              replicated:
-                mayastor:
-                  enabled: false
-            loki:
-              singleBinary:
-                replicas: 1
-            openebs-crds:
-              csi:
-                volumeSnapshots:
-                  enabled: false
-          '';
+          valuesContent = builtins.toJSON {
+            engines = {
+              local = {
+                lvm.enabled = false;
+                zfs.enabled = true;
+	      };
+              replicated.mayastor.enabled = false;
+              loki.singleBinary.replicas = 1;
+              openebs-crds.csi.volumeSnapshots.enabled = false;
+            };
+          };
         };
       }
       {

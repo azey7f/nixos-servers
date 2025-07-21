@@ -29,7 +29,7 @@ in {
         }));
       default = {};
     };
-    # TODO?: charts
+    # TODO?: charts option
 
     manifestDir = optStr "/var/lib/rancher/rke2/server/manifests";
   };

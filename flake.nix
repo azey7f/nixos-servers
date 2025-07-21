@@ -39,7 +39,7 @@
 
               extraArgs = {inherit inputs outputs;};
             }
-            hostName; # TODO: maybe fqdn?
+            hostName; # TODO?: fqdn for derivation name?
         })
         (builtins.attrNames cluster.nodes)
       ))

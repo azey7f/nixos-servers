@@ -68,30 +68,7 @@ with lib; {
     #options = ["noexec" "nodev"];
   };
 
-  fileSystems."/secrets" = {
-    #TODO
-    device = "nvme/keys/nixos-secrets";
-    fsType = "zfs";
-    neededForBoot = true;
-    #options = ["noexec" "nodev"];
-  };
-
-  fileSystems."/var/lib/microvms" = {
-    #TODO
-    device = "nvme/microvm";
-    fsType = "zfs";
-    #options = ["noexec" "nodev"];
-  };
-
-  fileSystems."/vm" = {
-    #TODO
-    device = "nvme/microvm/vm-data";
-    fsType = "zfs";
-    #options = ["noexec" "nodev"];
-  };
-
   fileSystems."/var/lib/rancher/rke2" = {
-    #TODO
     device = "nvme/rke2";
     fsType = "zfs";
     #options = ["noexec" "nodev"];

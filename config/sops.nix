@@ -14,7 +14,7 @@ in {
     path = mkOption {type = types.path;}; # path to private sops submodule, contains a dir for each host
     keyPath = mkOption {
       type = types.path;
-      default = "/etc/nixos/age.key"; # .gitignored, should be chmod 0 #TODO: add to setup docs
+      default = "/etc/nixos/age.key"; # .gitignored, should be chmod 0
     };
   };
 

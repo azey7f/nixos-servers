@@ -1,4 +1,3 @@
-# TODO: OIDC
 {
   pkgs,
   config,
@@ -221,7 +220,7 @@ in {
 
               notifier.filesystem = {
                 enabled = true;
-                filename = "/tmp/notifier"; # TODO
+                filename = "/tmp/notifier"; # TODO mail
               };
 
               access_control = {
