@@ -11,6 +11,7 @@ with lib; let
 in {
   options.az.svc.rke2.forgejo = with azLib.opt; {
     enable = optBool false;
+    themesUrl = optStr "https://github.com/catppuccin/gitea/releases/latest/download/catppuccin-gitea.tar.gz";
   };
 
   config = mkIf cfg.enable {
@@ -36,12 +37,13 @@ in {
               runAsUser = 1000;
               runAsGroup = 1000;
               runAsNonRoot = true;
+              fsGroup = 1000;
               seccompProfile.type = "RuntimeDefault";
             };
 
-            redis-cluster.enabled = false;
+            valkey-cluster.enabled = false;
             postgresql-ha.enabled = false;
-            redis.enabled = true;
+            valkey.enabled = true;
             postgresql.enabled = true;
 
             global.namespaceOverride = "app-forgejo";
@@ -75,7 +77,8 @@ in {
               };
 
               ui = {
-                DEFAULT_THEME = "forgejo-dark";
+                DEFAULT_THEME = "catppuccin-macchiato-mauve";
+                THEMES = "forgejo-light,forgejo-dark,catppuccin-latte-rosewater,catppuccin-latte-flamingo,catppuccin-latte-pink,catppuccin-latte-mauve,catppuccin-latte-red,catppuccin-latte-maroon,catppuccin-latte-peach,catppuccin-latte-yellow,catppuccin-latte-green,catppuccin-latte-teal,catppuccin-latte-sky,catppuccin-latte-sapphire,catppuccin-latte-blue,catppuccin-latte-lavender,catppuccin-frappe-rosewater,catppuccin-frappe-flamingo,catppuccin-frappe-pink,catppuccin-frappe-mauve,catppuccin-frappe-red,catppuccin-frappe-maroon,catppuccin-frappe-peach,catppuccin-frappe-yellow,catppuccin-frappe-green,catppuccin-frappe-teal,catppuccin-frappe-sky,catppuccin-frappe-sapphire,catppuccin-frappe-blue,catppuccin-frappe-lavender,catppuccin-macchiato-rosewater,catppuccin-macchiato-flamingo,catppuccin-macchiato-pink,catppuccin-macchiato-mauve,catppuccin-macchiato-red,catppuccin-macchiato-maroon,catppuccin-macchiato-peach,catppuccin-macchiato-yellow,catppuccin-macchiato-green,catppuccin-macchiato-teal,catppuccin-macchiato-sky,catppuccin-macchiato-sapphire,catppuccin-macchiato-blue,catppuccin-macchiato-lavender,catppuccin-mocha-rosewater,catppuccin-mocha-flamingo,catppuccin-mocha-pink,catppuccin-mocha-mauve,catppuccin-mocha-red,catppuccin-mocha-maroon,catppuccin-mocha-peach,catppuccin-mocha-yellow,catppuccin-mocha-green,catppuccin-mocha-teal,catppuccin-mocha-sky,catppuccin-mocha-sapphire,catppuccin-mocha-blue,catppuccin-mocha-lavender";
               };
 
               repository = {
@@ -92,6 +95,55 @@ in {
               };
               */
             };
+
+            extraVolumes = [
+              {
+                name = "forgejo-themes";
+                emptyDir = {};
+              }
+            ];
+            extraContainerVolumeMounts = [
+              {
+                name = "forgejo-themes";
+                readOnly = true;
+                mountPath = "/data/gitea/public/assets/css";
+              }
+            ];
+            extraInitVolumeMounts = [
+              {
+                name = "forgejo-themes";
+                mountPath = "/themes";
+              }
+            ];
+            initPreScript = ''
+              curl -Lo /themes/themes.tar.gz ${cfg.themesUrl}
+              tar -xzvf /themes/themes.tar.gz -C /themes
+              rm /themes/themes.tar.gz
+            '';
+            /*
+              extraContainers = [
+              {
+                name = "catppuccin-themes-dl";
+                image = "curlimages/curl:latest";
+                command = ["/bin/sh" "-c" "curl -L -o /themes/themes.tar.gz ${cfg.themesUrl} && tar -xzvf /themes/themes.tar.gz -C /themes && rm /themes/themes.tar.gz && sleep infinity"];
+                volumeMounts = [
+                  {
+                    name = "forgejo-themes";
+                    mountPath = "/themes";
+                  }
+                ];
+                securityContext = {
+                  allowPrivilegeEscalation = false;
+                  capabilities.drop = ["ALL"];
+                  runAsUser = 1000;
+                  runAsGroup = 1000;
+                  fsGroup = 1000;
+                  runAsNonRoot = true;
+                  seccompProfile.type = "RuntimeDefault";
+                };
+              }
+            ];
+            */
           };
         };
       }
