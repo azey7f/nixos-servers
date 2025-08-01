@@ -32,7 +32,7 @@ in {
         };
         spec = {
           targetNamespace = "app-searxng";
-          chart = "oci://registry-1.docker.io/bitnamicharts/valkey";
+          chart = "oci://registry-1.docker.io/bitnamicharts/valkey"; # TODO: https://github.com/orgs/valkey-io/discussions/338#discussioncomment-13802901
           valuesContent = builtins.toJSON {
             auth.enabled = false; # TODO
           };
