@@ -8,6 +8,8 @@
     if pred
     then str
     else "";
+  
+  pgpPubkey = "mDMEZ/1EchYJKwYBBAHaRw8BAQdAqV4yxw+9cXHvJeK037MNrwnqUNhsBnptvFAXmymSCxS0EmF6ZXkgPG1lQGF6ZXkubmV0PoiZBBMWCgBBFiEELMs0A0P+iiuRzn91+U9KccXCHo8FAmf9RHICGwMFCQWjmoAFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQ+U9KccXCHo/m2wEAhYbrg5+fa6ZQT3dOjaSxp9rGJAZnSNPBZfHsda2CHDABAPxFZ9VciZ1FRGscGAHYwUX3N9FQZk4kiwWQmzqFPRMCuDgEZ/1EchIKKwYBBAGXVQEFAQEHQMGURGFScsMEkgYpKnN6cAxFDT1bPrtsgXrTBvlILG9MAwEIB4h+BBgWCgAmFiEELMs0A0P+iiuRzn91+U9KccXCHo8FAmf9RHICGwwFCQWjmoAACgkQ+U9KccXCHo+dngEAoF4P7ovWPrIN/E3bmxWRAEvQ5tw1qUm8K49Dvx8UOLIBAPiHqMUYZtya/Umdh2MK15iotuP+7BiC/70kq6cF8YQO";
 in ''
   $TTL 3600
   $ORIGIN ${domain}.
@@ -39,12 +41,6 @@ in ''
     '')
     outputs.infra.domains.${domain}.vps}
 
-  ; SSH - # TODO?
-  ;@                    IN  SSHFP         1 1 BA6B9A49143417A3AEF2F1757C1DAC0029271105
-  ;@                    IN  SSHFP         1 2 C5B2FFBD7B5FFB44A97E541B72E2324EBAD474E828C0441445427B02A71663CD
-  ;@                    IN  SSHFP         4 1 10F4803601771CE8E21A220B4A83553C1170DAF2
-  ;@                    IN  SSHFP         4 2 DCDB72D050EC403BF7136BBCCF0AB5F55EACB01755D9ABE1E7689405E35F799E
-
   ; CAA
   @                     IN  CAA           0 contactemail "me@${domain}"
   *                     IN  CAA           0 contactemail "me@${domain}"
@@ -53,19 +49,30 @@ in ''
   @                     IN  CAA           0 issue "letsencrypt.org"
   *                     IN  CAA           0 issue "letsencrypt.org"
 
-  ; DAV
-  _caldav._tcp          IN  SRV           0 0 0 .
-  _caldavs._tcp         IN  TXT           "path=/dav"
-  _caldavs._tcp         IN  SRV           0 1 443 dav
-  _carddav._tcp         IN  SRV           0 0 0 .
-  _carddavs._tcp        IN  TXT           "path=/dav"
-  _carddavs._tcp        IN  SRV           0 1 443 dav
+  ; PGP keys
+  ; gpg --auto-key-locate clear,nodefault,cert,dane --locate-keys me@azey.net
+  me                    IN  CERT          PGP 0 0 ${pgpPubkey}
+  2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc._openpgpkey  IN  OPENPGPKEY ${pgpPubkey}
 
   ; TLSA
   ;_443._tcp             IN  TLSA          3 1 1 ''${TLSA}
   ;_25._tcp.mail         IN  TLSA          3 1 1 ''${TLSA}
   ;_465._tcp.mail        IN  TLSA          3 1 1 ''${TLSA}
   ;_993._tcp.mail        IN  TLSA          3 1 1 ''${TLSA}
+
+  ; SSH - # TODO
+  ;@                    IN  SSHFP         1 1 BA6B9A49143417A3AEF2F1757C1DAC0029271105
+  ;@                    IN  SSHFP         1 2 C5B2FFBD7B5FFB44A97E541B72E2324EBAD474E828C0441445427B02A71663CD
+  ;@                    IN  SSHFP         4 1 10F4803601771CE8E21A220B4A83553C1170DAF2
+  ;@                    IN  SSHFP         4 2 DCDB72D050EC403BF7136BBCCF0AB5F55EACB01755D9ABE1E7689405E35F799E
+
+  ; DAV
+  ;_caldav._tcp          IN  SRV           0 0 0 .
+  ;_caldavs._tcp         IN  TXT           "path=/dav"
+  ;_caldavs._tcp         IN  SRV           0 1 443 dav
+  ;_carddav._tcp         IN  SRV           0 0 0 .
+  ;_carddavs._tcp        IN  TXT           "path=/dav"
+  ;_carddavs._tcp        IN  SRV           0 1 443 dav
 
   ; Mail stuff - zoho mail
   @                      IN  MX            10 mx.zoho.eu.
