@@ -51,8 +51,8 @@ in ''
 
   ; PGP keys
   ; gpg --auto-key-locate clear,nodefault,cert,dane --locate-keys me@azey.net
-  me                    IN  CERT          PGP 0 0 ${pgpPubkey}
-  2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc._openpgpkey  IN  OPENPGPKEY ${pgpPubkey}
+  me                                                                     IN   CERT         PGP 0 0 ${pgpPubkey}
+  2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc._openpgpkey   IN   OPENPGPKEY   ${pgpPubkey}
 
   ; TLSA
   ;_443._tcp             IN  TLSA          3 1 1 ''${TLSA}
