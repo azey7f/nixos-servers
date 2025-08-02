@@ -15,7 +15,14 @@ in {
 
     remotes = mkOption {
       type = with types; listOf types.str;
-      default = builtins.map (v: v.ipv4 /* # TODO: ipv6 */) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps;
+      default =
+        builtins.map (
+          v: v.ipv4
+          /*
+          # TODO: ipv6
+          */
+        )
+        outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps;
     };
 
     localIP = optStr config.az.svc.rke2.envoyGateway.addresses.ipv6;

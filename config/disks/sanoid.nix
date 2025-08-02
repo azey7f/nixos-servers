@@ -66,7 +66,7 @@ in {
       ];
 
       localTargetAllow = [
-	# defaults
+        # defaults
         "compression"
         "create"
         "mount"
@@ -74,8 +74,8 @@ in {
         "receive"
         "rollback"
 
-	# custom
-	"userprop"
+        # custom
+        "userprop"
         "canmount"
         "xattr"
         "dnodesize"

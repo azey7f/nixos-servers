@@ -109,7 +109,7 @@ in {
               local = {
                 lvm.enabled = false;
                 zfs.enabled = true;
-	      };
+              };
               replicated.mayastor.enabled = false;
               loki.singleBinary.replicas = 1;
               openebs-crds.csi.volumeSnapshots.enabled = false;

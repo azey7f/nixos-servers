@@ -27,7 +27,12 @@ in ''
   remote:
   ${lib.strings.concatImapStringsSep "\n" (i: remote: ''
         - id: "ns${toString i}"
-          address: "${remote.ipv4 /* #TODO: .ipv6 */}@853"
+          address: "${
+        remote.ipv4
+        /*
+        #TODO: .ipv6
+        */
+      }@853"
           cert-key: ${remote.knotPubkey}
           quic: "on"
       # <- indent here, nix
