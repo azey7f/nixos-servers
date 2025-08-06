@@ -11,6 +11,7 @@ in {
   system.stateVersion = config.system.nixos.release; # root is on tmpfs, this should be fine
 
   az.svc.rke2 = {
+    # cluster core
     envoyGateway = {
       enable = true;
       addresses = {
@@ -24,14 +25,18 @@ in {
       remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my current connection for living in the middle of nowhere reasons
     };
 
-    nameserver.enable = true;
-
+    # auth
     lldap.enable = true;
     authelia.enable = true;
 
+    # web/domain core stuff
+    nameserver.enable = true;
     nginx.enable = true;
     searxng.enable = true;
+    # misc storage
     forgejo.enable = true;
+    woodpecker.enable = true;
+    # media
     navidrome.enable = true;
     feishin.enable = true;
   };
