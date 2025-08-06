@@ -329,22 +329,11 @@ in {
       }
     ];
 
-    sops.secrets."rke2/authelia/hmac-secret" = {
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-    sops.secrets."rke2/authelia/jwk-key" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-    sops.secrets."rke2/authelia/storage-encryption-key" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-    sops.secrets."rke2/authelia/lldap-passwd" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-    sops.secrets."rke2/authelia/cnpg-passwd" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    az.server.rke2.clusterWideSecrets."rke2/authelia/hmac-secret" = {};
+    az.server.rke2.clusterWideSecrets."rke2/authelia/jwk-key" = {};
+    az.server.rke2.clusterWideSecrets."rke2/authelia/storage-encryption-key" = {};
+    az.server.rke2.clusterWideSecrets."rke2/authelia/lldap-passwd" = {};
+    az.server.rke2.clusterWideSecrets."rke2/authelia/cnpg-passwd" = {};
 
     az.server.rke2.manifests."envoy-gateway-routes" = lib.lists.flatten (builtins.map (route: [
         {

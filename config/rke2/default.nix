@@ -59,10 +59,7 @@ in {
       #gracefulNodeShutdown.enable = true; # TODO
     };
 
-    sops.secrets."rke2/token" = {
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    az.server.rke2.clusterWideSecrets."rke2/token" = {};
 
     # file watch limit sysctls #TODO: is this really the best solution?
     # https://serverfault.com/questions/1137211/failed-to-create-fsnotify-watcher-too-many-open-files

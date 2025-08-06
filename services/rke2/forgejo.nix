@@ -120,30 +120,6 @@ in {
               tar -xzvf /themes/themes.tar.gz -C /themes
               rm /themes/themes.tar.gz
             '';
-            /*
-              extraContainers = [
-              {
-                name = "catppuccin-themes-dl";
-                image = "curlimages/curl:latest";
-                command = ["/bin/sh" "-c" "curl -L -o /themes/themes.tar.gz ${cfg.themesUrl} && tar -xzvf /themes/themes.tar.gz -C /themes && rm /themes/themes.tar.gz && sleep infinity"];
-                volumeMounts = [
-                  {
-                    name = "forgejo-themes";
-                    mountPath = "/themes";
-                  }
-                ];
-                securityContext = {
-                  allowPrivilegeEscalation = false;
-                  capabilities.drop = ["ALL"];
-                  runAsUser = 1000;
-                  runAsGroup = 1000;
-                  fsGroup = 1000;
-                  runAsNonRoot = true;
-                  seccompProfile.type = "RuntimeDefault";
-                };
-              }
-            ];
-            */
           };
         };
       }
@@ -184,13 +160,7 @@ in {
       scopes = ["openid" "email" "profile" "groups"];
     };
 
-    # TODO: make az.server.clusterWideSecrets or something
-    sops.secrets."rke2/forgejo/oidc-id" = {
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
-    sops.secrets."rke2/forgejo/oidc-secret-digest" = {
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    az.server.rke2.clusterWideSecrets."rke2/forgejo/oidc-id" = {};
+    az.server.rke2.clusterWideSecrets."rke2/forgejo/oidc-secret-digest" = {};
   };
 }

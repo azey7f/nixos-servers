@@ -126,10 +126,7 @@ in {
       }
     ];
 
-    sops.secrets."rke2/nameserver/tsig-secret" = {
-      # ACME
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    # ACME
+    az.server.rke2.clusterWideSecrets."rke2/nameserver/tsig-secret" = {};
   };
 }

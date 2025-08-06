@@ -12,6 +12,12 @@ with lib; let
   yamlDocSeparator = builtins.toFile "yaml-doc-separator" "\n---\n";
 in {
   options.az.server.rke2 = with azLib.opt; {
+    # sops.secrets using the cluster-wide sopsFile
+    clusterWideSecrets = mkOption {
+      type = with types; attrsOf anything;
+      default = {};
+    };
+
     manifests = mkOption {
       type = with types; attrsOf (listOf attrs);
       default = {};
@@ -50,6 +56,13 @@ in {
         name: manifest: "${pkgs.fetchurl {inherit (manifest) url hash;}}"
       ) (lib.attrsets.filterAttrs (n: v: v.enable) cfg.remoteManifests));
   in {
+    sops.secrets = mapAttrs (n: v:
+      v
+      // {
+        sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
+      })
+    cfg.clusterWideSecrets;
+
     sops.templates =
       mapAttrs' (name: manifest: {
         name = "rke2/manifests/${name}.yaml";

@@ -29,10 +29,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    sops.secrets."${cfg.sopsPath}/token" = {
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    az.server.rke2.clusterWideSecrets."${cfg.sopsPath}/token" = {};
 
     az.server.rke2.manifests."frp" = [
       {

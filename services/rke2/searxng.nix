@@ -167,9 +167,6 @@ in {
       }
     ];
 
-    sops.secrets."rke2/searxng/secret-key" = {
-      # cluster-wide
-      sopsFile = "${config.az.server.sops.path}/${azLib.reverseFQDN config.networking.domain}/default.yaml";
-    };
+    az.server.rke2.clusterWideSecrets."rke2/searxng/secret-key" = {};
   };
 }
