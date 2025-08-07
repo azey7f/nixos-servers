@@ -66,11 +66,9 @@ in {
           k8sServiceHost = "api.${config.networking.domain}";
           k8sServicePort = 8443;
           tunnelProtocol = "";
-          bgpControlPlane = mkIf top.bgp.enable {
-            enabled = true;
-          };
-          l2announcements = mkIf (!top.bgp.enable) {
-            enabled = true;
+          bgpControlPlane.enabled = top.bgp.enable;
+          l2announcements = {
+            enabled = !top.bgp.enable;
             leaseDuration = "10s";
             leaseRenewDeadline = "5s";
             leaseRetryPeriod = "1s";

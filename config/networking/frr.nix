@@ -29,41 +29,40 @@ in {
 
     az.server.net.frr.ospf.redistribute = ["static" "kernel" "connected"]; # defaults set here, so adding something doesn't override everything else
     sops.templates."frr.conf" = {
-      content =
-        ''
-          ! FRR Configuration
+      content = ''
+        ! FRR Configuration
+        !
+        	hostname ${config.networking.hostName}
+        	log syslog
+        	service password-encryption
+        	service integrated-vtysh-config
+        !
+        ! OSPF
+        !
+        key chain lan
+        	key 0
+        	key-string ${config.sops.placeholder.ospf-key}
+        	cryptographic-algorithm hmac-sha-256
+        !
+        ${lib.strings.concatMapStrings (iface: ''
+          interface ${iface}
+          	ip ospf area 0.0.0.0
+          	ip ospf authentication key-chain lan
+          	ipv6 ospf6 area 0.0.0.0
+          	ipv6 ospf6 authentication keychain lan
           !
-          hostname ${config.networking.hostName}
-          	log syslog
-          	service password-encryption
-          	service integrated-vtysh-config
-          !
-          ! OSPF
-          !
-          key chain lan
-          	key 0
-          	key-string ${config.sops.placeholder.ospf-key}
-          	cryptographic-algorithm hmac-sha-256
-          !
-          ${lib.strings.concatMapStrings (iface: ''
-            interface ${iface}
-            	ip ospf area 0.0.0.0
-            	ip ospf authentication key-chain lan
-            	ipv6 ospf6 area 0.0.0.0
-            	ipv6 ospf6 authentication keychain lan
-            !
-          '') ([net.interface] ++ cfg.extraInterfaces)}
-          router ospf
-          	ospf router-id ${ipv4.address}
-          ${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
-          !
-          router ospf6
-          	ospf6 router-id ${ipv4.address}
-          ${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
-          !
-          end
-        ''
-        + cfg.extraConfig;
+        '') ([net.interface] ++ cfg.extraInterfaces)}
+        router ospf
+        	ospf router-id ${ipv4.address}
+        	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
+        !
+        router ospf6
+        	ospf6 router-id ${ipv4.address}
+        	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
+        !
+        ${cfg.extraConfig}
+        end
+      '';
       owner = "frr";
     };
 

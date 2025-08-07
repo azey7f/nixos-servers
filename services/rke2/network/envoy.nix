@@ -266,7 +266,7 @@ in {
       {
         name = "http";
         protocol = "HTTP";
-        port = 8080; # 80 doesn't work - possibly because of pod security? idk
+        port = 80;
         allowedRoutes.namespaces.from = "Same";
       }
       {

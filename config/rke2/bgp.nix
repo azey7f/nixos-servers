@@ -23,17 +23,19 @@ in {
     };
   };
 
-  config = lib.mkMerge [
-    (mkIf (cfg.enable && cfg.router == "::1") {
+  config = mkIf cfg.enable (lib.mkMerge [
+    (mkIf (cfg.router == "::1") {
       az.server.net.frr.ospf.redistribute = ["bgp"];
       az.server.net.frr.extraConfig = ''
         allow-reserved-ranges
+	access-list all permit any
         route-map set-nexthop-v4 permit 10
           match ip address all
           set ip next-hop ${config.az.server.net.ipv4.address}
         !
         route-map set-nexthop permit 10
           match ipv6 address all
+	  set ipv6 next-hop prefer-global
           set ipv6 next-hop global ${builtins.elemAt config.az.server.net.ipv6.address 0}
         !
         router bgp ${toString cfg.peerASN}
@@ -48,7 +50,7 @@ in {
       '';
       services.frr.bgpd.enable = true;
     })
-    (mkIf cfg.enable {
+    {
       # just testing, hardcoded stuff for now
       az.server.rke2.manifests."cilium-bgp" = [
         {
@@ -126,6 +128,6 @@ in {
           ];
         }
       ];
-    })
-  ];
+    }
+  ]);
 }
