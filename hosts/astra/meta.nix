@@ -33,12 +33,13 @@ in {
     nameserver.enable = true;
     nginx.enable = true;
     searxng.enable = true;
-    # misc storage
-    forgejo.enable = true;
-    woodpecker.enable = true;
     # media
     navidrome.enable = true;
     feishin.enable = true;
+    # source control, ci/cd
+    forgejo.enable = true;
+    woodpecker.enable = true;
+    #hydra.enable = true;
   };
 
   az.server = rec {

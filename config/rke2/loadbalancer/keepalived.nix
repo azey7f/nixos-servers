@@ -25,6 +25,8 @@ in {
 
     services.keepalived = {
       enable = true;
+      enableScriptSecurity = true;
+      extraGlobalDefs = "script_user root";
       vrrpScripts.kube-apiserver = {
         script = "${pkgs.psmisc}/bin/killall -0 kube-apiserver";
         interval = 1;
