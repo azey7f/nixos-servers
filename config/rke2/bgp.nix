@@ -28,24 +28,24 @@ in {
       az.server.net.frr.ospf.redistribute = ["bgp"];
       az.server.net.frr.extraConfig = ''
         allow-reserved-ranges
-	access-list all permit any
+        access-list all permit any
         route-map set-nexthop-v4 permit 10
-          match ip address all
-          set ip next-hop ${config.az.server.net.ipv4.address}
+        	match ip address all
+        	set ip next-hop ${config.az.server.net.ipv4.address}
         !
         route-map set-nexthop permit 10
-          match ipv6 address all
-	  set ipv6 next-hop prefer-global
-          set ipv6 next-hop global ${builtins.elemAt config.az.server.net.ipv6.address 0}
+        	match ipv6 address all
+        	set ipv6 next-hop prefer-global
+        	set ipv6 next-hop global ${builtins.elemAt config.az.server.net.ipv6.address 0}
         !
         router bgp ${toString cfg.peerASN}
-          bgp allow-martian-nexthop
-          no bgp ebgp-requires-policy
-          bgp router-id 0.0.0.1
-          neighbor ::1 remote-as ${toString cfg.selfASN}
-          neighbor ::1 route-map set-nexthop in
-          neighbor ::1 route-map set-nexthop-v4 in
-          neighbor ::1 soft-reconfiguration inbound
+        	bgp allow-martian-nexthop
+        	no bgp ebgp-requires-policy
+        	bgp router-id 0.0.0.1
+        	neighbor ::1 remote-as ${toString cfg.selfASN}
+        	neighbor ::1 route-map set-nexthop in
+        	neighbor ::1 route-map set-nexthop-v4 in
+        	neighbor ::1 soft-reconfiguration inbound
         !
       '';
       services.frr.bgpd.enable = true;

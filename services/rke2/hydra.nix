@@ -84,7 +84,7 @@ in {
             #!/usr/bin/env sh
             if [ "$3" == "MASTER" ]; then
             	systemctl start az-hydra-active.service
-		systemctl start --all hydra-\*
+            	systemctl start --all hydra-\*
             else
             	systemctl stop hydra-\* # shouldn't be necessary, but just in case
             	systemctl stop az-hydra-active.service
