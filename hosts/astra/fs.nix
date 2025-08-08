@@ -49,7 +49,7 @@ with lib; {
     fsType = "tmpfs";
     options = [
       "defaults"
-      "size=8G"
+      "size=24G"
       "mode=755"
     ];
   };

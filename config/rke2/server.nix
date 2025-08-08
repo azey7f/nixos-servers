@@ -45,6 +45,10 @@ in {
           "--tls-san=api.${config.networking.domain}"
           "--tls-san=${config.networking.fqdn}"
           "--disable=rke2-ingress-nginx" # replaced w/ cilium's gateway API
+          "--disable=rke2-metrics-server"
+          "--disable=rke2-snapshot-controller"
+          "--disable=rke2-snapshot-controller-crd"
+          "--disable=rke2-snapshot-validation-webhook"
         ];
         #cni = "none";
         cni = "cilium";
