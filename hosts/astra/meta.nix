@@ -39,7 +39,7 @@ in {
     # source control, ci/cd
     forgejo.enable = true;
     woodpecker.enable = true;
-    #hydra.enable = true;
+    hydra.enable = true;
   };
 
   az.server = rec {

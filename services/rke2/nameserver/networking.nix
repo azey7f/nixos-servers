@@ -71,7 +71,7 @@ in {
         name = "knot-doq";
         protocol = "UDP";
         port = 853;
-        allowedRoutes.namespaces.from = "All";
+        allowedRoutes.namespaces.from = "All"; # TODO: Selector
       }
     ];
   };
