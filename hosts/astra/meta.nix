@@ -6,31 +6,48 @@
 }:
 with lib; let
   cluster = outputs.infra.clusters.${config.networking.domain};
+  domain = config.az.server.rke2.baseDomain;
 in {
   networking.hostId = "a6b703c2";
   system.stateVersion = config.system.nixos.release; # root is on tmpfs, this should be fine
+
+  # FIXME: UDPRoute doesn't work for some reason, so blocky can't be used directly
+  services.dnsproxy = {
+    enable = true;
+    settings.upstream = ["tcp://${cluster.publicSubnet}:fc6a::2"];
+    settings.listen-ports = [53];
+    settings.listen-addrs = ["192.168.0.254" "::1"];
+  };
+  az.core.net.dns.nameservers = ["::1"];
 
   az.svc.rke2 = {
     # cluster core
     envoyGateway = {
       enable = true;
-      addresses = {
+      gateways.external.addresses = {
         ipv4 = "10.33.1.1";
         ipv6 = "${cluster.publicSubnet}:fc6a::1";
       };
+      gateways.internal.addresses = {
+        ipv4 = "10.33.1.2";
+        ipv6 = "${cluster.publicSubnet}:fc6a::2";
+      };
     };
     certManager.enable = true;
+
     frp = {
       enable = true;
       remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my current connection for living in the middle of nowhere reasons
     };
 
+    nameserver.enable = true;
+    resolver.enable = true;
+
     # auth
     lldap.enable = true;
     authelia.enable = true;
 
-    # web/domain core stuff
-    nameserver.enable = true;
+    # web core
     nginx.enable = true;
     searxng.enable = true;
     # media

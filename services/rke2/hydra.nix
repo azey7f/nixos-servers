@@ -53,7 +53,7 @@ in {
       minimumDiskFree = 50;
       minimumDiskFreeEvaluator = 50;
 
-      dbi = "dbi:Pg:dbname=hydra;host=${config.az.svc.rke2.envoyGateway.addresses.ipv6};user=hydra;";
+      dbi = "dbi:Pg:dbname=hydra;host=${config.az.svc.rke2.envoyGateway.gateways.internal.addresses.ipv6};user=hydra;";
       extraEnv = {
         # undocumented, https://github.com/NixOS/hydra/blob/79ba8fdd04ba53826aa9aaba6e25fd0d6952b3b3/nixos-modules/hydra.nix#L21
         PGPASSFILE = "/run/secrets/rendered/rke2/hydra/pgpass";
@@ -221,8 +221,9 @@ in {
         spec = {
           parentRefs = [
             {
-              name = "envoy-gateway";
+              name = "envoy-gateway-internal";
               namespace = "envoy-gateway";
+              sectionName = "hydra-cnpg";
             }
           ];
           rules = [
@@ -257,7 +258,7 @@ in {
       }
     ];
 
-    az.svc.rke2.envoyGateway.listeners = [
+    az.svc.rke2.envoyGateway.gateways.internal.listeners = [
       {
         name = "hydra-cnpg";
         protocol = "TCP";

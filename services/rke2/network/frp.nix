@@ -8,6 +8,7 @@
 }:
 with lib; let
   cfg = config.az.svc.rke2.frp;
+  domain = config.az.server.rke2.baseDomain;
 in {
   options.az.svc.rke2.frp = with azLib.opt; {
     enable = optBool false;
@@ -25,7 +26,7 @@ in {
         outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps;
     };
 
-    localIP = optStr config.az.svc.rke2.envoyGateway.addresses.ipv6;
+    localIP = optStr config.az.svc.rke2.envoyGateway.gateways.external.addresses.ipv6;
   };
 
   config = mkIf cfg.enable {
@@ -62,7 +63,7 @@ in {
                 {
                   name = "doq";
                   type = "udp";
-                  localIP = "knot.app-nameserver.svc";
+                  localIP = "knot-public.app-nameserver.svc";
                   localPort = 853;
                   remotePort = 8853;
                 }
@@ -70,7 +71,7 @@ in {
                   name = "http";
                   type = "tcp";
                   localIP = cfg.localIP;
-                  localPort = 8080;
+                  localPort = 80;
                   remotePort = 80;
                 }
                 {

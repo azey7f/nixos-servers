@@ -1,18 +1,33 @@
 # knot uses a special yaml-like format, so (pkgs.formats.yaml {}).generate doesn't work
 {
+  id,
+  domain,
+  zonefile,
+  secondaryServers,
+  acmeTsig,
+  ...
+}: {
   config,
   lib,
   azLib,
   ...
 }: let
   cfg = config.az.svc.rke2.nameserver;
-  domain = config.az.server.rke2.baseDomain;
   identity = "master-ns.${domain}";
+
+  optionalStr = pred: str:
+    if pred
+    then str
+    else "";
+
+  hasSecondaries = (builtins.length secondaryServers) != 0;
 in ''
-  key:
-    - id: acme
-      algorithm: hmac-sha256
-      secret: ${config.sops.placeholder."rke2/nameserver/tsig-secret"}
+  ${optionalStr acmeTsig ''
+    key:
+      - id: acme
+        algorithm: hmac-sha256
+        secret: ${config.sops.placeholder."rke2/nameserver/${id}/tsig-secret"}
+  ''}
 
   server:
     identity: "${identity}"
@@ -37,12 +52,16 @@ in ''
           quic: "on"
       # <- indent here, nix
     '')
-    cfg.secondaryServers}
+    secondaryServers}
 
   acl:
-    - id: "allow-secondary"
-      cert-key: [ ${lib.strings.concatMapStringsSep ", " (remote: ''"${remote.knotPubkey}"'') cfg.secondaryServers} ]
-      action: [ "transfer", "notify" ]
+  ${optionalStr hasSecondaries ''
+      - id: "allow-secondary"
+        cert-key: [ ${lib.strings.concatMapStringsSep ", " (remote: ''"${remote.knotPubkey}"'') secondaryServers} ]
+        action: [ "transfer", "notify" ]
+    # <- indent here, nix
+  ''}
+  ${optionalStr acmeTsig ''
     - id: "acme"
       key: "acme"
       action: "update"
@@ -50,6 +69,8 @@ in ''
       update-owner: "name"
       update-owner-match: "equal"
       update-owner-name: "_acme-challenge"
+    # <- indent here, nix
+  ''}
 
   policy:
     - id: "ecc"
@@ -75,7 +96,23 @@ in ''
 
   zone:
     - domain: "${domain}"
-      file: "/config/${azLib.reverseFQDN domain}.zone"
-      notify: [ ${lib.strings.concatImapStringsSep ", " (i: _: ''"ns${toString i}"'') cfg.secondaryServers} ]
-      acl: [ "allow-secondary", "acme" ]
+      file: "/config/${zonefile}.zone"${{
+      # TODO: jesus this is such an ugly solution
+      "00" = "";
+      "10" = "\n    acl: [ \"allow-secondary\" ]";
+      "01" = "\n    acl: [ \"acme\" ]";
+      "11" = "\n    acl: [ \"allow-secondary\", \"acme\" ]";
+    }."${
+      if hasSecondaries
+      then "1"
+      else "0"
+    }${
+      if acmeTsig
+      then "1"
+      else "0"
+    }"}
+  ${optionalStr hasSecondaries ''
+        notify: [ ${lib.strings.concatImapStringsSep ", " (i: _: ''"ns${toString i}"'') secondaryServers} ]
+    # <- indent here, nix
+  ''}
 ''

@@ -11,16 +11,26 @@ with lib; let
 in {
   options.az.svc.rke2.envoyGateway = with azLib.opt; {
     enable = optBool false;
-    addresses = {
-      ipv4 = mkOption {
-        type = with types; nullOr str;
-        default = null;
+    gateways = let
+      gwOptions = {
+        addresses = {
+          ipv4 = mkOption {
+            type = with types; nullOr str;
+            default = null;
+          };
+          ipv6 = mkOption {type = types.str;};
+        };
+
+        listeners = mkOption {
+          type = with types; listOf attrs;
+          default = [];
+        };
       };
-      ipv6 = mkOption {type = types.str;};
-    };
-    listeners = mkOption {
-      type = with types; listOf attrs;
-      default = [];
+    in {
+      # external = accessible from the internet, routed, frp reverse-proxied, etc
+      # internal = only accessible from LAN/via VPN
+      external = gwOptions;
+      internal = gwOptions;
     };
 
     httpRoutes = mkOption {
@@ -32,10 +42,14 @@ in {
 
             rules = mkOption {type = listOf attrs;};
             hostnames = mkOption {
-              type = listOf str;
+              type = with types; listOf str;
               default = [];
             };
             gatewaySection = optStr "https";
+            gateways = mkOption {
+              type = with types; listOf str;
+              default = ["external" "internal"];
+            };
 
             csp = optStr "lax";
             customCSP = mkOption {
@@ -64,227 +78,236 @@ in {
     };
     */
 
-    az.server.rke2.manifests."envoy-gateway" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "envoy-gateway";
-          namespace = "kube-system";
-        };
-        spec = {
-          chart = "oci://docker.io/envoyproxy/gateway-helm";
-          targetNamespace = "envoy-gateway";
-          createNamespace = true;
-        };
-      }
+    az.server.rke2.manifests."envoy-gateway" =
+      [
+        {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChart";
+          metadata = {
+            name = "envoy-gateway";
+            namespace = "kube-system";
+          };
+          spec = {
+            chart = "oci://docker.io/envoyproxy/gateway-helm";
+            targetNamespace = "envoy-gateway";
+            createNamespace = true;
+          };
+        }
 
-      # gateway API resources
-      {
-        apiVersion = "gateway.networking.k8s.io/v1";
-        kind = "GatewayClass";
-        metadata = {
-          name = "envoy-gateway";
-          namespace = "envoy-gateway";
-        };
-        spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
-      }
-      {
-        apiVersion = "gateway.networking.k8s.io/v1";
-        kind = "Gateway";
-        metadata = {
-          name = "envoy-gateway";
-          namespace = "envoy-gateway";
-          #annotations."cert-manager.io/cluster-issuer" = "letsencrypt-issuer";
-        };
-        spec = {
-          gatewayClassName = "envoy-gateway";
-          listeners = cfg.listeners;
-          infrastructure.parametersRef = {
-            group = "gateway.envoyproxy.io";
-            kind = "EnvoyProxy";
+        {
+          apiVersion = "gateway.networking.k8s.io/v1";
+          kind = "GatewayClass";
+          metadata = {
+            name = "envoy-gateway";
+            namespace = "envoy-gateway";
+          };
+          spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+        }
+
+        # dual stack
+        {
+          apiVersion = "gateway.envoyproxy.io/v1alpha1";
+          kind = "EnvoyProxy";
+          metadata = {
             name = "envoy-proxy-config";
+            namespace = "envoy-gateway";
           };
-          addresses =
-            [
-              {
-                type = "IPAddress";
-                value = cfg.addresses.ipv6;
-              }
-            ]
-            ++ lib.lists.optional (cfg.addresses.ipv4 != null) {
-              type = "IPAddress";
-              value = cfg.addresses.ipv4;
+          spec.ipFamily = "DualStack";
+        }
+
+        # TLS config & conn limit
+        {
+          apiVersion = "gateway.envoyproxy.io/v1alpha1";
+          kind = "ClientTrafficPolicy";
+          metadata = {
+            name = "envoy-gateway-traffic-policy";
+            namespace = "envoy-gateway";
+          };
+          spec = {
+            targetRefs =
+              lib.attrsets.mapAttrsToList (name: _: {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "envoy-gateway-${name}";
+              })
+              cfg.gateways;
+
+            # TODO: http3 doesn't seem to work for some reason
+            # [source/common/quic/envoy_quic_proof_source.cc:81] No certificate is configured in transport socket config.
+            #http3 = {};
+
+            tls = {
+              minVersion = "1.3";
+              ecdhCurves = ["X25519"];
+              session.resumption.stateless = {};
             };
-        };
-      }
 
-      # dual stack
-      {
-        apiVersion = "gateway.envoyproxy.io/v1alpha1";
-        kind = "EnvoyProxy";
-        metadata = {
-          name = "envoy-proxy-config";
-          namespace = "envoy-gateway";
-        };
-        spec.ipFamily = "DualStack";
-      }
-
-      # wildcard cert
-      {
-        apiVersion = "cert-manager.io/v1";
-        kind = "Certificate";
-        metadata = {
-          name = "wildcard";
-          namespace = "envoy-gateway";
-        };
-        spec = {
-          secretName = "wildcard-tlscert";
-
-          privateKey = {
-            algorithm = "ECDSA";
-            size = 384;
+            connection.connectionLimit.value = 33000;
           };
-          signatureAlgorithm = "ECDSAWithSHA384";
-          usages = ["server auth"];
+        }
 
-          dnsNames = [
-            "${config.az.server.rke2.baseDomain}"
-            "*.${config.az.server.rke2.baseDomain}"
-          ];
-
-          issuerRef = {
-            kind = "ClusterIssuer";
-            name = "letsencrypt-issuer";
+        # wildcard cert
+        {
+          apiVersion = "cert-manager.io/v1";
+          kind = "Certificate";
+          metadata = {
+            name = "wildcard";
+            namespace = "envoy-gateway";
           };
-        };
-      }
+          spec = {
+            secretName = "wildcard-tlscert";
 
-      # TLS config & conn limit
-      {
-        apiVersion = "gateway.envoyproxy.io/v1alpha1";
-        kind = "ClientTrafficPolicy";
-        metadata = {
-          name = "envoy-gateway-traffic-policy";
-          namespace = "envoy-gateway";
-        };
-        spec = {
-          targetRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "envoy-gateway";
-            }
-          ];
+            privateKey = {
+              algorithm = "ECDSA";
+              size = 384;
+            };
+            signatureAlgorithm = "ECDSAWithSHA384";
+            usages = ["server auth"];
 
-          # TODO: http3 doesn't seem to work for some reason
-          # [source/common/quic/envoy_quic_proof_source.cc:81] No certificate is configured in transport socket config.
-          #http3 = {};
+            dnsNames = [
+              "${domain}"
+              "*.${domain}"
+            ];
 
-          tls = {
-            minVersion = "1.3";
-            ecdhCurves = ["X25519"];
-            session.resumption.stateless = {};
+            issuerRef = {
+              kind = "ClusterIssuer";
+              name = "letsencrypt-issuer";
+            };
           };
+        }
 
-          connection.connectionLimit.value = 33000;
-        };
-      }
-
-      # HTTP -> HTTPS redirect
-      {
-        apiVersion = "gateway.networking.k8s.io/v1";
-        kind = "HTTPRoute";
-        metadata = {
-          name = "http-redirect";
-          namespace = "envoy-gateway";
-        };
-        spec = {
-          parentRefs = [
-            {
-              name = "envoy-gateway";
-              namespace = "envoy-gateway";
-              sectionName = "http";
-            }
-          ];
-          rules = [
-            {
-              filters = [
-                {
-                  type = "RequestRedirect";
-                  requestRedirect = {
-                    scheme = "https";
-                    statusCode = 301;
-                  };
-                }
-              ];
-            }
-          ];
-        };
-      }
-
-      # 404 redirect to root
-      {
-        apiVersion = "gateway.networking.k8s.io/v1";
-        kind = "HTTPRoute";
-        metadata = {
-          name = "https-default-redirect";
-          namespace = "envoy-gateway";
-        };
-        spec = {
-          parentRefs = [
-            {
-              name = "envoy-gateway";
-              namespace = "envoy-gateway";
-              sectionName = "https";
-            }
-          ];
-          hostnames = ["*.${domain}"];
-          rules = [
-            {
-              filters = [
-                {
-                  type = "RequestRedirect";
-                  requestRedirect = {
-                    hostname = domain;
-                    path = {
-                      type = "ReplaceFullPath";
-                      replaceFullPath = "/";
+        # HTTP -> HTTPS redirect
+        {
+          apiVersion = "gateway.networking.k8s.io/v1";
+          kind = "HTTPRoute";
+          metadata = {
+            name = "http-redirect";
+            namespace = "envoy-gateway";
+          };
+          spec = {
+            parentRefs =
+              lib.attrsets.mapAttrsToList (name: _: {
+                name = "envoy-gateway-${name}";
+                namespace = "envoy-gateway";
+                sectionName = "http";
+              })
+              cfg.gateways;
+            rules = [
+              {
+                filters = [
+                  {
+                    type = "RequestRedirect";
+                    requestRedirect = {
+                      scheme = "https";
+                      statusCode = 301;
                     };
-                    statusCode = 302;
-                  };
-                }
-              ];
-            }
-          ];
-        };
-      }
-    ];
+                  }
+                ];
+              }
+            ];
+          };
+        }
 
-    # default value of cfg.listeners
-    az.svc.rke2.envoyGateway.listeners = [
-      {
-        name = "http";
-        protocol = "HTTP";
-        port = 80;
-        allowedRoutes.namespaces.from = "Same";
-      }
-      {
-        name = "https";
-        protocol = "HTTPS";
-        port = 443;
-        allowedRoutes.namespaces.from = "All";
-        tls = {
-          mode = "Terminate";
-          certificateRefs = [
-            {
-              kind = "Secret";
-              name = "wildcard-tlscert";
-            }
-          ];
-        };
-      }
-    ];
+        # 404 redirect to root
+        {
+          apiVersion = "gateway.networking.k8s.io/v1";
+          kind = "HTTPRoute";
+          metadata = {
+            name = "https-default-redirect";
+            namespace = "envoy-gateway";
+          };
+          spec = {
+            parentRefs =
+              lib.attrsets.mapAttrsToList (name: _: {
+                name = "envoy-gateway-${name}";
+                namespace = "envoy-gateway";
+                sectionName = "https";
+              })
+              cfg.gateways;
+            hostnames = ["*.${domain}"];
+            rules = [
+              {
+                filters = [
+                  {
+                    type = "RequestRedirect";
+                    requestRedirect = {
+                      hostname = domain;
+                      path = {
+                        type = "ReplaceFullPath";
+                        replaceFullPath = "/";
+                      };
+                      statusCode = 302;
+                    };
+                  }
+                ];
+              }
+            ];
+          };
+        }
+      ]
+      ++ lib.lists.flatten (lib.attrsets.mapAttrsToList (name: gw: [
+          # Gateway objects
+          {
+            apiVersion = "gateway.networking.k8s.io/v1";
+            kind = "Gateway";
+            metadata = {
+              name = "envoy-gateway-${name}";
+              namespace = "envoy-gateway";
+              #annotations."cert-manager.io/cluster-issuer" = "letsencrypt-issuer";
+            };
+            spec = {
+              gatewayClassName = "envoy-gateway";
+              listeners = gw.listeners;
+              infrastructure.parametersRef = {
+                group = "gateway.envoyproxy.io";
+                kind = "EnvoyProxy";
+                name = "envoy-proxy-config";
+              };
+              addresses =
+                [
+                  {
+                    type = "IPAddress";
+                    value = gw.addresses.ipv6;
+                  }
+                ]
+                ++ lib.lists.optional (gw.addresses.ipv4 != null) {
+                  type = "IPAddress";
+                  value = gw.addresses.ipv4;
+                };
+            };
+          }
+        ])
+        cfg.gateways);
+
+    # default value of gateways.*.listeners
+    az.svc.rke2.envoyGateway.gateways = let
+      listeners = [
+        {
+          name = "http";
+          protocol = "HTTP";
+          port = 80;
+          allowedRoutes.namespaces.from = "Same";
+        }
+        {
+          name = "https";
+          protocol = "HTTPS";
+          port = 443;
+          allowedRoutes.namespaces.from = "All";
+          tls = {
+            mode = "Terminate";
+            certificateRefs = [
+              {
+                kind = "Secret";
+                name = "wildcard-tlscert";
+              }
+            ];
+          };
+        }
+      ];
+    in {
+      external = {inherit listeners;};
+      internal = {inherit listeners;};
+    };
 
     # cfg.httpRoutes impl
     az.server.rke2.manifests."envoy-gateway-routes" =
@@ -296,13 +319,13 @@ in {
           namespace = route.namespace;
         };
         spec = {
-          parentRefs = [
-            {
-              name = "envoy-gateway";
+          parentRefs =
+            lib.lists.map (name: {
+              name = "envoy-gateway-${name}";
               namespace = "envoy-gateway";
               sectionName = route.gatewaySection;
-            }
-          ];
+            })
+            route.gateways;
           hostnames = route.hostnames;
           rules =
             map (
@@ -319,9 +342,9 @@ in {
                           (
                             {
                               cat = "~(=^.^=)"; # essential for (emotional) security
-                              contact = "me@${config.az.server.rke2.baseDomain}";
+                              contact = "me@${domain}";
                               x-powered-by = "NixOS; RKE2; hopes and dreams (and estrogen)";
-                              source-code = "https://git.${config.az.server.rke2.baseDomain}/infra";
+                              source-code = "https://git.${domain}/infra";
 
                               # security
                               strict-transport-security = "max-age=63072000; includeSubdomains; preload";

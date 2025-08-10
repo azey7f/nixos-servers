@@ -92,7 +92,7 @@ in {
         metadata.name = "default";
         spec = {
           #interfaces = ["^lo$"]; #top.loadBalancing.interfaces;
-          loadBalancerIPs = true;
+          loadBalancerIPs = false;
           externalIPs = true;
         };
       }

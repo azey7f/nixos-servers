@@ -8,6 +8,7 @@
 }:
 with lib; let
   cfg = config.az.svc.rke2.certManager;
+  domain = config.az.server.rke2.baseDomain;
 in {
   options.az.svc.rke2.certManager = with azLib.opt; {
     enable = optBool false;
@@ -33,7 +34,7 @@ in {
             extraArgs = [
               # use local NS directly
               "--dns01-recursive-nameservers-only"
-              "--dns01-recursive-nameservers=knot.app-nameserver.svc:53"
+              "--dns01-recursive-nameservers=knot-public.app-nameserver.svc:53"
             ];
           };
         };
@@ -55,7 +56,7 @@ in {
             {
               selector = {};
               dns01.rfc2136 = {
-                nameserver = "knot.app-nameserver.svc";
+                nameserver = "knot-public.app-nameserver.svc";
                 tsigKeyName = "acme";
                 tsigAlgorithm = "HMACSHA256";
                 tsigSecretSecretRef = {

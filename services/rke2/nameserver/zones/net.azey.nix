@@ -1,9 +1,9 @@
-{
+{domain, ...}@domainConf: {
+  config,
   lib,
   outputs,
   ...
-}: let
-  domain = "azey.net";
+}@args: let
   optionalStr = pred: str:
     if pred
     then str
@@ -54,7 +54,7 @@ in ''
   me                                                                     IN   CERT         PGP 0 0 ${pgpPubkey}
   2744ccd10c7533bd736ad890f9dd5cab2adb27b07d500b9493f29cdc._openpgpkey   IN   OPENPGPKEY   ${pgpPubkey}
 
-  ; TLSA
+  ; TLSA - # TODO
   ;_443._tcp             IN  TLSA          3 1 1 ''${TLSA}
   ;_25._tcp.mail         IN  TLSA          3 1 1 ''${TLSA}
   ;_465._tcp.mail        IN  TLSA          3 1 1 ''${TLSA}
