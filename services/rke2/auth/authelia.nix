@@ -226,16 +226,16 @@ in {
                 filename = "/tmp/notifier"; # TODO mail
               };
               /*
-                      # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
-                          notifier.smtp = {
-                            enabled = true;
-                            address = "submission://mail.kube-system.svc";
-                            sender = "authelia <noreply@${domain}>";
-                            identifier = "app-authelia";
-              tls.skip_verify = true;
-              username = null;
-              password.enabled = false;
-                          };
+              # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
+              notifier.smtp = {
+                enabled = true;
+                address = "submission://mail.kube-system.svc";
+                sender = "authelia <noreply@${domain}>";
+                identifier = "app-authelia";
+                tls.skip_verify = true;
+                username = null;
+                password.enabled = false;
+              };
               */
 
               access_control = {
