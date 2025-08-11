@@ -1,9 +1,9 @@
-{domain, ...}@domainConf: {
+{domain, ...} @ domainConf: {
   config,
   lib,
   outputs,
   ...
-}@args: let
+} @ args: let
   optionalStr = pred: str:
     if pred
     then str

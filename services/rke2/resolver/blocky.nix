@@ -43,12 +43,12 @@ in {
           };
           ede.enable = true;
 
-	  conditional = {
-	    # try to fetch record from internal NS, if not found use public via unbound
-	    fallbackUpstream = true;
-	    rewrite.${domain} = domain; # somewhat redundant, but necessary for fallbackUpstream
-	    mapping.${domain} = "knot-internal.app-nameserver.svc";
-	  };
+          conditional = {
+            # try to fetch record from internal NS, if not found use public via unbound
+            fallbackUpstream = true;
+            rewrite.${domain} = domain; # somewhat redundant, but necessary for fallbackUpstream
+            mapping.${domain} = "knot-internal.app-nameserver.svc";
+          };
 
           # https://v.firebog.net/hosts/lists.php?type=tick
           blocking.clientGroupsBlock.default = ["firebog"];
@@ -107,7 +107,7 @@ in {
           template.spec.containers = [
             {
               name = "blocky";
-              image = "spx01/blocky";
+              image = "spx01/blocky:v0.26.2";
               volumeMounts = [
                 {
                   name = "blocky-cm";

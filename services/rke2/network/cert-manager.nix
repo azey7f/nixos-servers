@@ -24,10 +24,13 @@ in {
           namespace = "kube-system";
         };
         spec = {
-          chart = "cert-manager";
-          repo = "https://charts.jetstack.io";
           targetNamespace = "cert-manager";
           createNamespace = true;
+
+          chart = "cert-manager";
+          repo = "https://charts.jetstack.io";
+          version = "1.18.2";
+
           valuesContent = builtins.toJSON {
             crds.enabled = true;
             config.enableGatewayAPI = true;

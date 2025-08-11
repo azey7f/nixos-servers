@@ -28,6 +28,7 @@ in {
 
           chart = "cloudnative-pg";
           repo = "https://cloudnative-pg.github.io/charts";
+          version = "0.25.0";
         };
       }
     ];

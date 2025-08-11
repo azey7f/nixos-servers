@@ -81,7 +81,7 @@ in {
           template.spec.containers = let
             syncContainer = dir: repo: {
               name = "git-sync-${dir}";
-              image = "registry.k8s.io/git-sync/git-sync:v4.4.2"; # TODO: is there any way to use latest?
+              image = "registry.k8s.io/git-sync/git-sync:v4.4.2";
               args = [
                 "--repo=${repo}"
                 "--depth=1"
@@ -105,7 +105,7 @@ in {
             (syncContainer "miku" cfg.repos.miku)
             {
               name = "nginx";
-              image = "nginxinc/nginx-unprivileged";
+              image = "nginxinc/nginx-unprivileged:1.29";
               volumeMounts = [
                 {
                   name = "nginx-srv";

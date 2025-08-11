@@ -95,7 +95,7 @@ in {
           template.spec.containers = [
             {
               name = "searxng";
-              image = "docker.io/searxng/searxng";
+              image = "docker.io/searxng/searxng:2025.8.10-6cccb46";
               volumeMounts = [
                 {
                   name = "searxng-config";

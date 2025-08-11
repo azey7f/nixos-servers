@@ -110,7 +110,7 @@ in {
           template.spec.containers = [
             {
               name = "unbound";
-              image = "klutchell/unbound";
+              image = "klutchell/unbound:1.23.1";
               volumeMounts = [
                 {
                   name = "unbound-cm";

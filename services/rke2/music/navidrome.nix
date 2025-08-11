@@ -15,7 +15,7 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.music.enable = true;
-    az.server.rke2.manifests."app-navidrome" = [
+    az.server.rke2.manifests."app-music" = [
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
@@ -26,7 +26,8 @@ in {
         spec = {
           targetNamespace = "app-music";
 
-          chart = "oci://tccr.io/truecharts/navidrome";
+          chart = "oci://tccr.io/truecharts/navidrome"; # TODO: move to raw deployment
+          version = "22.3.0";
 
           valuesContent = builtins.toJSON {
             global.namespace = "app-music";

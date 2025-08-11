@@ -88,9 +88,11 @@ in {
             namespace = "kube-system";
           };
           spec = {
-            chart = "oci://docker.io/envoyproxy/gateway-helm";
             targetNamespace = "envoy-gateway";
             createNamespace = true;
+
+            chart = "oci://docker.io/envoyproxy/gateway-helm";
+            version = "1.5.0";
           };
         }
 

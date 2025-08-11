@@ -32,7 +32,7 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.clusterWideSecrets."${cfg.sopsPath}/token" = {};
 
-    az.server.rke2.manifests."frp" = [
+    az.server.rke2.manifests."app-frp" = [
       {
         apiVersion = "v1";
         kind = "Namespace";
@@ -116,7 +116,7 @@ in {
           template.spec.containers = [
             {
               name = "frp";
-              image = "snowdreamtech/frpc";
+              image = "snowdreamtech/frpc:0.63";
               env = [
                 {
                   name = "POD_INDEX";

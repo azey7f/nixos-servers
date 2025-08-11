@@ -107,6 +107,7 @@ in {
 
           chart = "authelia";
           repo = "https://charts.authelia.com";
+          version = "0.10.42";
 
           valuesContent = builtins.toJSON {
             pod.securityContext = {

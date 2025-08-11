@@ -15,7 +15,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    az.server.rke2.manifests."app-feishin" = [
+    az.server.rke2.manifests."app-music" = [
       {
         apiVersion = "apps/v1";
         kind = "Deployment";
@@ -38,7 +38,7 @@ in {
           template.spec.containers = [
             {
               name = "feishin";
-              image = "ghcr.io/jeffvli/feishin";
+              image = "ghcr.io/jeffvli/feishin:0.19.0";
               env = lib.attrsets.mapAttrsToList (name: value: {inherit name value;}) {
                 SERVER_LOCK = "true";
                 SERVER_NAME = "navidrome";

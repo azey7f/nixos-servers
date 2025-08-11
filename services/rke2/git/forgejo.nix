@@ -28,6 +28,7 @@ in {
           createNamespace = true;
 
           chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
+          version = "13.0.1";
 
           valuesContent = builtins.toJSON {
             podSecurityContext.fsGroup = 1000; # can't push to mirrors w/ 65532

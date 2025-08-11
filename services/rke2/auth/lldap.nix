@@ -27,7 +27,8 @@ in {
           targetNamespace = "app-lldap";
           createNamespace = true;
 
-          chart = "oci://tccr.io/truecharts/lldap";
+          chart = "oci://tccr.io/truecharts/lldap"; # TODO?: move to raw deployment
+          version = "8.2.1";
 
           valuesContent = builtins.toJSON {
             service.main = {
