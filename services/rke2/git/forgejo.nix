@@ -15,6 +15,7 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.svc.rke2.mail.namespaces = ["app-forgejo"];
     az.server.rke2.manifests."app-forgejo" = [
       {
         apiVersion = "helm.cattle.io/v1";
@@ -87,14 +88,13 @@ in {
                 ENABLE_PUSH_CREATE_ORG = true;
               };
 
-              /*
-              mailer = { # TODO
+              mailer = {
                 ENABLED = true;
-                SMTP_ADDR = "mail.${domain}";
+                SMTP_ADDR = "mail.kube-system.svc";
+                SMTP_PORT = 587;
+                FORCE_TRUST_SERVER_CERT = true;
                 FROM = "git@${domain}";
-                USER = "git@${domain}";
               };
-              */
             };
 
             extraVolumes = [

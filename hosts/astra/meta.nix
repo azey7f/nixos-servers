@@ -34,6 +34,8 @@ in {
       };
     };
     certManager.enable = true;
+    mail.enable = true;
+    metrics.enable = true;
 
     frp = {
       enable = true;

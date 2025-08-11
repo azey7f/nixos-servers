@@ -63,7 +63,7 @@ in {
                 tsigKeyName = "acme";
                 tsigAlgorithm = "HMACSHA256";
                 tsigSecretSecretRef = {
-                  name = "rfc2136-tsig";
+                  name = "${config.az.svc.rke2.nameserver.domains.${config.az.server.rke2.baseDomain}.id}-rfc2136-tsig";
                   key = "secret";
                 };
               };

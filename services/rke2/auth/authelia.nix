@@ -39,6 +39,8 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.cnpg.enable = true;
+    az.svc.rke2.mail.namespaces = ["app-authelia"];
+
     az.server.rke2.manifests."app-authelia" = [
       {
         apiVersion = "v1";
@@ -223,6 +225,18 @@ in {
                 enabled = true;
                 filename = "/tmp/notifier"; # TODO mail
               };
+              /*
+                      # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
+                          notifier.smtp = {
+                            enabled = true;
+                            address = "submission://mail.kube-system.svc";
+                            sender = "authelia <noreply@${domain}>";
+                            identifier = "app-authelia";
+              tls.skip_verify = true;
+              username = null;
+              password.enabled = false;
+                          };
+              */
 
               access_control = {
                 default_policy = "deny";

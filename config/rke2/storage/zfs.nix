@@ -100,10 +100,11 @@ in {
         };
         spec = {
           targetNamespace = "kube-system";
-          #targetNamespace = "openebs";
-          #createNamespace = true;
+
           chart = "openebs";
           repo = "https://openebs.github.io/openebs";
+          version = "4.3.2";
+
           valuesContent = builtins.toJSON {
             engines = {
               local = {
@@ -111,9 +112,13 @@ in {
                 zfs.enabled = true;
               };
               replicated.mayastor.enabled = false;
-              loki.singleBinary.replicas = 1;
-              openebs-crds.csi.volumeSnapshots.enabled = false;
             };
+
+            openebs-crds.csi.volumeSnapshots.enabled = false;
+
+            loki.singleBinary.replicas = 1;
+            loke.loki.commonConfig.replication_factor = 1;
+            minio.replicas = 1;
           };
         };
       }

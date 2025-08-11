@@ -37,20 +37,25 @@ in {
       (lib.attrsets.optionalAttrs cfg.clusterInit {serverAddr = mkForce "";})
       // {
         role = "server";
-        extraFlags = [
-          "--cluster-domain=${config.networking.domain}"
-          "--cluster-cidr=${top.clusterCidr}"
-          "--service-cidr=${top.serviceCidr}"
-          "--tls-san-security"
-          "--tls-san=api.${config.networking.domain}"
-          "--tls-san=${config.networking.fqdn}"
-          "--disable=rke2-ingress-nginx" # replaced w/ cilium's gateway API
-          "--disable=rke2-metrics-server"
-          "--disable=rke2-snapshot-controller"
-          "--disable=rke2-snapshot-controller-crd"
-          "--disable=rke2-snapshot-validation-webhook"
-        ];
-        #cni = "none";
+        extraFlags =
+          [
+            "--cluster-domain=${config.networking.domain}"
+            "--cluster-cidr=${top.clusterCidr}"
+            "--service-cidr=${top.serviceCidr}"
+            "--tls-san-security"
+            "--tls-san=api.${config.networking.domain}"
+            "--tls-san=${config.networking.fqdn}"
+            "--disable=rke2-ingress-nginx" # replaced w/ cilium's gateway API
+            "--disable=rke2-metrics-server"
+            "--disable=rke2-snapshot-controller"
+            "--disable=rke2-snapshot-controller-crd"
+            "--disable=rke2-snapshot-validation-webhook"
+          ]
+          ++ lib.optionals config.az.svc.rke2.metrics.enable [
+            "--etcd-expose-metrics"
+            "--kube-scheduler-arg=bind-address=::"
+            "--kube-controller-manager-arg=bind-address=::"
+          ];
         cni = "cilium";
       };
 
