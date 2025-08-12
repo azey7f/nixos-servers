@@ -31,6 +31,7 @@ in {
 
   config = mkIf cfg.enable {
     networking.firewall.allowedTCPPorts = [2379 2380 6443];
+    environment.sessionVariables.KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
 
     systemd.services.rke2-server.preStart = "${pkgs.kmod}/bin/modprobe -a ip6_tables ip6table_mangle ip6table_raw ip6table_filter";
     services.rke2 =
