@@ -18,7 +18,7 @@ in {
     settings.listen-ports = [53];
     settings.listen-addrs = ["192.168.0.254" "::1"];
   };
-  az.core.net.dns.nameservers = ["::1"];
+  #az.core.net.dns.nameservers = ["::1"];
 
   az.svc.rke2 = {
     # cluster core
@@ -37,11 +37,7 @@ in {
     mail.enable = true;
     metrics.enable = true;
 
-    frp = {
-      enable = true;
-      remotes = builtins.map (v: v.ipv4) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps; # TODO: .ipv4, because ipv6 would have to go through mullvad and that's insanely slow on my current connection for living in the middle of nowhere reasons
-    };
-
+    frp.enable = true;
     nameserver.enable = true;
     resolver.enable = true;
 

@@ -27,18 +27,15 @@ in ''
   @                     IN  NS            ns2
 
   ; vps
-  ${lib.strings.concatImapStrings (i: addr: ''
-      @                   IN  AAAA          ${addr.ipv6}
-      *                   IN  AAAA          ${addr.ipv6}
-      ns${toString i}     IN  AAAA          ${addr.ipv6}
-      ${optionalStr (addr ? ipv4) ''
-        @                   IN  A             ${addr.ipv4}
-        *                   IN  A             ${addr.ipv4}
-        ns${toString i}     IN  A             ${addr.ipv4}
-      ''}
-      _dns.ns${toString i}          IN  SVCB          2 ns${toString i} alpn=dot
-      ;_dns.ns${toString i}          IN  SVCB          1 ns${toString i} alpn=h2,h3 dohpath=/dns-query{?dns}
-    '')
+  ${lib.strings.concatImapStrings (
+      i: vps:
+        lib.strings.concatMapStrings (sub: ''
+          ${sub}              IN  AAAA          ${vps.ipv6}
+          ${optionalStr (vps ? ipv4) ''
+            ${sub}            IN  A             ${vps.ipv4}
+          ''}
+        '') (vps.subdomains ++ lib.lists.optional (vps ? knotPubkey) "ns${toString i}")
+    )
     outputs.infra.domains.${domain}.vps}
 
   ; CAA

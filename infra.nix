@@ -5,11 +5,15 @@ lib: rec {
       vps = [
         # used in k8s nameserver & frp
         {
+          # ns1.azey.net - frp proxy
+          subdomains = ["ns1.vps" "@" "*"];
           ipv4 = "188.245.84.161";
           ipv6 = "2a01:4f8:c013:f05f::53";
           knotPubkey = "Dz14HoMs3cuczSYTUscntbB7ZRb7JAGg98/pP+Rv0tk=";
         }
         {
+          # ns1.azey.net - uptime status page
+          subdomains = ["ns2.vps" "status"];
           ipv4 = "95.217.221.156";
           ipv6 = "2a01:4f9:c012:dc23::53";
           knotPubkey = "jLWkMn4g5XD8oC4HRDzwGY8eWCkExNb/lDUPoiafyis=";

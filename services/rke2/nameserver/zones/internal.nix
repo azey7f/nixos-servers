@@ -4,6 +4,11 @@
   outputs,
   ...
 }: let
+  optionalStr = pred: str:
+    if pred
+    then str
+    else "";
+
   gateways = {
     external = {
       inherit (config.az.svc.rke2.envoyGateway.gateways.external.addresses) ipv4 ipv6;
@@ -34,4 +39,9 @@ in ''
   @            IN  AAAA          ${gateways.internal.ipv6}
   *            IN  A             ${gateways.internal.ipv4}
   *            IN  AAAA          ${gateways.internal.ipv6}
+
+  ${optionalStr config.az.svc.rke2.resolver.enable ''
+    _dns.dns     IN  SVCB          2 dns alpn=dot
+    _dns.dns     IN  SVCB          1 dns alpn=h2,h3 dohpath=/dns-query{?dns}
+  ''}
 ''
