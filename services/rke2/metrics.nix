@@ -16,6 +16,18 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.manifests."metrics" = [
       {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "grafana-env";
+          namespace = "kube-system";
+        };
+        stringData = {
+          GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET = config.sops.placeholder."rke2/metrics/oidc-secret";
+          GF_SECURITY_ADMIN_PASSWORD = config.sops.placeholder."rke2/metrics/admin-passwd"; # unused, user should be deleted after first start
+        };
+      }
+      {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
@@ -31,6 +43,39 @@ in {
 
           valuesContent = builtins.toJSON {
             namespaceOverride = "kube-system";
+
+            grafana.envFromSecret = "grafana-env";
+            grafana."grafana.ini" = {
+              server.root_url = "https://metrics.${domain}";
+
+              #security.disable_initial_admin_creation = true; # FIXME: for some reason, this makes no data sources appear
+              #auth.disable_login_form = true;
+
+              #"auth.basic".enabled = false; # same problem as fixme
+              "auth.generic_oauth" = {
+                enabled = true;
+                auto_login = true;
+                name = "authelia";
+
+                client_id = config.sops.placeholder."rke2/metrics/oidc-id";
+                # client_secret = config.sops.placeholder."rke2/metrics/oidc-secret";
+
+                auth_url = "https://auth.${domain}/api/oidc/authorization";
+                token_url = "https://auth.${domain}/api/oidc/token";
+                api_url = "https://auth.${domain}/api/oidc/userinfo";
+                scopes = "openid profile email groups";
+                use_pkce = true;
+                auth_style = "InHeader";
+
+                login_attribute_path = "preferred_username";
+                name_attribute_path = "name";
+                groups_attribute_path = "groups";
+
+                role_attribute_path = "contains(groups[*], 'admin') && 'GrafanaAdmin' || 'Viewer'";
+                role_attribute_strict = true;
+                allow_assign_grafana_admin = true;
+              };
+            };
 
             # https://github.com/prometheus-community/helm-charts/issues/3800
             grafana.serviceMonitor.labels.release = "metrics";
@@ -136,5 +181,27 @@ in {
         policy = "two_factor";
       }
     ];
+
+    # https://www.authelia.com/integration/openid-connect/clients/grafana/#configuration-escape-hatch
+    az.svc.rke2.authelia.oidcClaims."grafana" = {
+      id_token = ["email" "name" "groups" "preferred_username"];
+    };
+    az.svc.rke2.authelia.oidcClients."grafana" = {
+      client_id = config.sops.placeholder."rke2/metrics/oidc-id";
+      client_secret = config.sops.placeholder."rke2/metrics/oidc-secret-digest";
+
+      require_pkce = true;
+      pkce_challenge_method = "S256";
+      #access_token_signed_response_alg = "RS256"; # msg="Error retrieving access token payload" error="token is not in JWT format: ..."
+
+      redirect_uris = ["https://metrics.${domain}/login/generic_oauth"];
+      scopes = ["openid" "email" "profile" "groups"];
+      claims_policy = "grafana";
+    };
+
+    az.server.rke2.clusterWideSecrets."rke2/metrics/oidc-id" = {};
+    az.server.rke2.clusterWideSecrets."rke2/metrics/oidc-secret" = {};
+    az.server.rke2.clusterWideSecrets."rke2/metrics/oidc-secret-digest" = {};
+    az.server.rke2.clusterWideSecrets."rke2/metrics/admin-passwd" = {};
   };
 }

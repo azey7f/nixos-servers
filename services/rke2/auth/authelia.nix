@@ -35,6 +35,10 @@ in {
         }));
       default = [];
     };
+    oidcClaims = mkOption {
+      type = with types; attrsOf anything;
+      default = {};
+    };
   };
 
   config = mkIf cfg.enable {
@@ -172,6 +176,7 @@ in {
 
                 #TODO?: authorization_policies = {};
                 clients = cfg.oidcClients;
+                claims_policies = cfg.oidcClaims;
               };
 
               server.endpoints.authz.ext-authz.implementation = "ExtAuthz";
