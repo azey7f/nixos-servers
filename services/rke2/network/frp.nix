@@ -110,8 +110,8 @@ in {
           template.spec.securityContext = {
             runAsNonRoot = true;
             seccompProfile.type = "RuntimeDefault";
-            runAsUser = 65532;
-            runAsGroup = 65532;
+            runAsUser = 65534;
+            runAsGroup = 65534;
           };
 
           template.spec.containers = [

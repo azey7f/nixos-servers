@@ -32,7 +32,7 @@ in {
           version = "13.0.1";
 
           valuesContent = builtins.toJSON {
-            podSecurityContext.fsGroup = 1000; # can't push to mirrors w/ 65532
+            podSecurityContext.fsGroup = 1000; # can't push to mirrors w/ 65534
             containerSecurityContext = {
               allowPrivilegeEscalation = false;
               capabilities.drop = ["ALL"];

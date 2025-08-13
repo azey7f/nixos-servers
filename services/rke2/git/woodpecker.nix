@@ -37,15 +37,15 @@ in {
           version = "3.2.1";
 
           valuesContent = let
-            podSecurityContext = {fsGroup = 65532;};
+            podSecurityContext = {fsGroup = 65534;};
             securityContext = {
               privileged = false;
               allowPrivilegeEscalation = false;
               capabilities.drop = ["ALL"];
-              runAsUser = 65532;
-              runAsGroup = 65532;
+              runAsUser = 65534;
+              runAsGroup = 65534;
               runAsNonRoot = true;
-              fsGroup = 65532;
+              fsGroup = 65534;
               seccompProfile.type = "RuntimeDefault";
             };
           in
