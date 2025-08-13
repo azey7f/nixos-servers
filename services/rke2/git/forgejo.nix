@@ -32,6 +32,7 @@ in {
           version = "13.0.1";
 
           valuesContent = builtins.toJSON {
+            strategy.type = "Recreate"; # TODO: remove w RWM storage
             podSecurityContext.fsGroup = 1000; # can't push to mirrors w/ 65534
             containerSecurityContext = {
               allowPrivilegeEscalation = false;

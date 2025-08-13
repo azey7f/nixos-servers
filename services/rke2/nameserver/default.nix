@@ -109,9 +109,11 @@ in {
                 namespace = "app-nameserver";
               };
               spec = {
-                replicas = 1; # hidden master, doesn't need HA
                 selector.matchLabels.app = "knot-${id}";
                 template.metadata.labels.app = "knot-${id}";
+
+                replicas = 1; # hidden master, doesn't need HA
+                strategy.type = "Recreate"; # same as ^^, doesn't matter if it goes down for a bit
 
                 template.spec.securityContext = {
                   runAsNonRoot = true;
