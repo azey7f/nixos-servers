@@ -34,14 +34,15 @@ Setting up cluster from scratch:
     - create `admin` group, user account(s)
 4. enable `svc.mail` & `svc.authelia`, setup 2FA (at time of writing mail doesn't work, `exec` into pod and `cat /tmp/notifier`)
 5. enable everything else as needed, manual steps for specific services:
-    - forgejo: temporarily modify `gitea.admin` in the chart's `valuesContent`, delete account when done with setup
+    - forgejo: temporarily modify `gitea.admin` & enable internal auth in the chart's `valuesContent`, delete account when done with setup
       - OIDC: additional scopes `email profile groups`, auto-discovery URL `https://auth.azey.net/.well-known/openid-configuration`
     - navidrome: no default auth, IMMEDIATELY connect & create admin user
     - woodpecker: create `Integrations > Applications` in forgejo (`https://woodpecker.azey.net/authorize`), modify sops secrets
       - create `woodpecker-ci` user in forgejo & add as collaborator to repos
       - `REMOTE_URL` secrets in woodpecker: `https://woodpecker-ci:<passwd>@git.azey.net/<repo>`, available for `appleboy/drone-git-push`
+      - create `daily` cron in each repo
     - grafana: delete default admin user
     - renovate bot: create user (restricted account), add as collaborator
-      - login & create personal token in `Applications`, put into sops
+      - login & create personal token in `Applications`, put into sops - just the password might also work
 
 [^1]: I specifically used a semicolon instead of an en dash because I didn't want people to think I used an LLM. what has the world come to

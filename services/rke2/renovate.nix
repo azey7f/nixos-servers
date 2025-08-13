@@ -35,7 +35,7 @@ in {
         };
         stringData = {
           RENOVATE_TOKEN = config.sops.placeholder."rke2/renovate/forgejo-pat";
-	  RENOVATE_GITHUB_COM_TOKEN = config.sops.placeholder."rke2/renovate/github-ro-pat";
+          RENOVATE_GITHUB_COM_TOKEN = config.sops.placeholder."rke2/renovate/github-ro-pat";
         };
       }
       {
@@ -68,11 +68,11 @@ in {
             cronjob.schedule = "0 4 * * *"; # 4AM daily
 
             existingSecret = "renovate-env";
-	    #envFrom = [{secretRef.name = "renovate-env";}];
+            #envFrom = [{secretRef.name = "renovate-env";}];
             renovate.config = builtins.toJSON {
               platform = "forgejo";
               endpoint = "https://git.${domain}/api/v1";
-	      token = "{{ secrets.RENOVATE_TOKEN }}";
+              token = "{{ secrets.RENOVATE_TOKEN }}";
               gitAuthor = "renovate-bot <renovate-bot@${domain}>";
               autodiscover = true; # restricted account in forgejo
             };

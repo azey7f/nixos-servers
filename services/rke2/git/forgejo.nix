@@ -66,7 +66,16 @@ in {
               };
 
               session.COOKIE_SECURE = true;
-              service.DISABLE_REGISTRATION = true;
+
+              admin.SEND_NOTIFICATION_EMAIL_ON_NEW_USER = true;
+              service = {
+                ENABLE_NOTIFY_MAIL = true;
+
+                REGISTER_EMAIL_CONFIRM = true;
+                #DISABLE_REGISTRATION = true;
+                ENABLE_INTERNAL_SIGNIN = false;
+                REQUIRE_EXTERNAL_REGISTRATION_PASSWORD = false;
+              };
 
               server = rec {
                 DOMAIN = "git.${domain}";
