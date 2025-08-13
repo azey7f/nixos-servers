@@ -41,7 +41,6 @@
 				"minor"
 			],
 			"matchDepNames": [
-				"renovate",
 				"code.forgejo.org/forgejo-helm/forgejo",
 				"ghcr.io/woodpecker-ci/helm/woodpecker",
 				"ghcr.io/prometheus-community/charts/kube-prometheus-stack",
@@ -60,6 +59,7 @@
 		},
 		{
 			"matchDepNames": [
+				"renovate",
 				"ghcr.io/jeffvli/feishin",
 				"docker.io/searxng/searxng"
 			],
