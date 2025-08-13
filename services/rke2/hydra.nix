@@ -1,6 +1,6 @@
-# this is half a native module and half an RKE2 one, but it's still clustered so I'm putting it here
-# since I'm not sure if hydra is stateless even with an external DB (#TODO),
-# the service only gets started via keepalived on one host at a time and is accessed via VIP
+# this is half a native module and half an RKE2 one, but it's still clustered so I'm putting it here.
+# since I'm not sure if hydra is stateless even with an external DB (#TODO), the
+# service only gets started via keepalived on one host at a time and is accessed via VIP
 {
   pkgs,
   config,
@@ -23,7 +23,7 @@ in {
   config = mkIf cfg.enable {
     warnings = lib.lists.optional (!config.services.keepalived.enable) ''
       The az.svc.rke2.hydra module uses keepalived, which isn't enabled.
-      Normally the hydra module should be used along with az.server.rke2.keepalived.
+      Normally the hydra module should be used alongside az.server.rke2.keepalived.
     '';
     assertions = [
       {
@@ -48,7 +48,9 @@ in {
       enable = true;
       port = cfg.port;
       hydraURL = "https://hydra.${domain}";
-      notificationSender = "hydra@invalid.internal"; # TODO
+      notificationSender = "hydra@${domain}";
+
+      useSubstitutes = true; # TODO: some packages fail to build even on stable (e.g. because upstream's source URL isn't accessible anymore), is there any way to substitute only failed builds?
 
       minimumDiskFree = 50;
       minimumDiskFreeEvaluator = 50;
@@ -57,6 +59,10 @@ in {
       extraEnv = {
         # undocumented, https://github.com/NixOS/hydra/blob/79ba8fdd04ba53826aa9aaba6e25fd0d6952b3b3/nixos-modules/hydra.nix#L21
         PGPASSFILE = "/run/secrets/rendered/rke2/hydra/pgpass";
+
+        # https://metacpan.org/pod/Email::Sender::Transport::Sendmail
+        EMAIL_SENDER_TRANSPORT = "Sendmail";
+        EMAIL_SENDER_TRANSPORT_sendmail = "${pkgs.msmtp}/bin/sendmail";
       };
     };
 
@@ -270,7 +276,9 @@ in {
     az.svc.rke2.authelia.rules = [
       {
         domain = ["hydra.${domain}"];
-        policy = "bypass";
+        #policy = "bypass";
+        subject = "group:admin";
+        policy = "two_factor";
       }
     ];
   };

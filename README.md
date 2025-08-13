@@ -44,5 +44,7 @@ Setting up cluster from scratch:
     - grafana: delete default admin user
     - renovate bot: create user (restricted account), add as collaborator
       - login & create personal token in `Applications`, put into sops - just the password might also work
+    - hydra: `PGPASSFILE=/run/secrets/rendered/rke2/hydra/pgpass hydra-create-user azey --role admin --password-pro
+mpt`
 
 [^1]: I specifically used a semicolon instead of an en dash because I didn't want people to think I used an LLM. what has the world come to

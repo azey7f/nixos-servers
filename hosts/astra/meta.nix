@@ -55,7 +55,7 @@ in {
     forgejo.enable = true;
     woodpecker.enable = true;
     renovate.enable = true;
-    #hydra.enable = true;
+    hydra.enable = true;
   };
 
   az.server = rec {

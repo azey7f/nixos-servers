@@ -108,8 +108,8 @@ in {
         spec = {
           targetNamespace = "openebs-system";
 
-          chart = "openebs";
           repo = "https://openebs.github.io/openebs";
+          chart = "openebs";
           version = "4.3.2";
 
           valuesContent = builtins.toJSON {
