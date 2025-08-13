@@ -27,8 +27,8 @@ in {
           targetNamespace = "cert-manager";
           createNamespace = true;
 
-          chart = "cert-manager";
           repo = "https://charts.jetstack.io";
+          chart = "cert-manager";
           version = "1.18.2";
 
           valuesContent = builtins.toJSON {

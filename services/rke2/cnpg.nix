@@ -26,8 +26,8 @@ in {
           targetNamespace = "cnpg-system";
           createNamespace = true;
 
-          chart = "cloudnative-pg";
           repo = "https://cloudnative-pg.github.io/charts";
+          chart = "cloudnative-pg";
           version = "0.25.0";
         };
       }

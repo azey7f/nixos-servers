@@ -51,8 +51,8 @@ in {
           targetNamespace = "app-mail";
           #createNamespace = true;
 
-          chart = "mail";
           repo = "https://bokysan.github.io/docker-postfix";
+          chart = "mail";
           version = "4.4.0";
 
           valuesContent = builtins.toJSON {

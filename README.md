@@ -41,5 +41,7 @@ Setting up cluster from scratch:
       - create `woodpecker-ci` user in forgejo & add as collaborator to repos
       - `REMOTE_URL` secrets in woodpecker: `https://woodpecker-ci:<passwd>@git.azey.net/<repo>`, available for `appleboy/drone-git-push`
     - grafana: delete default admin user
+    - renovate bot: create user (restricted account), add as collaborator
+      - login & create personal token in `Applications`, put into sops
 
 [^1]: I specifically used a semicolon instead of an en dash because I didn't want people to think I used an LLM. what has the world come to

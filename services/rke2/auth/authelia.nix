@@ -111,8 +111,8 @@ in {
         spec = {
           targetNamespace = "app-authelia";
 
-          chart = "authelia";
           repo = "https://charts.authelia.com";
+          chart = "authelia";
           version = "0.10.42";
 
           valuesContent = builtins.toJSON {

@@ -1,0 +1,62 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"customManagers": [
+		{
+				"customType": "regex",
+				"fileMatch": [".*\\.nix$"],
+				"matchStrings": [
+						"image\\s*=\\s*\"(?<depName>\\S+):(?<currentValue>\\S+)\"\\s*;",
+						"chart\\s*=\\s*\"\\S+:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				],
+				"datasourceTemplate": "docker"
+		},
+		{
+				"customType": "regex",
+				"fileMatch": [".*\\.nix$"],
+				"matchStrings": [
+						"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				],
+				"datasourceTemplate": "helm"
+		}
+	],
+	"packageRules": [
+		{
+			"matchUpdateTypes": ["patch"],
+			"groupName": "automerge-patch",
+			"automerge": true,
+			"automergeType": "branch",
+			"ignoreTests": true
+		},
+		{
+			"matchUpdateTypes": ["minor"],
+			"matchDepNames": [
+				"renovate",
+				"code.forgejo.org/forgejo-helm/forgejo",
+				"ghcr.io/woodpecker-ci/helm/woodpecker",
+				"ghcr.io/prometheus-community/charts/kube-prometheus-stack",
+				"mail",
+				"cert-manager",
+				"snowdreamtech/frpc",
+				"registry.k8s.io/git-sync/git-sync",
+				"nginxinc/nginx-unprivileged",
+				"px01/blocky",
+				"klutchell/unbound"
+			],
+			"groupName": "automerge-minor",
+			"automerge": true,
+			"automergeType": "branch",
+			"ignoreTests": true
+		},
+		{
+			"matchDepNames": [
+				"ghcr.io/jeffvli/feishin",
+				"docker.io/searxng/searxng"
+			],
+			"groupName": "automerge-reckless",
+			"automerge": true,
+			"automergeType": "branch",
+			"ignoreTests": true
+		}
+	]
+}

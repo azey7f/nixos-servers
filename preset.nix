@@ -55,7 +55,7 @@ with lib; {
     ssh.ports = mkDefault [33];
     endlessh.enable = mkDefault true;
 
-    #TODO: cron.enable = mkDefault true;
+    cron.enable = mkDefault true;
     #TODO: mail.enable = mkDefault true;
   };
 }
