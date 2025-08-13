@@ -39,6 +39,12 @@ in {
               "--dns01-recursive-nameservers-only"
               "--dns01-recursive-nameservers=knot-public.app-nameserver.svc:53"
             ];
+
+            prometheus = lib.attrsets.optionalAttrs config.az.svc.rke2.metrics.enable {
+              enabled = true;
+	      servicemonitor.enabled = true;
+	      servicemonitor.labels.release = "metrics";
+            };
           };
         };
       }

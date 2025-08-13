@@ -56,6 +56,8 @@ in {
             grafana."grafana.ini" = {
               server.root_url = "https://metrics.${domain}";
 
+              dashboards.default_home_dashboard_path = "/var/lib/grafana/dashboards/default/k8s-dashboard.json";
+
               #security.disable_initial_admin_creation = true; # FIXME: for some reason, this makes no data sources appear
               #auth.disable_login_form = true;
 
@@ -82,6 +84,35 @@ in {
                 role_attribute_path = "contains(groups[*], 'admin') && 'GrafanaAdmin' || 'Viewer'";
                 role_attribute_strict = true;
                 allow_assign_grafana_admin = true;
+              };
+            };
+
+            grafana.dashboardProviders."dashboardproviders.yaml" = {
+	      # https://github.com/grafana/helm-charts/blob/0af99fac51424d0e5bb19e0da25a7750d3062f42/charts/grafana/values.yaml#L738
+	      apiVersion = 1;
+	      providers = [
+		{
+	          name = "default";
+                  orgId = 1;
+                  folder = "";
+                  type = "file";
+                  disableDeletion = false;
+                  editable = true;
+                  options.path = "/var/lib/grafana/dashboards/default";
+		}
+	      ];
+	    };
+            grafana.dashboards.default = {
+              k8s-dashboard = {
+                # https://grafana.com/grafana/dashboards/15661-k8s-dashboard-en-20250125/
+                gnetId = 15661;
+                revision = 2;
+		datasource = [{name = "DS__VICTORIAMETRICS-PROD-ALL"; value = "prometheus";}];
+              };
+              cert-manager = {
+                gnetId = 20842;
+                revision = 3;
+		datasource = "prometheus";
               };
             };
 
