@@ -42,8 +42,8 @@ in {
 
             prometheus = lib.attrsets.optionalAttrs config.az.svc.rke2.metrics.enable {
               enabled = true;
-	      servicemonitor.enabled = true;
-	      servicemonitor.labels.release = "metrics";
+              servicemonitor.enabled = true;
+              servicemonitor.labels.release = "metrics";
             };
           };
         };

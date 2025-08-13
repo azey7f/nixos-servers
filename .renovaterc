@@ -3,11 +3,20 @@
 	"extends": [
 		"config:recommended"
 	],
+	"customDatasources": {
+		"grafana-dashboards": {
+			"defaultRegistryUrlTemplate": "https://grafana.com/api/dashboards/{{packageName}}",
+			"format": "json",
+			"transformTemplates": [
+				"{\"releases\":[{\"version\": $string(revision)}]}"
+			]
+		}
+	},
 	"customManagers": [
 		{
 			"customType": "regex",
 			"managerFilePatterns": [
-				"/.*\\.nix$/"
+				"/\\.nix$/"
 			],
 			"matchStrings": [
 				"image\\s*=\\s*\"(?<depName>\\S+):(?<currentValue>\\S+)\"\\s*;",
@@ -18,12 +27,22 @@
 		{
 			"customType": "regex",
 			"managerFilePatterns": [
-				"/.*\\.nix$/"
+				"/\\.nix$/"
 			],
 			"matchStrings": [
 				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
 			],
 			"datasourceTemplate": "helm"
+		},
+		{
+			"customType": "regex",
+			"managerFilePatterns": ["/\\.nix$/"],
+			"matchStrings": [
+				"(?<depName>\\S+)\\s*=\\s*{\\s*gnetId\\s*=\\s*(?<packageName>[0-9]+)\\s*;\\s*revision\\s*=\\s*(?<currentValue>[0-9]+)\\s*;"
+			],
+			"depNameTemplate": "grafana-dashboard-{{depName}}",
+			"versioningTemplate": "regex:^(?<major>\\d+)$",
+			"datasourceTemplate": "custom.grafana-dashboards"
 		}
 	],
 	"packageRules": [
@@ -41,6 +60,7 @@
 				"minor"
 			],
 			"matchDepNames": [
+				"cloudnative-pg",
 				"code.forgejo.org/forgejo-helm/forgejo",
 				"ghcr.io/woodpecker-ci/helm/woodpecker",
 				"ghcr.io/prometheus-community/charts/kube-prometheus-stack",
@@ -61,7 +81,8 @@
 			"matchDepNames": [
 				"renovate",
 				"ghcr.io/jeffvli/feishin",
-				"docker.io/searxng/searxng"
+				"docker.io/searxng/searxng",
+				"^grafana-dashboard-"
 			],
 			"groupName": "automerge-reckless",
 			"automerge": true,
