@@ -46,7 +46,7 @@ in {
           #createNamespace = true;
 
           chart = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
-          version = "76.2.0";
+          version = "76.3.0";
 
           valuesContent = builtins.toJSON {
             alertmanager.alertmanagerSpec.externalUrl = "https://alerts.${domain}";
