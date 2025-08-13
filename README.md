@@ -24,4 +24,22 @@ Setting up a domain:
     - set up glue & DS records with the registar, `exec` into the pod and run `keymgr <zone> ds` for the DS stuff
 3. done!
 
+Setting up cluster from scratch:
+1. enable nothing but the `az.server.rke2` modules & `az.svc.nameserver`
+2. wait for nameserver to come online, follow `Setting up a domain` step 2
+3. enable `svc.envoyGateway` & `svc.lldap`, login to [lldap](https://lldap.azey.net) using the init-passwd, then:
+    - create `lldap-admin` account with `lldap_admin` group
+    - delete default `admin` account
+    - create `authelia` account with `lldap_password_manager` group
+    - create `admin` group, user account(s)
+4. enable `svc.mail` & `svc.authelia`, setup 2FA (at time of writing mail doesn't work, `exec` into pod and `cat /tmp/notifier`)
+5. enable everything else as needed, manual steps for specific services:
+    - forgejo: temporarily modify `gitea.admin` in the chart's `valuesContent`, delete account when done with setup
+      - OIDC: additional scopes `email profile groups`, auto-discovery URL `https://auth.azey.net/.well-known/openid-configuration`
+    - navidrome: no default auth, IMMEDIATELY connect & create admin user
+    - woodpecker: create `Integrations > Applications` in forgejo (`https://woodpecker.azey.net/authorize`), modify sops secrets
+      - create `woodpecker-ci` user in forgejo & add as collaborator to repos
+      - `REMOTE_URL` secrets in woodpecker: `https://woodpecker-ci:<passwd>@git.azey.net/<repo>`, available for `appleboy/drone-git-push`
+    - grafana: delete default admin user
+
 [^1]: I specifically used a semicolon instead of an en dash because I didn't want people to think I used an LLM. what has the world come to

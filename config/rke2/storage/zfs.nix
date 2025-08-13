@@ -92,6 +92,13 @@ in {
     systemd.services.rke2-server.path = with pkgs; [zfs];
     az.server.rke2.manifests."openebs" = [
       {
+        apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "openebs-system";
+        metadata.labels.name = "openebs-system";
+        metadata.labels."pod-security.kubernetes.io/enforce" = "privileged";
+      }
+      {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
@@ -99,7 +106,7 @@ in {
           namespace = "kube-system";
         };
         spec = {
-          targetNamespace = "kube-system";
+          targetNamespace = "openebs-system";
 
           chart = "openebs";
           repo = "https://openebs.github.io/openebs";
@@ -113,8 +120,6 @@ in {
               };
               replicated.mayastor.enabled = false;
             };
-
-            openebs-crds.csi.volumeSnapshots.enabled = false;
 
             loki.singleBinary.replicas = 1;
             loke.loki.commonConfig.replication_factor = 1;

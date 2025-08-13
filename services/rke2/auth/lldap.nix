@@ -55,6 +55,7 @@ in {
             in {
               LLDAP_HTTP_URL = "https://lldap.${domain}";
               LLDAP_LDAP_BASE_DN = lib.strings.concatMapStringsSep "," (n: "dc=${n}") split;
+              LLDAP_LDAP_USER_PASS = config.sops.placeholder."rke2/lldap/init-passwd"; # shouldn't actually be used, admin user should be deleted immediately after init
             };
           };
         };
@@ -86,5 +87,7 @@ in {
         policy = "two_factor";
       }
     ];
+
+    az.server.rke2.clusterWideSecrets."rke2/lldap/init-passwd" = {};
   };
 }

@@ -90,7 +90,7 @@ in {
 
               mailer = {
                 ENABLED = true;
-                SMTP_ADDR = "mail.kube-system.svc";
+                SMTP_ADDR = "mail.app-mail.svc";
                 SMTP_PORT = 587;
                 FORCE_TRUST_SERVER_CERT = true;
                 FROM = "git@${domain}";

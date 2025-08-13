@@ -17,10 +17,17 @@ in {
     az.server.rke2.manifests."metrics" = [
       {
         apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "metrics-system";
+        metadata.labels.name = "metrics-system";
+        metadata.labels."pod-security.kubernetes.io/enforce" = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
+      }
+      {
+        apiVersion = "v1";
         kind = "Secret";
         metadata = {
           name = "grafana-env";
-          namespace = "kube-system";
+          namespace = "metrics-system";
         };
         stringData = {
           GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET = config.sops.placeholder."rke2/metrics/oidc-secret";
@@ -35,14 +42,15 @@ in {
           namespace = "kube-system";
         };
         spec = {
-          targetNamespace = "kube-system";
+          targetNamespace = "metrics-system";
           #createNamespace = true;
 
           chart = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
           version = "76.2.0";
 
           valuesContent = builtins.toJSON {
-            namespaceOverride = "kube-system";
+            alertmanager.alertmanagerSpec.externalUrl = "https://alerts.${domain}";
+            prometheus.prometheusSpec.externalUrl = "https://prometheus.${domain}";
 
             grafana.envFromSecret = "grafana-env";
             grafana."grafana.ini" = {
@@ -78,7 +86,7 @@ in {
             };
 
             # https://github.com/prometheus-community/helm-charts/issues/3800
-            grafana.serviceMonitor.labels.release = "metrics";
+            grafana.extraLabels.release = "metrics";
 
             # https://stackoverflow.com/questions/73031228/getting-kubecontrollermanager-kubeproxy-kubescheduler-down-alert-in-kube-prome/73181797#73181797
             kubeControllerManager = {
@@ -108,28 +116,11 @@ in {
         };
       }
       {
-        apiVersion = "networking.k8s.io/v1";
-        kind = "NetworkPolicy";
-        metadata = {
-          name = "metrics-grafana-allow-envoy";
-          namespace = "kube-system";
-        };
-        spec = {
-          podSelector.matchLabels."app.kubernetes.io/name" = "grafana";
-          policyTypes = ["Ingress"];
-          ingress = [
-            {
-              from = [{namespaceSelector.matchLabels.name = "envoy-gateway";}];
-            }
-          ];
-        };
-      }
-      {
         apiVersion = "monitoring.coreos.com/v1alpha1";
         kind = "AlertmanagerConfig";
         metadata = {
           name = "mail-alerts";
-          namespace = "kube-system";
+          namespace = "metrics-system";
         };
         spec = {
           route = {
@@ -146,7 +137,7 @@ in {
                 {
                   to = "alerts@${domain}";
                   from = "metrics@${domain}";
-                  smarthost = "mail.kube-system.svc:587";
+                  smarthost = "mail.app-mail.svc:587";
                   tlsConfig.insecureSkipVerify = true;
                 }
               ];
@@ -159,7 +150,7 @@ in {
     az.svc.rke2.envoyGateway.httpRoutes = [
       {
         name = "metrics";
-        namespace = "kube-system";
+        namespace = "metrics-system";
         hostnames = ["metrics.${domain}"];
         rules = [
           {
@@ -172,11 +163,41 @@ in {
           }
         ];
       }
+      {
+        name = "alerts";
+        namespace = "metrics-system";
+        hostnames = ["alerts.${domain}"];
+        rules = [
+          {
+            backendRefs = [
+              {
+                name = "metrics-kube-prometheus-st-alertmanager";
+                port = 9093;
+              }
+            ];
+          }
+        ];
+      }
+      {
+        name = "prometheus";
+        namespace = "metrics-system";
+        hostnames = ["prometheus.${domain}"];
+        rules = [
+          {
+            backendRefs = [
+              {
+                name = "metrics-kube-prometheus-st-prometheus";
+                port = 9090;
+              }
+            ];
+          }
+        ];
+      }
     ];
 
     az.svc.rke2.authelia.rules = [
       {
-        domain = ["metrics.${domain}"];
+        domain = ["metrics.${domain}" "alerts.${domain}" "prometheus.${domain}"];
         subject = "group:admin";
         policy = "two_factor";
       }

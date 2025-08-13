@@ -18,7 +18,7 @@ in {
     settings.listen-ports = [53];
     settings.listen-addrs = ["192.168.0.254" "::1"];
   };
-  az.core.net.dns.nameservers = ["::1"];
+  #az.core.net.dns.nameservers = ["::1"];
 
   az.svc.rke2 = {
     # cluster core
@@ -34,9 +34,9 @@ in {
       };
     };
     certManager.enable = true;
-    mail.enable = true;
     metrics.enable = true;
 
+    mail.enable = true;
     frp.enable = true;
     nameserver.enable = true;
     resolver.enable = true;
@@ -54,7 +54,7 @@ in {
     # source control, ci/cd
     forgejo.enable = true;
     woodpecker.enable = true;
-    hydra.enable = true;
+    #hydra.enable = true;
   };
 
   az.server = rec {

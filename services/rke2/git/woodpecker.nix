@@ -16,6 +16,13 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.manifests."app-woodpecker" = [
       {
+        apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "app-woodpecker-steps";
+        metadata.labels.name = "app-woodpecker-steps";
+        metadata.labels."pod-security.kubernetes.io/enforce" = "baseline"; # TODO: there doesn't seem to be any way to set securityContext for steps
+      }
+      {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
@@ -48,7 +55,7 @@ in {
 
                 inherit securityContext podSecurityContext;
                 env = {
-                  WOODPECKER_BACKEND_K8S_NAMESPACE = "kube-system"; # CRITICAL TODO: https://github.com/woodpecker-ci/woodpecker/issues/4975
+                  WOODPECKER_BACKEND_K8S_NAMESPACE = "app-woodpecker-steps";
                   WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
                 };
               };

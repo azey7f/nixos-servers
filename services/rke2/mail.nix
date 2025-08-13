@@ -21,10 +21,17 @@ in {
     az.server.rke2.manifests."app-mail" = [
       {
         apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "app-mail";
+        metadata.labels.name = "app-mail";
+        metadata.labels."pod-security.kubernetes.io/enforce" = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
+      }
+      {
+        apiVersion = "v1";
         kind = "Secret";
         metadata = {
           name = "mail-env";
-          namespace = "kube-system";
+          namespace = "app-mail";
         };
         stringData = {
           ALLOWED_SENDER_DOMAINS = domain;
@@ -41,7 +48,7 @@ in {
           namespace = "kube-system";
         };
         spec = {
-          targetNamespace = "kube-system"; # https://github.com/bokysan/docker-postfix/issues/199
+          targetNamespace = "app-mail";
           #createNamespace = true;
 
           chart = "mail";
@@ -51,21 +58,6 @@ in {
           valuesContent = builtins.toJSON {
             existingSecret = "mail-env";
           };
-        };
-      }
-      {
-        apiVersion = "networking.k8s.io/v1";
-        kind = "NetworkPolicy";
-        metadata = {
-          name = "mail-allow";
-          namespace = "kube-system";
-        };
-        spec = {
-          podSelector.matchLabels."app.kubernetes.io/name" = "mail";
-          policyTypes = ["Ingress"];
-          ingress = [
-            {from = builtins.map (name: {namespaceSelector.matchLabels.name = name;}) cfg.namespaces;}
-          ];
         };
       }
     ];

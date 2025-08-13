@@ -33,7 +33,7 @@ in {
             pre_configured_consent_duration = optStr "2w";
           };
         }));
-      default = [];
+      default = {};
     };
     oidcClaims = mkOption {
       type = with types; attrsOf anything;
@@ -79,8 +79,8 @@ in {
           name = "authelia-cnpg-user";
           namespace = "app-authelia";
         };
-        data = {
-          username = "YXV0aGVsaWE="; # echo -n authelia | base64
+        stringData = {
+          username = "authelia";
           password = config.sops.placeholder."rke2/authelia/cnpg-passwd";
         };
       }
@@ -92,13 +92,13 @@ in {
           namespace = "app-authelia";
         };
         data = {
-          jwk-key = config.sops.placeholder."rke2/authelia/jwk-key";
-          lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
-          cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
+          hmac-secret = config.sops.placeholder."rke2/authelia/hmac-secret"; # binary data
+          jwk-key = config.sops.placeholder."rke2/authelia/jwk-key"; # yaml whitespace reasons
         };
         stringData = {
+          lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
+          cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
           storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
-          hmac-secret = config.sops.placeholder."rke2/authelia/hmac-secret";
         };
       }
       {
@@ -161,7 +161,7 @@ in {
               };
 
               identity_providers.oidc = {
-                enabled = true;
+                enabled = cfg.oidcClients != {};
 
                 hmac_secret = {
                   secret_name = "authelia-misc";
@@ -234,7 +234,7 @@ in {
               # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
               notifier.smtp = {
                 enabled = true;
-                address = "submission://mail.kube-system.svc";
+                address = "submission://mail.app-mail.svc";
                 sender = "authelia <noreply@${domain}>";
                 identifier = "app-authelia";
                 tls.skip_verify = true;

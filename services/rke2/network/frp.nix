@@ -20,10 +20,14 @@ in {
         builtins.map (
           v: v.ipv4 # TODO: ipv6
         )
-        (builtins.filter (v: builtins.elem "@" v.subdomains) outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps);
+        outputs.infra.domains.${config.az.server.rke2.baseDomain}.vps;
     };
 
-    localIP = optStr config.az.svc.rke2.envoyGateway.gateways.external.addresses.ipv6;
+    localIP = optStr (
+      if config.az.svc.rke2.envoyGateway.enable
+      then config.az.svc.rke2.envoyGateway.gateways.external.addresses.ipv6
+      else ""
+    );
   };
 
   config = mkIf cfg.enable {

@@ -27,7 +27,7 @@ in {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
-          name = "valkey";
+          name = "searxng-valkey";
           namespace = "kube-system";
         };
         spec = {
@@ -64,7 +64,7 @@ in {
               contact_url = "mailto:me@${domain}";
             };
             ui.theme_args.simple_style = "dark";
-            valkey.url = "valkey://valkey-primary.app-searxng.svc";
+            valkey.url = "valkey://searxng-valkey-primary.app-searxng.svc";
             outgoing = {
               request_timeout = 5;
               max_request_timeout = 15;
@@ -88,8 +88,8 @@ in {
           template.spec.securityContext = {
             runAsNonRoot = true;
             seccompProfile.type = "RuntimeDefault";
-            runAsUser = 65532;
-            runAsGroup = 65532;
+            runAsUser = 65534;
+            runAsGroup = 65534;
           };
 
           template.spec.containers = [
