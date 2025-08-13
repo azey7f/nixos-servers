@@ -1,35 +1,45 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["config:recommended"],
+	"extends": [
+		"config:recommended"
+	],
 	"customManagers": [
 		{
-				"customType": "regex",
-				"fileMatch": [".*\\.nix$"],
-				"matchStrings": [
-						"image\\s*=\\s*\"(?<depName>\\S+):(?<currentValue>\\S+)\"\\s*;",
-						"chart\\s*=\\s*\"\\S+:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
-				],
-				"datasourceTemplate": "docker"
+			"customType": "regex",
+			"managerFilePatterns": [
+				"/.*\\.nix$/"
+			],
+			"matchStrings": [
+				"image\\s*=\\s*\"(?<depName>\\S+):(?<currentValue>\\S+)\"\\s*;",
+				"chart\\s*=\\s*\"\\S+:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+			],
+			"datasourceTemplate": "docker"
 		},
 		{
-				"customType": "regex",
-				"fileMatch": [".*\\.nix$"],
-				"matchStrings": [
-						"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
-				],
-				"datasourceTemplate": "helm"
+			"customType": "regex",
+			"managerFilePatterns": [
+				"/.*\\.nix$/"
+			],
+			"matchStrings": [
+				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+			],
+			"datasourceTemplate": "helm"
 		}
 	],
 	"packageRules": [
 		{
-			"matchUpdateTypes": ["patch"],
+			"matchUpdateTypes": [
+				"patch"
+			],
 			"groupName": "automerge-patch",
 			"automerge": true,
 			"automergeType": "branch",
 			"ignoreTests": true
 		},
 		{
-			"matchUpdateTypes": ["minor"],
+			"matchUpdateTypes": [
+				"minor"
+			],
 			"matchDepNames": [
 				"renovate",
 				"code.forgejo.org/forgejo-helm/forgejo",
