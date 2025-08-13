@@ -56,6 +56,6 @@ with lib; {
     endlessh.enable = mkDefault true;
 
     cron.enable = mkDefault true;
-    #TODO: mail.enable = mkDefault true;
+    mail.enable = mkDefault true;
   };
 }

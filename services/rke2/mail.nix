@@ -60,6 +60,42 @@ in {
           };
         };
       }
+      {
+        apiVersion = "gateway.networking.k8s.io/v1alpha2";
+        kind = "TCPRoute";
+        metadata = {
+          name = "mail";
+          namespace = "app-mail";
+        };
+        spec = {
+          parentRefs = [
+            {
+              name = "envoy-gateway-internal";
+              namespace = "envoy-gateway";
+              sectionName = "mail";
+            }
+          ];
+          rules = [
+            {
+              backendRefs = [
+                {
+                  name = "mail";
+                  port = 587;
+                }
+              ];
+            }
+          ];
+        };
+      }
+    ];
+
+    az.svc.rke2.envoyGateway.gateways.internal.listeners = [
+      {
+        name = "mail";
+        protocol = "TCP";
+        port = 587;
+        allowedRoutes.namespaces.from = "All"; # TODO: Selector
+      }
     ];
 
     az.server.rke2.clusterWideSecrets."rke2/mail/zoho-passwd" = {};
