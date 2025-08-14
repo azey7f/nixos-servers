@@ -147,6 +147,18 @@ in {
               };
             };
             kubeProxy.enabled = false; # replaced w/ cilium
+
+	    # https://github.com/prometheus-community/helm-charts/issues/2816
+	    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec = {
+              storageClassName = "default";
+              accessModes = ["ReadWriteOnce"];
+              resources.requests.storage = "50Gi";
+	    };
+	    alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec = {
+              storageClassName = "default";
+              accessModes = ["ReadWriteOnce"];
+              resources.requests.storage = "10Gi";
+	    };
           };
         };
       }
