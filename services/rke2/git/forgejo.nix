@@ -20,6 +20,7 @@ in {
         fromNamespaces = ["envoy-gateway"];
         toNamespaces = ["app-mail"];
         toDomains = [
+          "auth.${domain}" # OIDC auto-discovery
           "github.com" # themes dl (#TODO: local mirror), pull mirroring
           "codeberg.org" # push mirrors
         ];

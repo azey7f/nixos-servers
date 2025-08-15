@@ -18,6 +18,7 @@ in {
       podSecurity = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
       networkPolicy.fromNamespaces = ["envoy-gateway"];
       networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+      networkPolicy.toDomains = ["auth.${domain}"]; # OIDC
     };
 
     az.server.rke2.manifests."metrics" = [
