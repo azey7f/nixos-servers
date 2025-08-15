@@ -78,6 +78,11 @@ in {
     };
     */
 
+    az.server.rke2.namespaces."envoy-gateway" = {
+      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+      networkPolicy.extraIngress = [{fromEntities = ["all"];}];
+    };
+
     az.server.rke2.manifests."envoy-gateway" =
       [
         {
@@ -89,7 +94,6 @@ in {
           };
           spec = {
             targetNamespace = "envoy-gateway";
-            createNamespace = true;
 
             chart = "oci://docker.io/envoyproxy/gateway-helm";
             version = "1.5.0";

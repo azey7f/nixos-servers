@@ -33,13 +33,13 @@ in {
       "30 5 * * *  root  fish -c 'for f in /var/lib/rancher/rke2/server/manifests/*'; kubectl apply -f $f; end"
     ];
 
+    az.server.rke2.namespaces."app-renovate" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.toDomains = ["git.${domain}"];
+      networkPolicy.toWAN = true;
+    };
+
     az.server.rke2.manifests."app-renovate" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-renovate";
-        metadata.labels.name = "app-renovate";
-      }
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -61,7 +61,6 @@ in {
         };
         spec = {
           targetNamespace = "app-renovate";
-          #createNamespace = true;
 
           repo = "https://docs.renovatebot.com/helm-charts";
           chart = "renovate";

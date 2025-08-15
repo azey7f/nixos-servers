@@ -43,15 +43,20 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.cnpg.enable = true;
-    az.svc.rke2.mail.namespaces = ["app-authelia"];
+
+    az.server.rke2.namespaces = {
+      "app-authelia".networkPolicy = {
+        fromNamespaces = ["envoy-gateway"];
+        toDomains = [
+          "lldap-ldap.app-lldap.svc"
+          "mail.app-mail.svc"
+        ];
+      };
+      "app-lldap".networkPolicy.fromNamespaces = ["app-authelia"];
+      "app-mail".networkPolicy.fromNamespaces = ["app-authelia"];
+    };
 
     az.server.rke2.manifests."app-authelia" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-authelia";
-        metadata.labels.name = "app-authelia";
-      }
       {
         apiVersion = "postgresql.cnpg.io/v1";
         kind = "Cluster";

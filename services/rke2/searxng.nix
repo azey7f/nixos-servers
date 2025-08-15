@@ -15,14 +15,12 @@ in {
   };
 
   config = mkIf cfg.enable {
-    az.server.rke2.manifests."app-searxng" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-searxng";
-        metadata.labels.name = "app-searxng";
-      }
+    az.server.rke2.namespaces."app-searxng" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.toWAN = true; # default engines could change at any time, so this is safer functioinality-wise than toDomains
+    };
 
+    az.server.rke2.manifests."app-searxng" = [
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
@@ -32,7 +30,7 @@ in {
         };
         spec = {
           targetNamespace = "app-searxng";
-          chart = "oci://registry-1.docker.io/bitnamicharts/valkey"; # TODO: https://github.com/orgs/valkey-io/discussions/338#discussioncomment-13802901
+          chart = "oci://registry-1.docker.io/bitnamicharts/valkey"; # CRITICAL TODO: https://github.com/orgs/valkey-io/discussions/338#discussioncomment-13802901 & pin version
           valuesContent = builtins.toJSON {
             auth.enabled = false; # TODO
           };

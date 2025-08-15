@@ -18,14 +18,11 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."app-mail" = {
+      podSecurity = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
+      networkPolicy.fromNamespaces = ["envoy-gateway"] ++ cfg.namespaces;
+    };
     az.server.rke2.manifests."app-mail" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-mail";
-        metadata.labels.name = "app-mail";
-        metadata.labels."pod-security.kubernetes.io/enforce" = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
-      }
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -49,7 +46,6 @@ in {
         };
         spec = {
           targetNamespace = "app-mail";
-          #createNamespace = true;
 
           repo = "https://bokysan.github.io/docker-postfix";
           chart = "mail";

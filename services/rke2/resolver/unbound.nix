@@ -16,13 +16,16 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces = {
+      "app-resolver" = {
+        networkPolicy.fromNamespaces = ["envoy-gateway"];
+        networkPolicy.toNamespaces = ["envoy-gateway"];
+        networkPolicy.toWAN = true;
+      };
+      "app-nameserver".networkPolicy.fromNamespaces = ["app-resolver"];
+    };
+
     az.server.rke2.manifests."app-resolver" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-resolver";
-        metadata.labels.name = "app-resolver";
-      }
       {
         apiVersion = "v1";
         kind = "ConfigMap";

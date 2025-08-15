@@ -19,13 +19,11 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."app-nginx" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.toDomains = ["git.${domain}"]; # source code fetching
+    };
     az.server.rke2.manifests."app-nginx" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-nginx";
-        metadata.labels.name = "app-nginx";
-      }
       {
         apiVersion = "v1";
         kind = "ConfigMap";

@@ -33,13 +33,19 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.clusterWideSecrets."${cfg.sopsPath}/token" = {};
 
+    az.server.rke2.namespaces."app-frp" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.toNamespaces = ["envoy-gateway"];
+      networkPolicy.toDomains = ["knot-public.app-nameserver.svc"];
+      networkPolicy.extraEgress = [
+        {
+          toCIDR = builtins.map (v: "${v}/32") cfg.remotes; # TODO: /128
+        }
+      ];
+    };
+    az.server.rke2.namespaces."app-nameserver".networkPolicy.fromNamespaces = ["app-frp"];
+
     az.server.rke2.manifests."app-frp" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-frp";
-        metadata.labels.name = "app-frp";
-      }
       {
         apiVersion = "v1";
         kind = "Secret";

@@ -14,13 +14,11 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."app-music" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+    };
+
     az.server.rke2.manifests."app-music" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-music";
-        metadata.labels.name = "app-music";
-      }
       {
         apiVersion = "v1";
         kind = "PersistentVolumeClaim";

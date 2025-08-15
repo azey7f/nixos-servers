@@ -46,6 +46,16 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."app-nameserver" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.extraEgress =
+        lib.attrsets.mapAttrsToList (_: {secondaryServers, ...}: {
+          toCIDR =
+            lib.lists.flatten (builtins.map (v: ["${v.ipv4}/32" "${v.ipv6}/128"]) secondaryServers);
+        })
+        cfg.domains;
+    };
+
     # default domain
     az.svc.rke2.nameserver.domains.${config.az.server.rke2.baseDomain} = {
       id = "public";
@@ -62,12 +72,6 @@ in {
           ...
         } @ domainConf:
           [
-            {
-              apiVersion = "v1";
-              kind = "Namespace";
-              metadata.name = "app-nameserver";
-              metadata.labels.name = "app-nameserver";
-            }
             {
               apiVersion = "v1";
               kind = "PersistentVolumeClaim";

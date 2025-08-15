@@ -14,14 +14,21 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."app-woodpecker".networkPolicy = {
+      fromNamespaces = ["envoy-gateway"];
+      toDomains = ["git.${domain}"];
+
+      toWAN = true; # downloads remote images - TODO: local registry
+      extraEgress = [{toEntities = ["kube-apiserver"];}];
+    };
+
+    az.server.rke2.namespaces."app-woodpecker-steps" = {
+      podSecurity = "baseline"; # TODO: there doesn't seem to be any way to set securityContext for steps
+      networkPolicy.toDomains = ["git.${domain}"];
+      networkPolicy.toWAN = true; # nix flake updates
+    };
+
     az.server.rke2.manifests."app-woodpecker" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-woodpecker-steps";
-        metadata.labels.name = "app-woodpecker-steps";
-        metadata.labels."pod-security.kubernetes.io/enforce" = "baseline"; # TODO: there doesn't seem to be any way to set securityContext for steps
-      }
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
@@ -31,7 +38,6 @@ in {
         };
         spec = {
           targetNamespace = "app-woodpecker";
-          createNamespace = true;
 
           chart = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
           version = "3.2.1";

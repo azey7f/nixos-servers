@@ -15,6 +15,11 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.cnpg.enable = true;
+
+    az.server.rke2.namespaces."app-lldap" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+    };
+
     az.server.rke2.manifests."app-lldap" = [
       {
         apiVersion = "helm.cattle.io/v1";
@@ -25,7 +30,6 @@ in {
         };
         spec = {
           targetNamespace = "app-lldap";
-          createNamespace = true;
 
           chart = "oci://tccr.io/truecharts/lldap"; # TODO?: move to raw deployment
           version = "8.2.1";

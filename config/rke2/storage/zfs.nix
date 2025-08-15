@@ -90,14 +90,12 @@ in {
       "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
     ];
     systemd.services.rke2-server.path = with pkgs; [zfs];
+
+    az.server.rke2.namespaces."openebs-system" = {
+      podSecurity = "privileged";
+      networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
+    };
     az.server.rke2.manifests."openebs" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "openebs-system";
-        metadata.labels.name = "openebs-system";
-        metadata.labels."pod-security.kubernetes.io/enforce" = "privileged";
-      }
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";

@@ -14,14 +14,13 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."metrics-system" = {
+      podSecurity = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+    };
+
     az.server.rke2.manifests."metrics" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "metrics-system";
-        metadata.labels.name = "metrics-system";
-        metadata.labels."pod-security.kubernetes.io/enforce" = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
-      }
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -43,7 +42,6 @@ in {
         };
         spec = {
           targetNamespace = "metrics-system";
-          #createNamespace = true;
 
           chart = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
           version = "76.3.0";
@@ -148,17 +146,17 @@ in {
             };
             kubeProxy.enabled = false; # replaced w/ cilium
 
-	    # https://github.com/prometheus-community/helm-charts/issues/2816
-	    prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec = {
+            # https://github.com/prometheus-community/helm-charts/issues/2816
+            prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec = {
               storageClassName = "default";
               accessModes = ["ReadWriteOnce"];
               resources.requests.storage = "50Gi";
-	    };
-	    alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec = {
+            };
+            alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec = {
               storageClassName = "default";
               accessModes = ["ReadWriteOnce"];
               resources.requests.storage = "10Gi";
-	    };
+            };
           };
         };
       }

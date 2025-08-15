@@ -15,7 +15,18 @@ in {
   };
 
   config = mkIf cfg.enable {
-    az.svc.rke2.mail.namespaces = ["app-forgejo"];
+    az.server.rke2.namespaces = {
+      "app-forgejo".networkPolicy = {
+        fromNamespaces = ["envoy-gateway"];
+        toDomains = [
+          "mail.app-mail.svc"
+          "github.com" # themes dl (#TODO: local mirror), pull mirroring
+          "codeberg.org" # push mirrors
+        ];
+      };
+      "app-mail".networkPolicy.fromNamespaces = ["app-forgejo"];
+    };
+
     az.server.rke2.manifests."app-forgejo" = [
       {
         apiVersion = "helm.cattle.io/v1";
@@ -26,7 +37,6 @@ in {
         };
         spec = {
           targetNamespace = "app-forgejo";
-          createNamespace = true;
 
           chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
           version = "13.0.1";

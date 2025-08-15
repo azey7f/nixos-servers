@@ -132,14 +132,10 @@ in {
 
     # K8s stuff
     az.svc.rke2.cnpg.enable = true; # TODO
+    az.server.rke2.namespaces."app-hydra" = {
+      networkPolicy.fromNamespaces = ["envoy-gateway"];
+    };
     az.server.rke2.manifests."app-hydra" = [
-      {
-        apiVersion = "v1";
-        kind = "Namespace";
-        metadata.name = "app-hydra";
-        metadata.labels.name = "app-hydra";
-      }
-
       # cnpg DB
       {
         apiVersion = "postgresql.cnpg.io/v1";

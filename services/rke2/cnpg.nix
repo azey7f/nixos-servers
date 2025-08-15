@@ -24,11 +24,26 @@ in {
         };
         spec = {
           targetNamespace = "cnpg-system";
-          createNamespace = true;
 
           repo = "https://cloudnative-pg.github.io/charts";
           chart = "cloudnative-pg";
           version = "0.26.0";
+        };
+      }
+
+      # for some reason cnpg pods need access to the apiserver
+      {
+        apiVersion = "cilium.io/v2";
+        kind = "CiliumClusterwideNetworkPolicy";
+        metadata = {
+          name = "cnpg-allow-kubernetes-default";
+          namespace = "app-authelia";
+        };
+        spec = {
+          endpointSelector.matchLabels."cnpg.io/podRole" = "instance";
+          egress = [
+            {toEntities = ["kube-apiserver"];}
+          ];
         };
       }
     ];
