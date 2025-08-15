@@ -24,7 +24,7 @@ in {
     az.server.rke2.namespaces = {
       "app-resolver" = {
         networkPolicy.fromNamespaces = ["envoy-gateway"];
-        networkPolicy.toDomains = ["knot-internal.app-nameserver.svc"];
+        networkPolicy.toNamespaces = ["app-nameserver"];
         networkPolicy.toWAN = true;
       };
       "app-nameserver".networkPolicy.fromNamespaces = ["app-resolver"];

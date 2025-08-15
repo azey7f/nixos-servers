@@ -35,8 +35,7 @@ in {
 
     az.server.rke2.namespaces."app-frp" = {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
-      networkPolicy.toNamespaces = ["envoy-gateway"];
-      networkPolicy.toDomains = ["knot-public.app-nameserver.svc"];
+      networkPolicy.toNamespaces = ["envoy-gateway" "app-nameserver"];
       networkPolicy.extraEgress = [
         {
           toCIDR = builtins.map (v: "${v}/32") cfg.remotes; # TODO: /128

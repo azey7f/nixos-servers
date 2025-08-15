@@ -17,7 +17,7 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.namespaces."app-searxng" = {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
-      networkPolicy.toWAN = true; # default engines could change at any time, so this is safer functioinality-wise than toDomains
+      networkPolicy.toWAN = true; # default engines could change at any time, so this is safer functionality-wise than toDomains
     };
 
     az.server.rke2.manifests."app-searxng" = [

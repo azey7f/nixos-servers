@@ -47,10 +47,7 @@ in {
     az.server.rke2.namespaces = {
       "app-authelia".networkPolicy = {
         fromNamespaces = ["envoy-gateway"];
-        toDomains = [
-          "lldap-ldap.app-lldap.svc"
-          "mail.app-mail.svc"
-        ];
+        toNamespaces = ["app-lldap" "app-mail"];
       };
       "app-lldap".networkPolicy.fromNamespaces = ["app-authelia"];
       "app-mail".networkPolicy.fromNamespaces = ["app-authelia"];

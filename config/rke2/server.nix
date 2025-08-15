@@ -60,6 +60,11 @@ in {
         cni = "cilium";
       };
 
+    az.server.rke2.namespaces."cilium-spire" = {
+      podSecurity = "privileged";
+      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+      networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
+    };
     az.server.rke2.manifests."rke2-cilium-config" = [
       {
         apiVersion = "helm.cattle.io/v1";
@@ -71,11 +76,27 @@ in {
         # TODO: remove operator.replicas wherever I get multiple nodes
         spec.valuesContent = builtins.toJSON {
           operator.replicas = 1;
+
           ipv6.enabled = true;
           kubeProxyReplacement = true;
           k8sServiceHost = "api.${config.networking.domain}";
           k8sServicePort = 8443;
           tunnelProtocol = "";
+
+          encryption = {
+            enabled = true;
+            nodeEncryption = true;
+            type = "wireguard";
+          };
+
+          authentication.mutual.spire = {
+            # TODO?: use a cnpg DB
+            enabled = true;
+            install.enabled = true;
+            install.existingNamespace = true;
+            install.namespace = "cilium-spire";
+          };
+
           bgpControlPlane.enabled = top.bgp.enable;
           l2announcements = {
             enabled = !top.bgp.enable;

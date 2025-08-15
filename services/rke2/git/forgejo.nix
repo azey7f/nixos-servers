@@ -18,8 +18,8 @@ in {
     az.server.rke2.namespaces = {
       "app-forgejo".networkPolicy = {
         fromNamespaces = ["envoy-gateway"];
+        toNamespaces = ["app-mail"];
         toDomains = [
-          "mail.app-mail.svc"
           "github.com" # themes dl (#TODO: local mirror), pull mirroring
           "codeberg.org" # push mirrors
         ];

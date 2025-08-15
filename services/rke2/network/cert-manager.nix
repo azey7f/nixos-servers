@@ -17,10 +17,8 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.namespaces."cert-manager" = {
       networkPolicy.fromNamespaces = ["metrics-system"];
-      networkPolicy.toDomains = [
-        "knot-public.app-nameserver.svc"
-        "acme-v02.api.letsencrypt.org"
-      ];
+      networkPolicy.toNamespaces = ["app-nameserver"];
+      networkPolicy.toDomains = ["acme-v02.api.letsencrypt.org"];
       networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
 

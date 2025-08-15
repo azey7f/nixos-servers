@@ -38,7 +38,6 @@ in {
 
     environment.systemPackages = with pkgs; [kubectl cilium-cli];
 
-    # TODO: wireguard-native transport, whenever I get more than just 1 node
     # TODO: https://distribution.github.io/distribution/about/deploying/#run-an-externally-accessible-registry
     # TODO: https://docs.k3s.io/installation/airgap
     services.rke2 = {

@@ -23,6 +23,8 @@ in {
             };
 
             networkPolicy = {
+              mutualAuth = optBool true;
+
               # allow from/to specific namespace, always includes self
               fromNamespaces = mkOption {
                 type = listOf str;
@@ -107,11 +109,12 @@ in {
                   ingress =
                     ns.networkPolicy.extraIngress
                     ++ [
-                      {
-                        fromEndpoints =
-                          builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
-                          (ns.networkPolicy.fromNamespaces ++ [ns.name]);
-                      }
+                      (lib.attrsets.optionalAttrs ns.networkPolicy.mutualAuth {authentication.mode = "required";}
+                        // {
+                          fromEndpoints =
+                            builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
+                            (ns.networkPolicy.fromNamespaces ++ [ns.name]);
+                        })
                     ];
                   egress =
                     ns.networkPolicy.extraEgress
