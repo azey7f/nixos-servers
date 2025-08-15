@@ -14,6 +14,9 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.namespaces."cnpg-system" = {
+      networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
+    };
     az.server.rke2.manifests."cnpg" = [
       {
         apiVersion = "helm.cattle.io/v1";
