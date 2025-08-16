@@ -82,6 +82,9 @@ in {
                   WOODPECKER_FORGEJO_SECRET = config.sops.placeholder."rke2/woodpecker/forgejo-secret";
 
                   WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = true;
+
+		  WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
+		  WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
                 };
               };
             };
