@@ -64,7 +64,7 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.namespaces.default = {create = false;}; # nothing should be running in default anyways
 
-    az.server.rke2.manifests."aaa-namespaces" = let
+    az.server.rke2.manifests."00-namespaces" = let
       # https://en.wikipedia.org/wiki/Reserved_IP_addresses as of this commit
       # IPv6 list not needed since publicly routable addrs are just 2000::/3 (yay!)
       # 2000::/3 includes some non-routable stuff like 2001:db8::/32, but not ULAs/link-locals/etc which is what's important

@@ -84,11 +84,11 @@ in {
 
           max-nar-info-size = 52428800 # 50MiB
 
-	  [chunking]
-	  nar-size-threshold = 262144
-	  min-size = 16384
-	  avg-size = 65536
-	  max-size = 262144
+          [chunking]
+          nar-size-threshold = 262144
+          min-size = 16384
+          avg-size = 65536
+          max-size = 262144
 
           [database]
           url = "postgresql://attic:${config.sops.placeholder."rke2/attic/cnpg-passwd"}@attic-cnpg-rw.app-attic.svc/attic"
@@ -100,12 +100,12 @@ in {
           [jwt.signing]
           token-rs256-secret-base64 = "${config.sops.placeholder."rke2/attic/jwt-secret"}"
 
-	  # defaults
-	  [compression]
-	  type = "zstd"
+          # defaults
+          [compression]
+          type = "zstd"
 
-	  [garbage-collection]
-	  interval = "12 hours"
+          [garbage-collection]
+          interval = "12 hours"
         '';
       }
       {
@@ -131,7 +131,7 @@ in {
             {
               name = "attic";
               image = "ghcr.io/zhaofengli/attic:59d60f266ce854e05143c5003b67fe07bcd562a6"; # what the fuck is a semver
-	      args = ["-f" "/config/config.toml"]; # why is this not -c
+              args = ["-f" "/config/config.toml"]; # why is this not -c
               volumeMounts = [
                 {
                   name = "attic-storage";

@@ -83,8 +83,8 @@ in {
 
                   WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = true;
 
-		  WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
-		  WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
+                  WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
+                  WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
                 };
               };
             };
