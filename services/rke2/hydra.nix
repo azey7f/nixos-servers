@@ -1,3 +1,7 @@
+# UNUSED, POSSIBLY (PROBABLY) BROKEN
+# way too complex for what I'm doing, plus running a service on the K8s hosts feels very dirty
+# replaced by attic.nix & woodpecker-ci pipelines
+# ---
 # this is half a native module and half an RKE2 one, but it's still clustered so I'm putting it here.
 # since I'm not sure if hydra is stateless even with an external DB (#TODO), the
 # service only gets started via keepalived on one host at a time and is accessed via VIP
@@ -36,7 +40,7 @@ in {
       }
     ];
 
-    # nix config - # CRITICAL TODO
+    # nix config
     nix.settings.allowed-users = ["@hydra"];
 
     # other native stuff
@@ -131,9 +135,12 @@ in {
     };
 
     # K8s stuff
-    az.svc.rke2.cnpg.enable = true; # TODO
+    az.svc.rke2.cnpg.enable = true;
+    #az.svc.rke2.minio.enable = true;
+
     az.server.rke2.namespaces."app-hydra" = {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
+      networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
     az.server.rke2.manifests."app-hydra" = [
       # cnpg DB
@@ -170,7 +177,8 @@ in {
         };
       }
 
-      # networking boilerplate (yippee)
+      # minio S3 store for cache.${domain}
+      # apparently minio can't even be configured declaratively, wuh /* { apiVersion = "helm.cattle.io/v1"; kind = "HelmChart"; metadata = { name = "minio-hydra"; namespace = "kube-system"; }; spec = { targetNamespace = "app-hydra"; repo = "https://operator.min.io"; chart = "tenant"; version = "7.1.1"; valuesContent = builtins.toJSON { tenant.name = "app-hydra"; tenant.pools = [ { name = "minio-0"; servers = 4; volumes = 4; size = "20Gi"; securityContext = { runAsNonRoot = true; seccompProfile.type = "RuntimeDefault"; runAsUser = 65534; runAsGroup = 65534; fsGroup = 65534; }; containerSecurityContext = { allowPrivilegeEscalation = false; capabilities.drop = ["ALL"]; }; } ]; }; }; } */ # networking boilerplate (yippee)
       {
         apiVersion = "v1";
         kind = "Service";
@@ -241,7 +249,6 @@ in {
         };
       }
     ];
-
     az.svc.rke2.envoyGateway.httpRoutes = [
       {
         name = "hydra";
@@ -259,7 +266,6 @@ in {
         ];
       }
     ];
-
     az.svc.rke2.envoyGateway.gateways.internal.listeners = [
       {
         name = "hydra-cnpg";
@@ -268,11 +274,9 @@ in {
         allowedRoutes.namespaces.from = "All"; # TODO: Selector
       }
     ];
-
     az.svc.rke2.authelia.rules = [
       {
-        domain = ["hydra.${domain}"];
-        #policy = "bypass";
+        domain = ["hydra.${domain}"]; #policy = "bypass";
         subject = "group:admin";
         policy = "two_factor";
       }

@@ -80,7 +80,7 @@ in {
       }
     ];
 
-    # CRITICAL TODO: remove mail listener from gateways, use only inside cluster
+    # CRITICAL TODO: remove mail listener from gateways, use only inside cluster - currently only used for ZFS notifs
     az.svc.rke2.envoyGateway.gateways.internal.listeners = [
       {
         name = "mail";

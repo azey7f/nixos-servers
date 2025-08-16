@@ -21,6 +21,7 @@ in {
       toWAN = true; # downloads remote images - TODO: local registry
       extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
+    az.server.rke2.namespaces."app-forgejo".networkPolicy.toDomains = ["woodpecker.${domain}"]; # push events
 
     az.server.rke2.namespaces."app-woodpecker-steps" = {
       podSecurity = "baseline"; # TODO: there doesn't seem to be any way to set securityContext for steps

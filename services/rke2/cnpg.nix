@@ -34,19 +34,26 @@ in {
         };
       }
 
-      # for some reason cnpg pods need access to the apiserver
       {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata = {
           name = "cnpg-allow-kubernetes-default";
-          namespace = "app-authelia";
         };
         spec = {
           endpointSelector.matchLabels."cnpg.io/podRole" = "instance";
-          egress = [
-            {toEntities = ["kube-apiserver"];}
-          ];
+          egress = [{toEntities = ["kube-apiserver"];}];
+        };
+      }
+      {
+        apiVersion = "cilium.io/v2";
+        kind = "CiliumClusterwideNetworkPolicy";
+        metadata = {
+          name = "cnpg-initdb-allow-kubernetes-default";
+        };
+        spec = {
+          endpointSelector.matchLabels."cnpg.io/jobRole" = "initdb";
+          egress = [{toEntities = ["kube-apiserver"];}];
         };
       }
     ];

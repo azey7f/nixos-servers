@@ -32,7 +32,7 @@ in {
       wantedBy = ["default.target"];
     };
 
-    #sops.validateSopsFiles = false;
+    sops.validateSopsFiles = false; # without this, build checks need access to nixos-sops
     sops.defaultSopsFile = "${cfg.path}/${azLib.reverseFQDN config.networking.fqdn}/default.yaml";
     sops.age.keyFile = cfg.keyPath;
     sops.keepGenerations = 0; # don't delete old gens on `nixos-rebuild switch`, see https://github.com/astro/microvm.nix/issues/239
