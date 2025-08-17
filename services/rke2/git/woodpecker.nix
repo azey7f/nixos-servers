@@ -11,6 +11,7 @@ with lib; let
 in {
   options.az.svc.rke2.woodpecker = with azLib.opt; {
     enable = optBool false;
+    agentCount = mkOpt types.ints.positive 4;
   };
 
   config = mkIf cfg.enable {
@@ -58,7 +59,7 @@ in {
           in
             builtins.toJSON {
               agent = {
-                replicaCount = 1;
+                replicaCount = cfg.agentCount;
 
                 inherit securityContext podSecurityContext;
                 env = {
