@@ -36,19 +36,26 @@ steps:
           substituters = http://attic.app-attic.svc/main\n
           trusted-public-keys = main:1jU1/ydAUG+eKm24k9MMGP13Bv+MmgxPyf169DNHZRM=
         " > ~/.config/nix/nix.conf
-      # make sure git, attic-client & alejandra are cached in attic or buildable locally, fetch from cache.nixos.org if not
-      - for pkg in git attic-client alejandra;
-        do
-          nix-shell -p $pkg --run true || {
-            mv ~/.config/nix/nix.conf{,.bk};
-            nix-shell -p $pkg --run true;
-            mv ~/.config/nix/nix.conf{.bk,};
-          };
-        done
+      # make sure attic-client is cached or buildable locally, fetch from cache.nixos.org if not
+      - nix-shell -p attic-client --run true || {
+          mv ~/.config/nix/nix.conf{,.bk};
+          nix-shell -p attic-client --run true;
+          mv ~/.config/nix/nix.conf{.bk,};
+        }
+      # start continuously caching to attic
+      - nix-shell -p attic-client --run "attic login az http://attic.app-attic.svc $ATTIC_TOKEN"
+      - nix-shell -p attic-client --run "attic watch-store main -j 16" & sleep 5
+      - sleep 5
+      # download/build alejandra
+      - nix-shell -p alejandra --run true || {
+          mv ~/.config/nix/nix.conf{,.bk};
+          nix-shell -p alejandra --run true;
+          mv ~/.config/nix/nix.conf{.bk,};
+        }
       # format
       - nix-shell -p alejandra --run "alejandra --check ."
-      # cache everything to attic
+      # cache entire store to attic, just in case - || because attic fails if *any* path is invalid
       - nix-shell -p attic-client --run "
-          attic login az http://attic.app-attic.svc $ATTIC_TOKEN;
-          find /nix/store -mindepth 1 -maxdepth 1 ! -name .links | attic push main --stdin --no-closure -j 16;"
+          find /nix/store -mindepth 1 -maxdepth 1 ! -name .links | attic push main --stdin --no-closure -j 16
+          || find /nix/store -mindepth 1 -maxdepth 1 ! -name .links | xargs -L 16 attic push main --no-closure"
     backend_options: *secctx-backend-options

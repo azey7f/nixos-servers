@@ -49,6 +49,5 @@ Setting up cluster from scratch:
         - the cache is public so feel free to use it if you want, just be aware that at time of writing my upload is like 10mbps, so... yeah
       - server: `kubectl exec -n app-attic attic-0 -- /bin/sh -c 'atticadm -f /config/config.toml make-token --pull main --push main --validity 100y --sub woodpecker-ci'`
         - add to woodpecker as `ATTIC_TOKEN`
-mpt`
 
 [^1]: I specifically used a semicolon instead of an en dash because I didn't want people to think I used an LLM. what has the world come to
