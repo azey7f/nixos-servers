@@ -122,7 +122,7 @@ in {
           template.spec.containers = [
             {
               name = "frp";
-              image = "snowdreamtech/frpc:0.63";
+              image = "snowdreamtech/frpc:0.64";
               env = [
                 {
                   name = "POD_INDEX";
