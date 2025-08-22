@@ -13,26 +13,10 @@ in {
     enable = optBool false;
     schedule = optStr "0 */2 * * *"; # bi-hourly
 
-    autoUpgrade = {
-      # TODO: factor out as core module, merge with VPS
-      enable = optBool true;
-      flake = optStr "git+https://git.${domain}/infra/nixos-servers";
-    };
+    autoUpgrade = optBool true;
   };
 
   config = mkIf cfg.enable {
-    system.autoUpgrade = mkIf cfg.autoUpgrade.enable {
-      enable = true;
-      randomizedDelaySec = "45min";
-      persistent = false;
-      flake = cfg.autoUpgrade.flake;
-      allowReboot = false; # TODO: change w/ multiple nodes
-    };
-    az.svc.cron.enable = lib.mkDefault cfg.autoUpgrade.enable;
-    az.svc.cron.jobs = lib.lists.optionals cfg.autoUpgrade.enable [
-      "30 5 * * *  root  fish -c 'for f in /var/lib/rancher/rke2/server/manifests/*'; kubectl apply -f $f; end"
-    ];
-
     az.server.rke2.namespaces."app-renovate" = {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
       networkPolicy.toDomains = ["git.${domain}"];
@@ -50,6 +34,7 @@ in {
         stringData = {
           RENOVATE_TOKEN = config.sops.placeholder."rke2/renovate/forgejo-pat";
           RENOVATE_GITHUB_COM_TOKEN = config.sops.placeholder."rke2/renovate/github-ro-pat";
+          RENOVATE_GIT_PRIVATE_KEY = config.sops.placeholder."rke2/renovate/gpg-key";
         };
       }
       {
@@ -64,7 +49,7 @@ in {
 
           repo = "https://docs.renovatebot.com/helm-charts";
           chart = "renovate";
-          version = "43.15.0";
+          version = "43.14.0";
 
           valuesContent = builtins.toJSON {
             renovate.securityContext = {
@@ -78,6 +63,20 @@ in {
               seccompProfile.type = "RuntimeDefault";
             };
 
+	    # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
+            extraVolumes = [
+              {
+                name = "home";
+                emptyDir = {};
+              }
+            ];
+            extraVolumeMounts = [
+              {
+                name = "home";
+                mountPath = "/home/ubuntu";
+              }
+            ];
+
             cronjob.schedule = cfg.schedule;
 
             existingSecret = "renovate-env";
@@ -87,6 +86,7 @@ in {
               endpoint = "https://git.${domain}/api/v1";
               token = "{{ secrets.RENOVATE_TOKEN }}";
               gitAuthor = "renovate-bot <renovate-bot@${domain}>";
+              gitPrivateKey = "{{ secrets.RENOVATE_GIT_PRIVATE_KEY }}";
               autodiscover = true; # restricted account in forgejo
             };
           };
@@ -96,5 +96,73 @@ in {
 
     az.server.rke2.clusterWideSecrets."rke2/renovate/forgejo-pat" = {};
     az.server.rke2.clusterWideSecrets."rke2/renovate/github-ro-pat" = {};
+    az.server.rke2.clusterWideSecrets."rke2/renovate/gpg-key" = {};
+
+    az.svc.cron.enable = lib.mkDefault cfg.autoUpgrade;
+    az.svc.cron.jobs = lib.lists.optionals cfg.autoUpgrade [
+      "0 4 * * *  root  ${pkgs.writeScript "system-update" ''
+        #!/usr/bin/env sh
+        sleep $(shuf -i 0-60 -n 1)m # random delay 0-60m
+        cd /etc/nixos
+
+        # make sure repo is clean & fetch
+        if ! [ "$(git status --porcelain=v1 -b | sed 's/ \[behind [0-9]*\]//')" = "## main...origin/main" ]
+        then
+        	echo "dirty repo, skipping auto-update"
+        	echo
+        	git status
+        	exit 1
+        fi
+        git fetch -q
+
+        # check commits against signature
+        # userid doesn't seem spoofable in a way that'd make verify-commit --raw match the pattern, since newlines in it get output as \n
+        i=0
+        while ! git verify-commit --raw origin/HEAD~$i 2>&1 | grep -q '^\[GNUPG:\] VALIDSIG 2CCB340343FE8A2B91CE7F75F94F4A71C5C21E8F '
+        do
+        	# if no match, check if it matches renovate's signature & commit pattern (changing strings for "version", "image" or "revision")
+        	# I really can't be bothered trying to parse .renovaterc and applying it to git diff, this should be more than good enough
+
+        	git verify-commit --raw origin/HEAD~$i 2>&1 | grep -q '^\[GNUPG:\] VALIDSIG 8597C121F9054BFE10F91B789D5772AC74E63568 ' || {
+        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): didn't match any known good signature"
+        		exit 1
+        	}
+
+        	{ ! git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status | grep -vqE '^M'; } || {
+        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): signed renovate-bot commit moved/deleted/added files"
+        		echo
+        		git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status
+        		exit 1
+        	}
+
+        	# remove diff headers based on colors
+        	#   technically it's possible to add a color ANSI code that then gets removed by the sed, but
+        	#   at worst that'd cause the later nixos-rebuild to fail on eval & send a notif anyways
+        	diff="$(git diff HEAD -U0 --color | grep -Pv '^\e\[1m' | grep -Pv '^\e\[36m' | sed 's/\x1b\[[0-9;]*m//g')"
+
+        	# remove OK lines from $diff & check if it's empty
+        	for name in version image revision
+        	do
+        		diff="$(echo "$diff" | grep -vE "^[+|-]\s+$name\s+=\s+\"\S+\";")"
+        	done
+
+        	if [ "$diff" != "" ]
+        	then
+        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): signed renovate-bot commit doesn't match pattern"
+        		echo
+        		echo "$diff"
+        		exit 1
+        	fi
+
+        	# commit seems safe enough, continue
+        	i=$((i+1))
+        done
+
+        # commits are good, pull & apply
+        git pull || exit 1
+        nixos-rebuild switch || exit 1
+        systemctl restart rke2-server
+      ''}"
+    ];
   };
 }
