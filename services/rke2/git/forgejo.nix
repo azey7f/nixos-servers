@@ -22,6 +22,7 @@ in {
         toDomains = [
           "auth.${domain}" # OIDC auto-discovery
           "github.com" # themes dl (#TODO: local mirror), pull mirroring
+          "release-assets.githubusercontent.com"
           "codeberg.org" # push mirrors
         ];
       };
@@ -138,7 +139,7 @@ in {
               }
             ];
             initPreScript = ''
-              curl -Lo /themes/themes.tar.gz ${cfg.themesUrl}
+              curl -Lvo /themes/themes.tar.gz ${cfg.themesUrl}
               tar -xzvf /themes/themes.tar.gz -C /themes
               rm /themes/themes.tar.gz
             '';
