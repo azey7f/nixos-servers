@@ -63,7 +63,7 @@ in {
               seccompProfile.type = "RuntimeDefault";
             };
 
-	    # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
+            # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
             extraVolumes = [
               {
                 name = "home";
