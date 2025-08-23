@@ -115,6 +115,24 @@ in {
         fi
         git fetch -q
 
+        # import pubkeys
+        gpg --auto-key-locate cert,dane --locate-keys me@azey.net
+        gpg --import ${pkgs.writeText "renovate-gpg-pubkey" ''
+          -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+          mDMEaKh6wBYJKwYBBAHaRw8BAQdAoHIfgeW8agi/rxFq9IfKJ5Q50u/RoiuFjnws
+          ugyMPM+0JHJlbm92YXRlLWJvdCA8cmVub3ZhdGUtYm90QGF6ZXkubmV0PoiZBBMW
+          CgBBFiEEhZfBIfkFS/4Q+Rt4nVdyrHTmNWgFAmioesACGwMFCQWjmoAFCwkIBwIC
+          IgIGFQoJCAsCBBYCAwECHgcCF4AACgkQnVdyrHTmNWhlBQD6A+sSYaw5jIwYonBz
+          U0v6E4mPW0LVrvwbHpGX/7V0BtwA/0UyA1LBwCtw+y/gzFd/IBqHOP/vTkD7AbCo
+          cNRK9gACuDgEaKh6wBIKKwYBBAGXVQEFAQEHQCJkx55iltzTPjqtv/wuIH1uT1w2
+          Q9khY5iyUn/Oz7MvAwEIB4h+BBgWCgAmFiEEhZfBIfkFS/4Q+Rt4nVdyrHTmNWgF
+          AmioesACGwwFCQWjmoAACgkQnVdyrHTmNWhXWAEAsjMriCntruU2u4VaYyVq3ntb
+          pmHgCbRO0Hal3E244IcA/3m2VNIkApZzomUBXIPbiCl8rRHOeDWmY3cNUS0KyIsJ
+          =ojFq
+          -----END PGP PUBLIC KEY BLOCK-----
+        ''}
+
         # check commits against signature
         # userid doesn't seem spoofable in a way that'd make verify-commit --raw match the pattern, since newlines in it get output as \n
         i=0
