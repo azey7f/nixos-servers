@@ -13,7 +13,10 @@ in {
     enable = optBool false;
     schedule = optStr "0 */2 * * *"; # bi-hourly
 
-    autoUpgrade = optBool true;
+    autoUpgrade = {
+      enable = optBool true;
+      gpgTrustedKey = optStr "me@${domain}";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -98,8 +101,8 @@ in {
     az.server.rke2.clusterWideSecrets."rke2/renovate/github-ro-pat" = {};
     az.server.rke2.clusterWideSecrets."rke2/renovate/gpg-key" = {};
 
-    az.svc.cron.enable = lib.mkDefault cfg.autoUpgrade;
-    az.svc.cron.jobs = lib.lists.optionals cfg.autoUpgrade [
+    az.svc.cron.enable = lib.mkDefault cfg.autoUpgrade.enable;
+    az.svc.cron.jobs = lib.lists.optionals cfg.autoUpgrade.enable [
       "0 4 * * *  root  ${pkgs.writeScript "system-update" ''
         #!/usr/bin/env sh
         sleep $(shuf -i 0-60 -n 1)m # random delay 0-60m
@@ -116,7 +119,7 @@ in {
         git fetch -q
 
         # import pubkeys
-        gpg --auto-key-locate cert,dane --locate-keys me@azey.net
+        gpg --auto-key-locate cert,dane --locate-keys ${cfg.autoUpgrade.gpgTrustedKey}
         gpg --import ${pkgs.writeText "renovate-gpg-pubkey" ''
           -----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -135,19 +138,19 @@ in {
 
         # check commits against signature
         # userid doesn't seem spoofable in a way that'd make verify-commit --raw match the pattern, since newlines in it get output as \n
+        echo -n "processing origin/HEAD ($(git rev-parse origin/HEAD))..."
         i=0
         while ! git verify-commit --raw origin/HEAD~$i 2>&1 | grep -q '^\[GNUPG:\] VALIDSIG 2CCB340343FE8A2B91CE7F75F94F4A71C5C21E8F '
         do
         	# if no match, check if it matches renovate's signature & commit pattern (changing strings for "version", "image" or "revision")
         	# I really can't be bothered trying to parse .renovaterc and applying it to git diff, this should be more than good enough
-
-        	git verify-commit --raw origin/HEAD~$i 2>&1 | grep -q '^\[GNUPG:\] VALIDSIG 8597C121F9054BFE10F91B789D5772AC74E63568 ' || {
-        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): didn't match any known good signature"
+        	{ git verify-commit --raw origin/HEAD~$i 2>&1 | grep -q '^\[GNUPG:\] VALIDSIG 8597C121F9054BFE10F91B789D5772AC74E63568 '; } || {
+        		echo -e "FAIL\nSECURITY ERROR: commit not signed by any trusted key"
         		exit 1
         	}
 
         	{ ! git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status | grep -vqE '^M'; } || {
-        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): signed renovate-bot commit moved/deleted/added files"
+        		echo -e "FAIL\nSECURITY ERROR: signed renovate-bot commit moved/deleted/added files"
         		echo
         		git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status
         		exit 1
@@ -166,15 +169,18 @@ in {
 
         	if [ "$diff" != "" ]
         	then
-        		echo "SECURITY ERROR: origin/HEAD~$i ($(git rev-parse origin/HEAD~$i)): signed renovate-bot commit doesn't match pattern"
+        		echo -e "FAIL\nSECURITY ERROR: signed renovate-bot commit changed something it shouldn't be allowed to"
         		echo
         		echo "$diff"
         		exit 1
         	fi
 
         	# commit seems safe enough, continue
-        	i=$((i+1))
+        	echo "OK [renovate-bot]"
+        	echo -n "processing origin/HEAD~$((++i)) ($(git rev-parse origin/HEAD~$i))..."
         done
+        echo "OK [${cfg.autoUpgrade.gpgTrustedKey}]"
+        echo "COMMIT CHAIN VERIFIED"
 
         # commits are good, pull & apply
         git pull || exit 1
