@@ -108,7 +108,7 @@ in {
 
           repo = "https://openebs.github.io/openebs";
           chart = "openebs";
-          version = "4.3.2";
+          version = "4.3.3";
 
           valuesContent = builtins.toJSON {
             engines = {
