@@ -52,7 +52,7 @@ in {
 
           repo = "https://docs.renovatebot.com/helm-charts";
           chart = "renovate";
-          version = "43.26.5";
+          version = "43.27.0";
 
           valuesContent = builtins.toJSON {
             renovate.securityContext = {
