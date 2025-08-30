@@ -16,6 +16,7 @@ in {
   config = mkIf cfg.enable {
     az.server.rke2.namespaces."app-mail" = {
       podSecurity = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
+      networkPolicy.fromNamespaces = ["envoy-gateway"]; # see CRITICAL TODO
     };
     az.server.rke2.manifests."app-mail" = [
       {
@@ -80,7 +81,7 @@ in {
       }
     ];
 
-    # CRITICAL TODO: remove mail listener from gateways, use only inside cluster - currently only used for ZFS notifs
+    # CRITICAL TODO: remove mail listener from gateways, use only inside cluster - currently only used for ZFS & cron notifs
     az.svc.rke2.envoyGateway.gateways.internal.listeners = [
       {
         name = "mail";
