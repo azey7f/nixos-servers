@@ -45,6 +45,7 @@
 			"datasourceTemplate": "custom.grafana-dashboards"
 		}
 	],
+	"ignoreDeps": ["authelia"],
 	"packageRules": [
 		{
 			"matchUpdateTypes": [
