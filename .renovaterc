@@ -53,8 +53,7 @@
 			],
 			"groupName": "automerge-patch",
 			"automerge": true,
-			"automergeType": "branch",
-			"ignoreTests": true
+			"automergeType": "branch"
 		},
 		{
 			"matchUpdateTypes": [
@@ -75,8 +74,7 @@
 			],
 			"groupName": "automerge-minor",
 			"automerge": true,
-			"automergeType": "branch",
-			"ignoreTests": true
+			"automergeType": "branch"
 		},
 		{
 			"matchDepNames": [
@@ -87,8 +85,7 @@
 			],
 			"groupName": "automerge-reckless",
 			"automerge": true,
-			"automergeType": "branch",
-			"ignoreTests": true
+			"automergeType": "branch"
 		}
 	]
 }
