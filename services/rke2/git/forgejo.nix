@@ -45,42 +45,9 @@ in {
             database = "forgejo";
             owner = "forgejo";
             secret.name = "forgejo-cnpg-user";
-            import = {
-              type = "microservice";
-              databases = ["gitea"];
-              source.externalCluster = "cluster-old";
-            };
           };
 
           storage.size = "100Gi";
-
-          externalClusters = [
-            {
-              name = "cluster-old";
-              connectionParameters = {
-                host = "forgejo-postgresql.app-forgejo.svc";
-                user = "gitea";
-                dbname = "gitea";
-              };
-              password = {
-                name = "forgejo-cnpg-olduser";
-                key = "password";
-              };
-            }
-          ];
-        };
-      }
-      {
-        apiVersion = "v1";
-        kind = "Secret";
-        type = "kubernetes.io/basic-auth";
-        metadata = {
-          name = "forgejo-cnpg-olduser";
-          namespace = "app-forgejo";
-        };
-        stringData = {
-          username = "gitea";
-          password = "gitea";
         };
       }
       {
@@ -98,6 +65,21 @@ in {
       }
 
       {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "forgejo-db-config";
+          namespace = "app-forgejo";
+        };
+        stringData.database = ''
+          DB_TYPE=postgres
+          HOST=forgejo-cnpg-rw.app-forgejo.svc
+          NAME=forgejo
+          USER=forgejo
+          PASSWD=${config.sops.placeholder."rke2/forgejo/cnpg-passwd"}
+        '';
+      }
+      {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
         metadata = {
@@ -108,7 +90,7 @@ in {
           targetNamespace = "app-forgejo";
 
           chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
-          version = "13.0.1";
+          version = "14.0.2";
 
           valuesContent = builtins.toJSON {
             strategy.type = "Recreate"; # TODO: remove w RWM storage
@@ -123,11 +105,6 @@ in {
               seccompProfile.type = "RuntimeDefault";
             };
 
-            valkey-cluster.enabled = false;
-            postgresql-ha.enabled = false;
-            valkey.enabled = true;
-            postgresql.enabled = true;
-
             global.namespaceOverride = "app-forgejo";
             clusterDomain = config.networking.domain;
             persistence.enabled = true;
@@ -138,8 +115,8 @@ in {
               username = "";
               password = "";
             };
+            gitea.additionalConfigSources = [{secret.secretName = "forgejo-db-config";}];
             gitea.config = {
-              database.DB_TYPE = "postgres";
               indexer = {
                 ISSUE_INDEXER_TYPE = "bleve";
                 REPO_INDEXER_ENABLED = true;
