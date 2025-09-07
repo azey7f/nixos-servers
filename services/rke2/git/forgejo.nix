@@ -15,6 +15,7 @@ in {
   };
 
   config = mkIf cfg.enable {
+    az.svc.rke2.cnpg.enable = true;
     az.server.rke2.namespaces = {
       "app-forgejo".networkPolicy = {
         fromNamespaces = ["envoy-gateway"];
@@ -30,6 +31,72 @@ in {
     };
 
     az.server.rke2.manifests."app-forgejo" = [
+      {
+        apiVersion = "postgresql.cnpg.io/v1";
+        kind = "Cluster";
+        metadata = {
+          name = "forgejo-cnpg";
+          namespace = "app-forgejo";
+        };
+        spec = {
+          instances = 1; # TODO: HA
+
+          bootstrap.initdb = {
+            database = "forgejo";
+            owner = "forgejo";
+            secret.name = "forgejo-cnpg-user";
+            import = {
+              type = "microservice";
+              databases = ["gitea"];
+              source.externalCluster = "cluster-old";
+            };
+          };
+
+          storage.size = "100Gi";
+
+          externalClusters = [
+            {
+              name = "cluster-old";
+              connectionParameters = {
+                host = "forgejo-postgresql.app-forgejo.svc";
+                user = "gitea";
+                dbname = "gitea";
+              };
+              password = {
+                name = "forgejo-cnpg-olduser";
+                key = "password";
+              };
+            }
+          ];
+        };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        type = "kubernetes.io/basic-auth";
+        metadata = {
+          name = "forgejo-cnpg-olduser";
+          namespace = "app-forgejo";
+        };
+        stringData = {
+          username = "gitea";
+          password = "gitea";
+        };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        type = "kubernetes.io/basic-auth";
+        metadata = {
+          name = "forgejo-cnpg-user";
+          namespace = "app-forgejo";
+        };
+        stringData = {
+          username = "forgejo";
+          password = config.sops.placeholder."rke2/forgejo/cnpg-passwd";
+        };
+      }
+
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
@@ -185,5 +252,6 @@ in {
 
     az.server.rke2.clusterWideSecrets."rke2/forgejo/oidc-id" = {};
     az.server.rke2.clusterWideSecrets."rke2/forgejo/oidc-secret-digest" = {};
+    az.server.rke2.clusterWideSecrets."rke2/forgejo/cnpg-passwd" = {};
   };
 }

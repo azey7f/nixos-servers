@@ -56,6 +56,17 @@ in {
           egress = [{toEntities = ["kube-apiserver"];}];
         };
       }
+      {
+        apiVersion = "cilium.io/v2";
+        kind = "CiliumClusterwideNetworkPolicy";
+        metadata = {
+          name = "cnpg-import-allow-kubernetes-default";
+        };
+        spec = {
+          endpointSelector.matchLabels."cnpg.io/jobRole" = "import";
+          egress = [{toEntities = ["kube-apiserver"];}];
+        };
+      }
     ];
   };
 }
