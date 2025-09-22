@@ -38,7 +38,7 @@ in {
           template.spec.containers = [
             {
               name = "feishin";
-              image = "ghcr.io/jeffvli/feishin:0.20.0";
+              image = "ghcr.io/jeffvli/feishin:0.20.1";
               env = lib.attrsets.mapAttrsToList (name: value: {inherit name value;}) {
                 SERVER_LOCK = "true";
                 SERVER_NAME = "navidrome";
