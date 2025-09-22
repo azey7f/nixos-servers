@@ -129,7 +129,7 @@ in {
                 template.spec.containers = [
                   {
                     name = "knot";
-                    image = "cznic/knot:v3.4.8";
+                    image = "cznic/knot:v3.5.0";
                     command = ["knotd" "-c" "/config/knot.conf"];
                     volumeMounts = [
                       {
