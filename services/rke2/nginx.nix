@@ -79,7 +79,7 @@ in {
           template.spec.containers = let
             syncContainer = dir: repo: {
               name = "git-sync-${dir}";
-              image = "registry.k8s.io/git-sync/git-sync:v4.4.3";
+              image = "registry.k8s.io/git-sync/git-sync:v4.5.0";
               args = [
                 "--repo=${repo}"
                 "--depth=1"
