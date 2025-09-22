@@ -38,6 +38,7 @@ in {
           RENOVATE_TOKEN = config.sops.placeholder."rke2/renovate/forgejo-pat";
           RENOVATE_GITHUB_COM_TOKEN = config.sops.placeholder."rke2/renovate/github-ro-pat";
           RENOVATE_GIT_PRIVATE_KEY = config.sops.placeholder."rke2/renovate/gpg-key";
+          #RENOVATE_LOG_LEVEL = "debug";
         };
       }
       {
@@ -91,6 +92,11 @@ in {
               gitAuthor = "renovate-bot <renovate-bot@${domain}>";
               gitPrivateKey = "{{ secrets.RENOVATE_GIT_PRIVATE_KEY }}";
               autodiscover = true; # restricted account in forgejo
+
+              # envoy-gateway causes https://codeberg.org/forgejo/forgejo/issues/1929 because it 307s any %2F URIs to /
+              # TODO: make an issue about this
+              branchNameStrict = true;
+              branchPrefix = "renovate#";
             };
           };
         };
