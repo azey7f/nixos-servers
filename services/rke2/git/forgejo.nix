@@ -90,7 +90,7 @@ in {
           targetNamespace = "app-forgejo";
 
           chart = "oci://code.forgejo.org/forgejo-helm/forgejo";
-          version = "14.0.2";
+          version = "14.0.3";
 
           valuesContent = builtins.toJSON {
             strategy.type = "Recreate"; # TODO: remove w RWM storage
