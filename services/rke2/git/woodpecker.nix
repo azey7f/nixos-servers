@@ -42,7 +42,7 @@ in {
           targetNamespace = "app-woodpecker";
 
           chart = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
-          version = "3.3.0";
+          version = "3.3.1";
 
           valuesContent = let
             podSecurityContext = {fsGroup = 65534;};
