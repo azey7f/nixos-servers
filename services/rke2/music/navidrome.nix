@@ -31,7 +31,12 @@ in {
 
           valuesContent = builtins.toJSON {
             global.namespace = "app-music";
-            workload.main.podSpec.containers.main.env.ND_SCANNER_SCHEDULE = "0"; # manual only
+            workload.main.podSpec.containers.main.env = {
+              ND_SCANNER_SCHEDULE = "0"; # manual only
+
+              ND_ENABLESHARING = "true";
+              ND_DEFAULTSHAREEXPIRATION = "2557920h";
+            };
 
             persistence.data = {
               type = "pvc";
@@ -67,6 +72,9 @@ in {
             ];
           }
         ];
+        # allow embedding
+        responseHeaders.x-frame-options = null;
+        customCSP.frame-ancestors = ["'self'" "https:"];
       }
     ];
 

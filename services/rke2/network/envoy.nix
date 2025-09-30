@@ -61,7 +61,7 @@ in {
               default = {};
             };
             responseHeaders = mkOption {
-              type = with types; attrsOf str;
+              type = with types; attrsOf (nullOr str);
               default = {};
             };
           };
@@ -342,32 +342,33 @@ in {
                     {
                       type = "ResponseHeaderModifier";
                       responseHeaderModifier.set =
-                        (lib.attrsets.mapAttrsToList (name: value: {
-                            inherit name value;
-                          })
-                          (
-                            {
-                              cat = "~(=^.^=)"; # essential for (emotional) security
-                              contact = "me@${domain}";
-                              x-powered-by = "NixOS; RKE2; hopes and dreams (and estrogen)";
-                              source-code = "https://git.${domain}/infra";
+                        (builtins.filter (r: r.value != null)
+                          (lib.attrsets.mapAttrsToList (name: value: {
+                              inherit name value;
+                            })
+                            (
+                              {
+                                cat = "~(=^.^=)"; # essential for (emotional) security
+                                contact = "me@${domain}";
+                                x-powered-by = "NixOS; RKE2; hopes and dreams (and estrogen)";
+                                source-code = "https://git.${domain}/infra";
 
-                              # security
-                              strict-transport-security = "max-age=63072000; includeSubdomains; preload";
-                              access-control-allow-origin = "*"; # TODO: https://gateway.envoyproxy.io/docs/tasks/security/cors/
-                              x-content-type-options = "nosniff";
-                              x-xss-protection = "1; mode=block";
-                              x-frame-options = "SAMEORIGIN";
-                              referrer-policy = "same-origin";
-                              cross-origin-opener-policy = "same-origin";
-                              cross-origin-embedder-policy = "require-corp";
-                              cross-origin-resource-policy = "same-site";
+                                # security
+                                strict-transport-security = "max-age=63072000; includeSubdomains; preload";
+                                access-control-allow-origin = "*"; # TODO: https://gateway.envoyproxy.io/docs/tasks/security/cors/
+                                x-content-type-options = "nosniff";
+                                x-xss-protection = "1; mode=block";
+                                x-frame-options = "SAMEORIGIN";
+                                referrer-policy = "same-origin";
+                                cross-origin-opener-policy = "same-origin";
+                                cross-origin-embedder-policy = "require-corp";
+                                cross-origin-resource-policy = "same-site";
 
-                              # misc
-                              x-robots-tag = "none"; # TODO: https://gateway.envoyproxy.io/docs/tasks/traffic/direct-response/ global location
-                            }
-                            // route.responseHeaders
-                          ))
+                                # misc
+                                x-robots-tag = "none"; # TODO: https://gateway.envoyproxy.io/docs/tasks/traffic/direct-response/ global location
+                              }
+                              // route.responseHeaders
+                            )))
                         ++ [
                           {
                             name = "content-security-policy";

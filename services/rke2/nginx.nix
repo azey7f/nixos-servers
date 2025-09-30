@@ -185,6 +185,7 @@ in {
           worker-src = ["'self'" "blob:"];
           script-src = ["'self'" "blob:"];
           style-src = ["'self'" "'unsafe-inline'"]; # CSS in JS on a static page, there shouldn't be any XSS attack vectors anyways
+          frame-src = ["https://navidrome.${domain}"];
         };
         responseHeaders.x-robots-tag = "all";
       }
