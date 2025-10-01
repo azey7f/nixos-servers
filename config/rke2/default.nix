@@ -27,19 +27,19 @@ in {
       (builtins.attrNames outputs.infra.domains);
     };
 
-    # openssl rand -hex goes brr
-    clusterCidr = optStr "10.42.0.0/16,fd01::/48"; # TODO: https://github.com/cilium/cilium/issues/28985
+    clusterCidr = optStr "10.42.0.0/16,fd01::/48";
     serviceCidr = optStr "10.43.0.0/16,fd98::/108";
   };
 
   config = mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = [10250 7946]; # 7946 for metallb
-    networking.firewall.allowedUDPPorts = [8472 7946];
+    # https://docs.rke2.io/install/requirements?cni-rules=Cilium
+    networking.firewall.allowedTCPPorts = [4240 10250];
+    networking.firewall.allowedUDPPorts = [51871];
 
     environment.systemPackages = with pkgs; [kubectl cilium-cli];
 
     # TODO: https://distribution.github.io/distribution/about/deploying/#run-an-externally-accessible-registry
-    # TODO: https://docs.k3s.io/installation/airgap
+    # TODO: https://docs.rke2.io/install/airgap
     services.rke2 = {
       enable = true;
       tokenFile = "/run/secrets/rke2/token";
@@ -94,7 +94,7 @@ in {
             conf.networking.hostName
             conf.networking.fqdn
           ];
-          # K8s/K3s API virtual IP, see ./loadbalancer/keepalived.nix
+          # K8s/RKE2 API virtual IP, see ./loadbalancer/keepalived.nix
           "${cluster.publicSubnet}::ffff" = ["api.${config.networking.domain}"];
         }
       )

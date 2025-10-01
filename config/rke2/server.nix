@@ -30,7 +30,9 @@ in {
   };
 
   config = mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = [2379 2380 6443];
+    # https://docs.rke2.io/install/requirements?cni-rules=Cilium
+    networking.firewall.allowedTCPPorts = [2379 2380 2381 6443 9345];
+
     environment.sessionVariables.KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
 
     systemd.services.rke2-server.preStart = "${pkgs.kmod}/bin/modprobe -a ip6_tables ip6table_mangle ip6table_raw ip6table_filter";
