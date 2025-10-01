@@ -114,9 +114,26 @@
         "type": "indirect"
       }
     },
+    "rke2-k3s-merge": {
+      "locked": {
+        "lastModified": 1759357602,
+        "narHash": "sha256-2/a8Mmm3F3nkIEEDAvd4Jb6utZo5xgUi/W5Mv3Mwqrg=",
+        "owner": "azey7f",
+        "repo": "nixpkgs",
+        "rev": "7e7d9a4a01cc72909839bddf254da8c0d7a082ea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "azey7f",
+        "ref": "rke2-k3s-merge",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "core": "core",
+        "rke2-k3s-merge": "rke2-k3s-merge",
         "sops-nix": "sops-nix"
       }
     },

@@ -5,13 +5,15 @@
   lib,
   azLib,
   outputs,
+  rke2-k3s-merge,
   ...
 }:
 with lib; let
   cfg = config.az.server.rke2;
   cluster = outputs.infra.clusters.${config.networking.domain};
 in {
-  imports = azLib.scanPath ./.;
+  disabledModules = ["services/cluster/rke2/default.nix" "services/cluster/k3s/default.nix"];
+  imports = azLib.scanPath ./. ++ ["${rke2-k3s-merge}/nixos/modules/services/cluster/rancher/default.nix"];
 
   options.az.server.rke2 = with azLib.opt; {
     enable = optBool false;
@@ -44,11 +46,11 @@ in {
       enable = true;
       tokenFile = "/run/secrets/rke2/token";
       serverAddr = "https://api.${config.networking.domain}";
+      nodeName = config.networking.fqdn;
 
-      cisHardening = false; # configured manually
+      cisHardening = true;
 
       extraFlags = [
-        "--node-name=${config.networking.fqdn}"
         "--disable-kube-proxy" # replaced w/ cilium
         #"--snapshotter=native"
         #"--kubelet-arg=resolv-conf=/etc/resolv.conf"
@@ -67,6 +69,18 @@ in {
       "fs.inotify.max_user_instances" = 2099999999;
       "fs.inotify.max_queued_events" = 2099999999;
     };
+
+    # iptables modules for cilium
+    boot.kernelModules = [
+      "iptable_raw"
+      "iptable_mangle"
+      "iptable_filter"
+      "iptable_nat"
+      "ip6table_raw"
+      "ip6table_mangle"
+      "ip6table_filter"
+      "ip6table_nat"
+    ];
 
     # networking
     az.server.net.ipv6.address = [

@@ -3,6 +3,8 @@
     self.submodules = true;
     core.url = "./core";
 
+    rke2-k3s-merge.url = "github:azey7f/nixpkgs/rke2-k3s-merge";
+
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "core/nixpkgs";
   };
@@ -10,6 +12,7 @@
   outputs = {
     self,
     core,
+    rke2-k3s-merge,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -38,6 +41,7 @@
               ];
 
               extraArgs = {inherit inputs outputs;};
+              specialArgs = {inherit rke2-k3s-merge;};
             }
             hostName; # TODO?: fqdn for derivation name?
         })

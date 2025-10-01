@@ -40,6 +40,13 @@ in {
       (lib.attrsets.optionalAttrs cfg.clusterInit {serverAddr = mkForce "";})
       // {
         role = "server";
+        disable = [
+          "rke2-ingress-nginx" # replaced w/ envoy gateway
+          "rke2-metrics-server"
+          "rke2-snapshot-controller"
+          "rke2-snapshot-controller-crd"
+          "rke2-snapshot-validation-webhook"
+        ];
         extraFlags =
           [
             "--cluster-domain=${config.networking.domain}"
@@ -48,11 +55,6 @@ in {
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
             "--tls-san=${config.networking.fqdn}"
-            "--disable=rke2-ingress-nginx" # replaced w/ cilium's gateway API
-            "--disable=rke2-metrics-server"
-            "--disable=rke2-snapshot-controller"
-            "--disable=rke2-snapshot-controller-crd"
-            "--disable=rke2-snapshot-validation-webhook"
           ]
           ++ lib.optionals config.az.svc.rke2.metrics.enable [
             "--etcd-expose-metrics"
