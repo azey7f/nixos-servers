@@ -96,7 +96,7 @@ in {
             targetNamespace = "envoy-gateway";
 
             chart = "oci://docker.io/envoyproxy/gateway-helm";
-            version = "1.5.1";
+            version = "1.5.2";
           };
         }
 
