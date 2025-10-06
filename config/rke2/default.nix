@@ -48,6 +48,8 @@ in {
       serverAddr = "https://api.${config.networking.domain}";
       nodeName = config.networking.fqdn;
 
+      package = pkgs.rke2_1_32;
+
       cisHardening = true;
 
       extraFlags = [
