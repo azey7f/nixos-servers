@@ -26,9 +26,7 @@
 		},
 		{
 			"customType": "regex",
-			"managerFilePatterns": [
-				"/\\.nix$/"
-			],
+			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
 				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
 			],
@@ -45,7 +43,6 @@
 			"datasourceTemplate": "custom.grafana-dashboards"
 		}
 	],
-	"ignoreDeps": ["authelia"],
 	"packageRules": [
 		{
 			"matchUpdateTypes": [
@@ -86,6 +83,13 @@
 			"groupName": "automerge-reckless",
 			"automerge": true,
 			"automergeType": "branch"
+		},
+		{
+			"matchDepNames": [
+				"authelia"
+			],
+			"groupName": "dont-automerge",
+			"automerge": false
 		}
 	]
 }
