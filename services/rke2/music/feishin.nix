@@ -20,8 +20,8 @@ in {
       feishin = {
         imageName = "ghcr.io/jeffvli/feishin";
         finalImageTag = "0.20.1";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/jeffvli/feishin
+        imageDigest = "sha256:924ac0a6d2ff62d4ea2cbdff174394259cd801d03156ae0988f9d1c308208186";
+        hash = "sha256-M/2lvY5r/0rAIchEGxqst1FExe3+Z7DQywdz9McQRs4="; # renovate: ghcr.io/jeffvli/feishin
       };
     };
     az.server.rke2.manifests."app-music" = [
