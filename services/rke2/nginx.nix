@@ -95,6 +95,7 @@ in {
             syncContainer = dir: repo: {
               name = "git-sync-${dir}";
               image = images.git-sync.imageString;
+              # TREEWIDE TODO: imagePullPolicy = "Never";
               args = [
                 "--repo=${repo}"
                 "--depth=1"

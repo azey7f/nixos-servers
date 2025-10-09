@@ -9,6 +9,7 @@
 } @ args:
 with lib; let
   cfg = config.az.svc.rke2.nameserver;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.nameserver = with azLib.opt; {
     enable = optBool false;
@@ -62,6 +63,14 @@ in {
       gateways = lib.lists.optional config.az.svc.rke2.envoyGateway.enable "external";
     };
 
+    az.server.rke2.images = {
+      knot = {
+        imageName = "cznic/knot";
+        finalImageTag = "v3.5.0";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: cznic/knot
+      };
+    };
     az.server.rke2.manifests."app-nameserver" = lib.lists.flatten (lib.attrsets.mapAttrsToList (
         _: {
           id,
@@ -129,7 +138,7 @@ in {
                 template.spec.containers = [
                   {
                     name = "knot";
-                    image = "cznic/knot:v3.5.0";
+                    image = images.knot.imageString;
                     command = ["knotd" "-c" "/config/knot.conf"];
                     volumeMounts = [
                       {

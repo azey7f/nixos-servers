@@ -9,6 +9,7 @@
 with lib; let
   cfg = config.az.svc.rke2.searxng;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.searxng = with azLib.opt; {
     enable = optBool false;
@@ -20,6 +21,14 @@ in {
       networkPolicy.toWAN = true; # default engines could change at any time, so this is safer functionality-wise than toDomains
     };
 
+    az.server.rke2.images = {
+      searxng = {
+        imageName = "searxng/searxng";
+        finalImageTag = "2025.8.10-6cccb46";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: searxng/searxng
+      };
+    };
     az.server.rke2.manifests."app-searxng" = [
       {
         apiVersion = "helm.cattle.io/v1";
@@ -93,7 +102,7 @@ in {
           template.spec.containers = [
             {
               name = "searxng";
-              image = "docker.io/searxng/searxng:2025.8.10-6cccb46";
+              image = images.searxng.imageString;
               volumeMounts = [
                 {
                   name = "searxng-config";

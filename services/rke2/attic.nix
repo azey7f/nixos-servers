@@ -9,6 +9,7 @@
 with lib; let
   cfg = config.az.svc.rke2.attic;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.attic = with azLib.opt; {
     enable = optBool false;
@@ -22,6 +23,14 @@ in {
     };
     az.server.rke2.namespaces."app-woodpecker-steps".networkPolicy.toNamespaces = ["app-attic"];
 
+    az.server.rke2.images = {
+      attic = {
+        imageName = "ghcr.io/zhaofengli/attic";
+        finalImageTag = "59d60f266ce854e05143c5003b67fe07bcd562a6"; # what the fuck is a semver
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/zhaofengli/attic
+      };
+    };
     az.server.rke2.manifests."app-attic" = [
       {
         apiVersion = "postgresql.cnpg.io/v1";
@@ -130,7 +139,7 @@ in {
           template.spec.containers = [
             {
               name = "attic";
-              image = "ghcr.io/zhaofengli/attic:59d60f266ce854e05143c5003b67fe07bcd562a6"; # what the fuck is a semver
+              image = images.attic.imageString;
               args = ["-f" "/config/config.toml"]; # why is this not -c
               volumeMounts = [
                 {

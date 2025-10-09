@@ -9,12 +9,21 @@
 with lib; let
   cfg = config.az.svc.rke2.feishin;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.feishin = with azLib.opt; {
     enable = optBool false;
   };
 
   config = mkIf cfg.enable {
+    az.server.rke2.images = {
+      feishin = {
+        imageName = "ghcr.io/jeffvli/feishin";
+        finalImageTag = "0.20.1";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/jeffvli/feishin
+      };
+    };
     az.server.rke2.manifests."app-music" = [
       {
         apiVersion = "apps/v1";
@@ -38,7 +47,7 @@ in {
           template.spec.containers = [
             {
               name = "feishin";
-              image = "ghcr.io/jeffvli/feishin:0.20.1";
+              image = images.feishin.imageString;
               env = lib.attrsets.mapAttrsToList (name: value: {inherit name value;}) {
                 SERVER_LOCK = "true";
                 SERVER_NAME = "navidrome";

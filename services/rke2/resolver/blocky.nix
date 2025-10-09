@@ -11,6 +11,7 @@ with lib; let
   top = config.az.svc.rke2.resolver;
   cfg = top.adguard;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.resolver.adguard = with azLib.opt; {
     enable = optBool top.enable;
@@ -30,6 +31,14 @@ in {
       "app-nameserver".networkPolicy.fromNamespaces = ["app-resolver"];
     };
 
+    az.server.rke2.images = {
+      blocky = {
+        imageName = "spx01/blocky";
+        finalImageTag = "v0.26.2";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: spx01/blocky
+      };
+    };
     az.server.rke2.manifests."app-resolver" = [
       {
         apiVersion = "v1";
@@ -110,7 +119,7 @@ in {
           template.spec.containers = [
             {
               name = "blocky";
-              image = "spx01/blocky:v0.26.2";
+              image = images.blocky.imageString;
               volumeMounts = [
                 {
                   name = "blocky-cm";

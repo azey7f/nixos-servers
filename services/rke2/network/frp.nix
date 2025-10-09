@@ -9,6 +9,7 @@
 with lib; let
   cfg = config.az.svc.rke2.frp;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.frp = with azLib.opt; {
     enable = optBool false;
@@ -44,6 +45,14 @@ in {
     };
     az.server.rke2.namespaces."app-nameserver".networkPolicy.fromNamespaces = ["app-frp"];
 
+    az.server.rke2.images = {
+      frpc = {
+        imageName = "snowdreamtech/frpc";
+        finalImageTag = "0.64";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: snowdreamtech/frpc
+      };
+    };
     az.server.rke2.manifests."app-frp" = [
       {
         apiVersion = "v1";
@@ -122,7 +131,7 @@ in {
           template.spec.containers = [
             {
               name = "frp";
-              image = "snowdreamtech/frpc:0.64";
+              image = images.frpc.imageString;
               env = [
                 {
                   name = "POD_INDEX";

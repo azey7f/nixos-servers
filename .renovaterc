@@ -59,7 +59,7 @@
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' | tee new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
 			}
@@ -71,7 +71,7 @@
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' | tee new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
 			}
@@ -83,7 +83,7 @@
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm /nix/tmp-image; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run 'skopeo --insecure-policy copy docker://{{{depName}}}@{{{newDigest}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newValue}}}'",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//' | tee new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
 			}

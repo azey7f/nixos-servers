@@ -10,6 +10,7 @@ with lib; let
   top = config.az.svc.rke2.resolver;
   cfg = top.unbound;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.resolver.unbound = with azLib.opt; {
     enable = optBool top.enable;
@@ -25,6 +26,14 @@ in {
       "app-nameserver".networkPolicy.fromNamespaces = ["app-resolver"];
     };
 
+    az.server.rke2.images = {
+      unbound = {
+        imageName = "klutchell/unbound";
+        finalImageTag = "1.24.0";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: klutchell/unbound
+      };
+    };
     az.server.rke2.manifests."app-resolver" = [
       {
         apiVersion = "v1";
@@ -113,7 +122,7 @@ in {
           template.spec.containers = [
             {
               name = "unbound";
-              image = "klutchell/unbound:1.24.0";
+              image = images.unbound.imageString;
               volumeMounts = [
                 {
                   name = "unbound-cm";
