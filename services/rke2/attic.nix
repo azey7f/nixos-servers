@@ -25,8 +25,9 @@ in {
 
     az.server.rke2.images = {
       attic = {
+        # what the fuck is a semver
         imageName = "ghcr.io/zhaofengli/attic";
-        finalImageTag = "59d60f266ce854e05143c5003b67fe07bcd562a6"; # what the fuck is a semver
+        finalImageTag = "59d60f266ce854e05143c5003b67fe07bcd562a6";
         imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
         hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/zhaofengli/attic
       };
