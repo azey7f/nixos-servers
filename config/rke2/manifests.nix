@@ -18,6 +18,21 @@ in {
       default = {};
     };
 
+    images = mkOption {
+      type = with types;
+        attrsOf (submodule ({name, ...}: {
+          options = {
+            imageName = optStr name;
+            imageDigest = optStr "";
+            hash = optStr "";
+            finalImageTag = optStr "";
+
+            imageString = optStr "${cfg.images.${name}.imageName}:${cfg.images.${name}.finalImageTag}";
+          };
+        }));
+      default = {};
+    };
+
     manifests = mkOption {
       type = with types; attrsOf (listOf attrs);
       default = {};
@@ -76,5 +91,11 @@ in {
         value."L+".argument = "/run/secrets/rendered/rke2/manifests/${name}.yaml";
       })
       manifests;
+
+    services.rke2.images = lib.attrsets.mapAttrsToList (_: image:
+      pkgs.dockerTools.pullImage {
+        inherit (image) imageName imageDigest hash finalImageTag;
+      })
+    cfg.images;
   });
 }

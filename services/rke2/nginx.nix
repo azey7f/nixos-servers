@@ -9,6 +9,7 @@
 with lib; let
   cfg = config.az.svc.rke2.nginx;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.nginx = with azLib.opt; {
     enable = optBool false;
@@ -22,6 +23,20 @@ in {
     az.server.rke2.namespaces."app-nginx" = {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
       networkPolicy.toDomains = ["git.${domain}"]; # source code fetching
+    };
+    az.server.rke2.images = {
+      git-sync = {
+        imageName = "registry.k8s.io/git-sync/git-sync";
+        finalImageTag = "v4.4.0";
+        imageDigest = "sha256:0330739a707a2969d617e859f096659ab6d149212658ac0ad7e550b59482ebf0";
+        hash = "sha256-Mbe+YVtO+a6e3ucpp6Mr9YKMOs8aToXYrKXniolB1hw="; # renovate: registry.k8s.io/git-sync/git-sync
+      };
+      nginx = {
+        imageName = "nginxinc/nginx-unprivileged";
+        finalImageTag = "1.27";
+        imageDigest = "sha256:f9dfa9c20b2b0b7c5cc830374f22f23dee3f750b6c5291ca7e0330b5c88e6403";
+        hash = "sha256-Ls3VUVJb/KQwfU0uXuu4aXqfaWX6mfYPLSCIDFDOAdQ="; # renovate: nginxinc/nginx-unprivileged
+      };
     };
     az.server.rke2.manifests."app-nginx" = [
       {
@@ -79,7 +94,7 @@ in {
           template.spec.containers = let
             syncContainer = dir: repo: {
               name = "git-sync-${dir}";
-              image = "registry.k8s.io/git-sync/git-sync:v4.5.0";
+              image = images.git-sync.imageString;
               args = [
                 "--repo=${repo}"
                 "--depth=1"
@@ -103,7 +118,7 @@ in {
             (syncContainer "miku" cfg.repos.miku)
             {
               name = "nginx";
-              image = "nginxinc/nginx-unprivileged:1.29";
+              image = images.nginx.imageString;
               volumeMounts = [
                 {
                   name = "nginx-srv";

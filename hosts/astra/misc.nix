@@ -35,30 +35,4 @@ with lib; {
     };
     */
   };
-
-  /*
-  services.rke2.images = [
-    (pkgs.dockerTools.pullImage {
-      imageName = "nginx";
-      imageDigest = "sha256:3b4019335070fb6445987c8dd72cf18dec2cbc63b3575581eb66469c8173cd4f";
-      finalImageTag = "1.28.0";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: nginx
-    })
-  ];
-  services.rke2.autoDeployCharts = {
-    test = {
-      repo = "https://helm.github.io/examples";
-      name = "hello-world";
-      version = "0.0.9";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: https://helm.github.io/examples hello-world
-    };
-  };
-  services.rke2.autoDeployCharts = {
-    test = {
-      repo = "oci://tccr.io/truecharts/endlessh";
-      version = "12.0.0";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: tccr.io/truecharts/endlessh
-    };
-  };
-  */
 }

@@ -36,7 +36,7 @@
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"imageName\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*imageDigest\\s*=\\s*\"(?<currentDigest>\\S+)\"\\s*;\\s*finalImageTag\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				"imageName\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*finalImageTag\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;\\s*imageDigest\\s*=\\s*\"(?<currentDigest>\\S+)\"\\s*;"
 			],
 			"datasourceTemplate": "docker"
 		},
@@ -58,9 +58,9 @@
 				"fileFilters": ["**/*.nix"],
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
+					"rm *.tgz; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
-					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{depType}}} {{{depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
 			}
 		},
@@ -70,7 +70,7 @@
 				"fileFilters": ["**/*.nix"],
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
+					"rm *.tgz; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
@@ -82,15 +82,16 @@
 				"fileFilters": ["**/*.nix"],
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run \"skopeo --insecure-policy copy docker://{{{depName}}}:{{{newVersion}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newVersion}}}\"",
+					"rm /nix/tmp-image; HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run 'skopeo --insecure-policy copy docker://{{{depName}}}@{{{newDigest}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newValue}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//' > new-hash",
-					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
 				]
 			}
 		},
 		{
 			"matchUpdateTypes": [
-				"patch"
+				"patch",
+				"digest"
 			],
 			"groupName": "automerge-patch",
 			"automerge": true,
