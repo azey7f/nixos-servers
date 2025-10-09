@@ -18,7 +18,17 @@ in {
       podSecurity = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
       networkPolicy.fromNamespaces = ["envoy-gateway"]; # see CRITICAL TODO
     };
-    az.server.rke2.manifests."app-mail" = [
+
+    services.rke2.autoDeployCharts."mail" = {
+      repo = "https://bokysan.github.io/docker-postfix";
+      name = "mail";
+      version = "4.0.0";
+      hash = ""; # renovate: https://bokysan.github.io/docker-postfix mail
+
+      targetNamespace = "app-mail";
+      values.existingSecret = "mail-env";
+    };
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -31,25 +41,6 @@ in {
           RELAYHOST = "smtp.zoho.eu:587";
           RELAYHOST_USERNAME = "noreply@${domain}";
           RELAYHOST_PASSWORD = config.sops.placeholder."rke2/mail/zoho-passwd";
-        };
-      }
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "mail";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "app-mail";
-
-          repo = "https://bokysan.github.io/docker-postfix";
-          chart = "mail";
-          version = "4.4.0";
-
-          valuesContent = builtins.toJSON {
-            existingSecret = "mail-env";
-          };
         };
       }
       {

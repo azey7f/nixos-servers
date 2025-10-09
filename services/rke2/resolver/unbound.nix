@@ -34,7 +34,7 @@ in {
         hash = "sha256-DBCeQF5XNEEjrbh6aOukfxKdE9McR+JHErXDokgrT8k="; # renovate: klutchell/unbound
       };
     };
-    az.server.rke2.manifests."app-resolver" = [
+    services.rke2.manifests."resolver".content = [
       {
         apiVersion = "v1";
         kind = "ConfigMap";

@@ -53,7 +53,8 @@ in {
         hash = "sha256-CC4VaPaLtz0uZxgOIvXbznAZW9af9gsf6hFNm6pirHM="; # renovate: snowdreamtech/frpc
       };
     };
-    az.server.rke2.manifests."app-frp" = [
+
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -109,6 +110,8 @@ in {
           cfg.remotes
         );
       }
+    ];
+    services.rke2.manifests."frp".content = [
       {
         apiVersion = "apps/v1";
         kind = "StatefulSet";

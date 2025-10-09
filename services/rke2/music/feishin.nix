@@ -24,7 +24,7 @@ in {
         hash = "sha256-M/2lvY5r/0rAIchEGxqst1FExe3+Z7DQywdz9McQRs4="; # renovate: ghcr.io/jeffvli/feishin
       };
     };
-    az.server.rke2.manifests."app-music" = [
+    services.rke2.manifests."music".content = [
       {
         apiVersion = "apps/v1";
         kind = "Deployment";

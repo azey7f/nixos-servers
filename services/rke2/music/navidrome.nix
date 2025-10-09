@@ -15,7 +15,7 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.music.enable = true;
-    az.server.rke2.manifests."app-music" = [
+    services.rke2.manifests."music".content = [
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";

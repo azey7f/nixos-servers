@@ -29,29 +29,20 @@ in {
         hash = "sha256-RPlb15UHD9mvNdPbSuDpgp3l5f733isxSFP/n97gJuU="; # renovate: searxng/searxng
       };
     };
-    az.server.rke2.manifests."app-searxng" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "searxng-valkey";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "app-searxng";
+    services.rke2.autoDeployCharts."searxng-valkey" = {
+      repo = "https://valkey.io/valkey-helm";
+      name = "valkey";
+      version = "0.7.4";
+      hash = "sha256-iMXdYlzAJQu4iKTIeRpKvkQnzo5p0Cwi2h8Rfmakuao="; # renovate: https://valkey.io/valkey-helm valkey
 
-          repo = "https://valkey.io/valkey-helm/";
-          chart = "valkey";
-          version = "0.7.4";
-
-          valuesContent = builtins.toJSON {
-            auth.enabled = false; # TODO?
-            podSecurityContext.seccompProfile.type = "RuntimeDefault";
-            securityContext.allowPrivilegeEscalation = false;
-          };
-        };
-      }
-
+      targetNamespace = "app-searxng";
+      values = {
+        auth.enabled = false; # TODO?
+        podSecurityContext.seccompProfile.type = "RuntimeDefault";
+        securityContext.allowPrivilegeEscalation = false;
+      };
+    };
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -87,6 +78,8 @@ in {
           };
         };
       }
+    ];
+    services.rke2.manifests."searxng".content = [
       {
         apiVersion = "apps/v1";
         kind = "Deployment";

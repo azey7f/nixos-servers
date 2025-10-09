@@ -18,7 +18,7 @@ in {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
     };
 
-    az.server.rke2.manifests."app-music" = [
+    services.rke2.manifests."music".content = [
       {
         apiVersion = "v1";
         kind = "PersistentVolumeClaim";

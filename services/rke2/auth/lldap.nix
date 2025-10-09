@@ -20,7 +20,7 @@ in {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
     };
 
-    az.server.rke2.manifests."app-lldap" = [
+    az.server.rke2.manifests."lldap" = [
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChart";
@@ -31,7 +31,7 @@ in {
         spec = {
           targetNamespace = "app-lldap";
 
-          chart = "oci://tccr.io/truecharts/lldap"; # TODO?: move to raw deployment
+          chart = "oci://tccr.io/truecharts/lldap"; # TODO: move to raw deployment
           version = "8.2.1";
 
           valuesContent = builtins.toJSON {

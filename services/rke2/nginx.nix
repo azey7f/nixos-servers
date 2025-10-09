@@ -24,6 +24,7 @@ in {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
       networkPolicy.toDomains = ["git.${domain}"]; # source code fetching
     };
+
     az.server.rke2.images = {
       git-sync = {
         imageName = "registry.k8s.io/git-sync/git-sync";
@@ -34,11 +35,11 @@ in {
       nginx = {
         imageName = "nginxinc/nginx-unprivileged";
         finalImageTag = "1.29";
-        imageDigest = "sha256:d97a7c08c0ebcee8e7337527d28ef03da32390820eae72f376912f86d9cdcb45";
-        hash = "sha256-wNnNQ+2PUJPiM26/MctJS4H5NXv1zLk6bF2KNu+S37s="; # renovate: nginxinc/nginx-unprivileged
+        imageDigest = "sha256:9e35043fcebac70231e89f1b91b38dbd131adbc5c99428182a983b4519eb05ee";
+        hash = "sha256-QsQ9rPDtWIntAQU7oqoCefCrbVsAXZCBI72ZI6yCCfU="; # renovate: nginxinc/nginx-unprivileged
       };
     };
-    az.server.rke2.manifests."app-nginx" = [
+    services.rke2.manifests."nginx".content = [
       {
         apiVersion = "v1";
         kind = "ConfigMap";

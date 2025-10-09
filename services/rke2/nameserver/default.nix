@@ -1,4 +1,3 @@
-# TODO: docs - knotc status cert-key, keymgr <zone> ds
 {
   pkgs,
   config,
@@ -71,7 +70,7 @@ in {
         hash = "sha256-1hs0KSz+iN2A9n0pzrsD4Lmyi3M18ENs5l4zWY16xeg="; # renovate: cznic/knot
       };
     };
-    az.server.rke2.manifests."app-nameserver" = lib.lists.flatten (lib.attrsets.mapAttrsToList (
+    services.rke2.manifests."nameserver".content = lib.lists.flatten (lib.attrsets.mapAttrsToList (
         _: {
           id,
           domain,
@@ -93,27 +92,6 @@ in {
                 resources.requests.storage = "10Mi"; # just keys & journal
               };
             }
-            {
-              apiVersion = "v1";
-              kind = "Secret";
-              metadata = {
-                name = "knot-${id}-config";
-                namespace = "app-nameserver";
-              };
-              stringData = {
-                "${zonefile}.zone" = import ./zones/${zonefile}.nix domainConf args;
-                "knot.conf" = import ./config.nix domainConf args;
-              };
-            }
-            (mkIf acmeTsig {
-              apiVersion = "v1";
-              kind = "Secret";
-              metadata = {
-                name = "${id}-rfc2136-tsig";
-                namespace = "cert-manager";
-              };
-              stringData.secret = config.sops.placeholder."rke2/nameserver/${id}/tsig-secret";
-            })
             {
               apiVersion = "apps/v1";
               kind = "Deployment";
@@ -294,6 +272,40 @@ in {
               };
             }
           ]
+      )
+      cfg.domains);
+
+    az.server.rke2.secrets = lib.lists.flatten (lib.attrsets.mapAttrsToList (
+        _: {
+          id,
+          domain,
+          zonefile,
+          acmeTsig,
+          gateways,
+          ...
+        } @ domainConf: [
+          {
+            apiVersion = "v1";
+            kind = "Secret";
+            metadata = {
+              name = "knot-${id}-config";
+              namespace = "app-nameserver";
+            };
+            stringData = {
+              "${zonefile}.zone" = import ./zones/${zonefile}.nix domainConf args;
+              "knot.conf" = import ./config.nix domainConf args;
+            };
+          }
+          (lib.optionalAttrs acmeTsig {
+            apiVersion = "v1";
+            kind = "Secret";
+            metadata = {
+              name = "${id}-rfc2136-tsig";
+              namespace = "cert-manager";
+            };
+            stringData.secret = config.sops.placeholder."rke2/nameserver/${id}/tsig-secret";
+          })
+        ]
       )
       cfg.domains);
 

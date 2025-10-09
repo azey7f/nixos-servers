@@ -26,7 +26,76 @@ in {
       networkPolicy.toWAN = true;
     };
 
-    az.server.rke2.manifests."app-renovate" = [
+    services.rke2.autoDeployCharts."renovate" = {
+      targetNamespace = "app-renovate";
+
+      repo = "https://docs.renovatebot.com/helm-charts";
+      name = "renovate";
+      version = "44.13.0";
+      hash = ""; # renovate: https://docs.renovatebot.com/helm-charts renovate
+
+      values = {
+        renovate.securityContext = {
+          privileged = false;
+          allowPrivilegeEscalation = false;
+          capabilities.drop = ["ALL"];
+          runAsUser = 65534;
+          runAsGroup = 65534;
+          runAsNonRoot = true;
+          fsGroup = 65534;
+          seccompProfile.type = "RuntimeDefault";
+        };
+
+        extraVolumes = [
+          {
+            name = "home";
+            emptyDir = {};
+          }
+          {
+            name = "nix";
+            emptyDir = {};
+          }
+        ];
+        extraVolumeMounts = [
+          # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
+          {
+            name = "home";
+            mountPath = "/home/ubuntu";
+          }
+          # rootless nix in postUpgradeTasks
+          {
+            name = "nix";
+            mountPath = "/nix";
+          }
+        ];
+
+        cronjob.schedule = cfg.schedule;
+
+        existingSecret = "renovate-env";
+        #envFrom = [{secretRef.name = "renovate-env";}];
+        renovate.config = builtins.toJSON {
+          platform = "forgejo";
+          endpoint = "https://git.${domain}/api/v1";
+          token = "{{ secrets.RENOVATE_TOKEN }}";
+          gitAuthor = "renovate-bot <renovate-bot@${domain}>";
+          gitPrivateKey = "{{ secrets.RENOVATE_GIT_PRIVATE_KEY }}";
+          autodiscover = true; # restricted account in forgejo
+
+          allowedCommands = [
+            "^.*$"
+            #"^helm pull --repo \\S* \\S*$"
+            #''^nix-hash --flat --type sha256 --sri *.tgz | sed 's/\//\\\//' > new-hash$''
+            #''sed -i "s/\\(hash = \"\\)\\S*\\(\"; # renovate: hello-world\\)/\\1$(cat new-hash)\\2/\" hosts/astra/misc.nix''
+          ];
+
+          # envoy-gateway causes https://codeberg.org/forgejo/forgejo/issues/1929 because it 307s any %2F URIs to /
+          # TODO: make an issue about this
+          branchNameStrict = true;
+          branchPrefix = "renovate#";
+        };
+      };
+    };
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -39,82 +108,6 @@ in {
           RENOVATE_GITHUB_COM_TOKEN = config.sops.placeholder."rke2/renovate/github-ro-pat";
           RENOVATE_GIT_PRIVATE_KEY = config.sops.placeholder."rke2/renovate/gpg-key";
           #RENOVATE_LOG_LEVEL = "debug";
-        };
-      }
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "renovate";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "app-renovate";
-
-          repo = "https://docs.renovatebot.com/helm-charts";
-          chart = "renovate";
-          version = "44.13.5";
-
-          valuesContent = builtins.toJSON {
-            renovate.securityContext = {
-              privileged = false;
-              allowPrivilegeEscalation = false;
-              capabilities.drop = ["ALL"];
-              runAsUser = 65534;
-              runAsGroup = 65534;
-              runAsNonRoot = true;
-              fsGroup = 65534;
-              seccompProfile.type = "RuntimeDefault";
-            };
-
-            extraVolumes = [
-              {
-                name = "home";
-                emptyDir = {};
-              }
-              {
-                name = "nix";
-                emptyDir = {};
-              }
-            ];
-            extraVolumeMounts = [
-              # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
-              {
-                name = "home";
-                mountPath = "/home/ubuntu";
-              }
-              # rootless nix in postUpgradeTasks
-              {
-                name = "nix";
-                mountPath = "/nix";
-              }
-            ];
-
-            cronjob.schedule = cfg.schedule;
-
-            existingSecret = "renovate-env";
-            #envFrom = [{secretRef.name = "renovate-env";}];
-            renovate.config = builtins.toJSON {
-              platform = "forgejo";
-              endpoint = "https://git.${domain}/api/v1";
-              token = "{{ secrets.RENOVATE_TOKEN }}";
-              gitAuthor = "renovate-bot <renovate-bot@${domain}>";
-              gitPrivateKey = "{{ secrets.RENOVATE_GIT_PRIVATE_KEY }}";
-              autodiscover = true; # restricted account in forgejo
-
-              allowedCommands = [
-                "^.*$"
-                #"^helm pull --repo \\S* \\S*$"
-                #''^nix-hash --flat --type sha256 --sri *.tgz | sed 's/\//\\\//' > new-hash$''
-                #''sed -i "s/\\(hash = \"\\)\\S*\\(\"; # renovate: hello-world\\)/\\1$(cat new-hash)\\2/\" hosts/astra/misc.nix''
-              ];
-
-              # envoy-gateway causes https://codeberg.org/forgejo/forgejo/issues/1929 because it 307s any %2F URIs to /
-              # TODO: make an issue about this
-              branchNameStrict = true;
-              branchPrefix = "renovate#";
-            };
-          };
         };
       }
     ];

@@ -32,26 +32,7 @@ in {
         hash = "sha256-ju3Vi4p5dMLOPIHhV6Po+o1qT0DgWrALHx/6rwIrrO8="; # renovate: ghcr.io/zhaofengli/attic
       };
     };
-    az.server.rke2.manifests."app-attic" = [
-      {
-        apiVersion = "postgresql.cnpg.io/v1";
-        kind = "Cluster";
-        metadata = {
-          name = "attic-cnpg";
-          namespace = "app-attic";
-        };
-        spec = {
-          instances = 1; # TODO: HA
-
-          bootstrap.initdb = {
-            database = "attic";
-            owner = "attic";
-            secret.name = "attic-cnpg-user";
-          };
-
-          storage.size = "5Gi";
-        };
-      }
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -65,20 +46,6 @@ in {
           password = config.sops.placeholder."rke2/attic/cnpg-passwd";
         };
       }
-
-      {
-        apiVersion = "v1";
-        kind = "PersistentVolumeClaim";
-        metadata = {
-          name = "attic-storage";
-          namespace = "app-attic";
-        };
-        spec = {
-          accessModes = ["ReadWriteOnce"];
-          resources.requests.storage = "1Ti"; #c4ch3 th3 w0r1d
-        };
-      }
-
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -118,6 +85,41 @@ in {
           interval = "12 hours"
         '';
       }
+    ];
+    services.rke2.manifests."attic".content = [
+      {
+        apiVersion = "postgresql.cnpg.io/v1";
+        kind = "Cluster";
+        metadata = {
+          name = "attic-cnpg";
+          namespace = "app-attic";
+        };
+        spec = {
+          instances = 1; # TODO: HA
+
+          bootstrap.initdb = {
+            database = "attic";
+            owner = "attic";
+            secret.name = "attic-cnpg-user";
+          };
+
+          storage.size = "5Gi";
+        };
+      }
+
+      {
+        apiVersion = "v1";
+        kind = "PersistentVolumeClaim";
+        metadata = {
+          name = "attic-storage";
+          namespace = "app-attic";
+        };
+        spec = {
+          accessModes = ["ReadWriteOnce"];
+          resources.requests.storage = "1Ti"; #c4ch3 th3 w0r1d
+        };
+      }
+
       {
         apiVersion = "apps/v1";
         kind = "StatefulSet";

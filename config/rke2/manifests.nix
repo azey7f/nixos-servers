@@ -18,6 +18,7 @@ in {
       default = {};
     };
 
+    # images to be linked to /var/lib/rancher/rke2/agent/images
     images = mkOption {
       type = with types;
         attrsOf (submodule ({name, ...}: {
@@ -33,6 +34,13 @@ in {
       default = {};
     };
 
+    # convenience shorthand for manifests."00-secrets"
+    secrets = mkOption {
+      type = with types; listOf attrs;
+      default = [];
+    };
+
+    # manifests supporting sops values
     manifests = mkOption {
       type = with types; attrsOf (listOf attrs);
       default = {};
@@ -71,6 +79,7 @@ in {
         name: manifest: "${pkgs.fetchurl {inherit (manifest) url hash;}}"
       ) (lib.attrsets.filterAttrs (n: v: v.enable) cfg.remoteManifests));
   in {
+    # manifests impl
     sops.secrets = mapAttrs (n: v:
       v
       // {
@@ -92,10 +101,14 @@ in {
       })
       manifests;
 
+    # images impl
     services.rke2.images = lib.attrsets.mapAttrsToList (_: image:
       pkgs.dockerTools.pullImage {
         inherit (image) imageName imageDigest hash finalImageTag;
       })
     cfg.images;
+
+    # secrets impl
+    az.server.rke2.manifests."00-secrets" = cfg.secrets;
   });
 }

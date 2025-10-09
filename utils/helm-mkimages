@@ -1,0 +1,36 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -i sh -p kubernetes-helm yq-go skopeo
+#
+# outputs a .nix file that imports all images contained in helm chart
+# ./helm-mkimages --repo https://helm.github.io/examples hello-world --version 0.1.0
+
+img_list=$(helm template "$@" | yq -N '..|.image? | select(.)' | sort -u)
+
+echo -n "\
+{pkgs, ...}: {
+  # args: $@
+  config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage ["
+
+for img in $img_list
+do
+	name=$(echo $img | cut -d: -f1)
+	tag=$(echo $img | cut -d: -f2)
+	digest=$(skopeo inspect docker://$img -f "{{.Digest}}")
+
+	skopeo --insecure-policy copy docker://$name@$digest docker-archive:///tmp/helm-mkimages-skopeo:$img >/dev/null
+	hash=$(nix-hash --flat --type sha256 --sri /tmp/helm-mkimages-skopeo)
+	rm /tmp/helm-mkimages-skopeo; 
+
+	# tag at the end, so the renovate regex doesn't pick try updating these
+	echo -n "
+    {
+      imageName = \"$name\";
+      imageDigest = \"$digest\";
+      hash = \"$hash\";
+      finalImageTag = \"$tag\";
+    }"
+done
+
+echo "
+  ];
+}"

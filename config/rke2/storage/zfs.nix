@@ -95,36 +95,29 @@ in {
       podSecurity = "privileged";
       networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
-    az.server.rke2.manifests."openebs" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "openebs";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "openebs-system";
 
-          repo = "https://openebs.github.io/openebs";
-          chart = "openebs";
-          version = "4.3.3";
+    services.rke2.autoDeployCharts."openebs" = {
+      repo = "https://openebs.github.io/openebs";
+      name = "openebs";
+      version = "4.3.0";
+      hash = ""; # renovate: https://openebs.github.io/openebs openebs
 
-          valuesContent = builtins.toJSON {
-            engines = {
-              local = {
-                lvm.enabled = false;
-                zfs.enabled = true;
-              };
-              replicated.mayastor.enabled = false;
-            };
-
-            loki.singleBinary.replicas = 1;
-            loke.loki.commonConfig.replication_factor = 1;
-            minio.replicas = 1;
+      targetNamespace = "openebs-system";
+      values = {
+        engines = {
+          local = {
+            lvm.enabled = false;
+            zfs.enabled = true;
           };
+          replicated.mayastor.enabled = false;
         };
-      }
+
+        loki.singleBinary.replicas = 1;
+        loke.loki.commonConfig.replication_factor = 1;
+        minio.replicas = 1;
+      };
+    };
+    az.server.rke2.manifests."openebs-sc" = [
       {
         apiVersion = "storage.k8s.io/v1";
         kind = "StorageClass";

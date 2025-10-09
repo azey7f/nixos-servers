@@ -30,65 +30,74 @@ in {
       networkPolicy.toWAN = true; # nix flake updates
     };
 
-    az.server.rke2.manifests."app-woodpecker" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "woodpecker";
-          namespace = "kube-system";
+    services.rke2.autoDeployCharts."woodpecker" = {
+      repo = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
+      version = "3.3.0";
+      hash = ""; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker
+
+      targetNamespace = "app-woodpecker";
+      values = let
+        podSecurityContext = {fsGroup = 65534;};
+        securityContext = {
+          privileged = false;
+          allowPrivilegeEscalation = false;
+          capabilities.drop = ["ALL"];
+          runAsUser = 65534;
+          runAsGroup = 65534;
+          runAsNonRoot = true;
+          fsGroup = 65534;
+          seccompProfile.type = "RuntimeDefault";
         };
-        spec = {
-          targetNamespace = "app-woodpecker";
+      in {
+        agent = {
+          replicaCount = cfg.agentCount;
 
-          chart = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
-          version = "3.3.1";
+          inherit securityContext podSecurityContext;
+          extraSecretNamesForEnvFrom = ["agent-env"];
+        };
 
-          valuesContent = let
-            podSecurityContext = {fsGroup = 65534;};
-            securityContext = {
-              privileged = false;
-              allowPrivilegeEscalation = false;
-              capabilities.drop = ["ALL"];
-              runAsUser = 65534;
-              runAsGroup = 65534;
-              runAsNonRoot = true;
-              fsGroup = 65534;
-              seccompProfile.type = "RuntimeDefault";
-            };
-          in
-            builtins.toJSON {
-              agent = {
-                replicaCount = cfg.agentCount;
+        server = {
+          inherit securityContext podSecurityContext;
+          extraSecretNamesForEnvFrom = ["server-env"];
+        };
+      };
+    };
+    az.server.rke2.secrets = [
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "agent-env";
+          namespace = "app-woodpecker";
+        };
+        stringData = {
+          WOODPECKER_BACKEND_K8S_NAMESPACE = "app-woodpecker-steps";
+          WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
+        };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "server-env";
+          namespace = "app-woodpecker";
+        };
+        stringData = {
+          WOODPECKER_OPEN = true;
+          WOODPECKER_HOST = "https://woodpecker.${domain}";
+          WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
+          WOODPECKER_ADMIN = ""; # admin accounts aren't really necessary
 
-                inherit securityContext podSecurityContext;
-                env = {
-                  WOODPECKER_BACKEND_K8S_NAMESPACE = "app-woodpecker-steps";
-                  WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
-                };
-              };
+          WOODPECKER_FORGEJO = true;
+          WOODPECKER_FORGEJO_URL = "https://git.${domain}";
+          # oauth2 client, callback URL https://woodpecker.<domain>/authorize
+          WOODPECKER_FORGEJO_CLIENT = config.sops.placeholder."rke2/woodpecker/forgejo-id";
+          WOODPECKER_FORGEJO_SECRET = config.sops.placeholder."rke2/woodpecker/forgejo-secret";
 
-              server = {
-                inherit securityContext podSecurityContext;
-                env = {
-                  WOODPECKER_OPEN = true;
-                  WOODPECKER_HOST = "https://woodpecker.${domain}";
-                  WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
-                  WOODPECKER_ADMIN = ""; # admin accounts aren't really necessary
+          WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = true;
 
-                  WOODPECKER_FORGEJO = true;
-                  WOODPECKER_FORGEJO_URL = "https://git.${domain}";
-                  # oauth2 client, callback URL https://woodpecker.<domain>/authorize
-                  WOODPECKER_FORGEJO_CLIENT = config.sops.placeholder."rke2/woodpecker/forgejo-id";
-                  WOODPECKER_FORGEJO_SECRET = config.sops.placeholder."rke2/woodpecker/forgejo-secret";
-
-                  WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = true;
-
-                  WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
-                  WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
-                };
-              };
-            };
+          WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
+          WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
         };
       }
     ];

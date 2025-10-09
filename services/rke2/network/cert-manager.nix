@@ -22,67 +22,60 @@ in {
       networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
 
-    az.server.rke2.manifests."cert-manager" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "cert-manager";
-          namespace = "kube-system";
+    services.rke2.autoDeployCharts."cert-manager" = {
+      repo = "https://charts.jetstack.io";
+      name = "cert-manager";
+      version = "1.18.0";
+      hash = ""; # renovate: https://charts.jetstack.io cert-manager
+
+      targetNamespace = "cert-manager";
+      values = {
+        crds.enabled = true;
+        config.enableGatewayAPI = true;
+        extraArgs = [
+          # use local NS directly
+          "--dns01-recursive-nameservers-only"
+          "--dns01-recursive-nameservers=knot-public.app-nameserver.svc:53"
+        ];
+
+        prometheus = lib.attrsets.optionalAttrs config.az.svc.rke2.metrics.enable {
+          enabled = true;
+          servicemonitor.enabled = true;
+          servicemonitor.labels.release = "metrics";
         };
-        spec = {
-          targetNamespace = "cert-manager";
+      };
 
-          repo = "https://charts.jetstack.io";
-          chart = "cert-manager";
-          version = "1.18.2";
-
-          valuesContent = builtins.toJSON {
-            crds.enabled = true;
-            config.enableGatewayAPI = true;
-            extraArgs = [
-              # use local NS directly
-              "--dns01-recursive-nameservers-only"
-              "--dns01-recursive-nameservers=knot-public.app-nameserver.svc:53"
-            ];
-
-            prometheus = lib.attrsets.optionalAttrs config.az.svc.rke2.metrics.enable {
-              enabled = true;
-              servicemonitor.enabled = true;
-              servicemonitor.labels.release = "metrics";
-            };
+      extraDeploy = [
+        {
+          apiVersion = "cert-manager.io/v1";
+          kind = "ClusterIssuer";
+          metadata = {
+            name = "letsencrypt-issuer";
+            namespace = "cert-manager";
           };
-        };
-      }
-      {
-        apiVersion = "cert-manager.io/v1";
-        kind = "ClusterIssuer";
-        metadata = {
-          name = "letsencrypt-issuer";
-          namespace = "cert-manager";
-        };
-        spec.acme = {
-          server = "https://acme-v02.api.letsencrypt.org/directory";
-          preferredChain = "ISRG Root X2"; # ECDSA P-384
+          spec.acme = {
+            server = "https://acme-v02.api.letsencrypt.org/directory";
+            preferredChain = "ISRG Root X2"; # ECDSA P-384
 
-          email = "domain-admin@${config.az.server.rke2.baseDomain}";
-          privateKeySecretRef.name = "letsencrypt-certkey";
-          solvers = [
-            {
-              selector = {};
-              dns01.rfc2136 = {
-                nameserver = "knot-public.app-nameserver.svc";
-                tsigKeyName = "acme";
-                tsigAlgorithm = "HMACSHA256";
-                tsigSecretSecretRef = {
-                  name = "${config.az.svc.rke2.nameserver.domains.${config.az.server.rke2.baseDomain}.id}-rfc2136-tsig";
-                  key = "secret";
+            email = "domain-admin@${config.az.server.rke2.baseDomain}";
+            privateKeySecretRef.name = "letsencrypt-certkey";
+            solvers = [
+              {
+                selector = {};
+                dns01.rfc2136 = {
+                  nameserver = "knot-public.app-nameserver.svc";
+                  tsigKeyName = "acme";
+                  tsigAlgorithm = "HMACSHA256";
+                  tsigSecretSecretRef = {
+                    name = "${config.az.svc.rke2.nameserver.domains.${config.az.server.rke2.baseDomain}.id}-rfc2136-tsig";
+                    key = "secret";
+                  };
                 };
-              };
-            }
-          ];
-        };
-      }
-    ];
+              }
+            ];
+          };
+        }
+      ];
+    };
   };
 }

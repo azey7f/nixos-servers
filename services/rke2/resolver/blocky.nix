@@ -39,7 +39,7 @@ in {
         hash = "sha256-m4aJGh9muJtQbdhn0v3i90jeT2ZQYr9XyXEuhx7jcYE="; # renovate: spx01/blocky
       };
     };
-    az.server.rke2.manifests."app-resolver" = [
+    services.rke2.manifests."resolver".content = [
       {
         apiVersion = "v1";
         kind = "ConfigMap";

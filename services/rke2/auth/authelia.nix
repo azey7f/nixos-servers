@@ -53,26 +53,38 @@ in {
       "app-mail".networkPolicy.fromNamespaces = ["app-authelia"];
     };
 
-    az.server.rke2.manifests."app-authelia" = [
-      {
-        apiVersion = "postgresql.cnpg.io/v1";
-        kind = "Cluster";
-        metadata = {
-          name = "authelia-cnpg";
-          namespace = "app-authelia";
-        };
-        spec = {
-          instances = 1; # TODO: HA
+    services.rke2.autoDeployCharts."authelia" = {
+      repo = "https://charts.authelia.com";
+      name = "authelia";
+      version = "0.10.45";
+      hash = ""; # renovate: https://charts.authelia.com authelia
 
-          bootstrap.initdb = {
-            database = "authelia";
-            owner = "authelia";
-            secret.name = "authelia-cnpg-user";
+      targetNamespace = "app-authelia";
+      # values defined in HelmChartConfig due to sops values
+
+      extraDeploy = [
+        {
+          apiVersion = "postgresql.cnpg.io/v1";
+          kind = "Cluster";
+          metadata = {
+            name = "authelia-cnpg";
+            namespace = "app-authelia";
           };
+          spec = {
+            instances = 1; # TODO: HA
 
-          storage.size = "1Gi"; # really shouldn't need more than this
-        };
-      }
+            bootstrap.initdb = {
+              database = "authelia";
+              owner = "authelia";
+              secret.name = "authelia-cnpg-user";
+            };
+
+            storage.size = "1Gi"; # really shouldn't need more than this
+          };
+        }
+      ];
+    };
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -103,163 +115,156 @@ in {
           storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
         };
       }
+
       {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
+        apiVersion = "v1";
+        kind = "HelmChartConfig";
         metadata = {
           name = "authelia";
           namespace = "kube-system";
         };
-        spec = {
-          targetNamespace = "app-authelia";
-
-          repo = "https://charts.authelia.com";
-          chart = "authelia";
-          version = "0.10.46";
-
-          valuesContent = builtins.toJSON {
-            pod.securityContext = {
-              container = {
-                runAsNonRoot = true;
-                runAsUser = 65534;
-                runAsGroup = 65534;
-                seccompProfile.type = "RuntimeDefault";
-                capabilities.drop = ["ALL"];
-                allowPrivilegeEscalation = false;
-              };
-              pod.fsGroup = 65534;
+        spec.valuesContent = builtins.toJSON {
+          pod.securityContext = {
+            container = {
+              runAsNonRoot = true;
+              runAsUser = 65534;
+              runAsGroup = 65534;
+              seccompProfile.type = "RuntimeDefault";
+              capabilities.drop = ["ALL"];
+              allowPrivilegeEscalation = false;
             };
-            configMap = {
-              theme = "dark";
-              default_2fa_method = "totp";
+            pod.fsGroup = 65534;
+          };
+          configMap = {
+            theme = "dark";
+            default_2fa_method = "totp";
 
-              totp = {
-                issuer = domain;
-                algorithm = "sha512";
-                digits = 8;
-                secret_size = 128;
-              };
+            totp = {
+              issuer = domain;
+              algorithm = "sha512";
+              digits = 8;
+              secret_size = 128;
+            };
 
-              webauthn.display_name = domain;
-              authentication_backend = {
-                password_reset.disable = true;
-                password_change.disable = true;
+            webauthn.display_name = domain;
+            authentication_backend = {
+              password_reset.disable = true;
+              password_change.disable = true;
 
-                ldap = let
-                  split = lib.strings.splitString "." domain;
-                  base_dn = lib.strings.concatMapStringsSep "," (n: "dc=${n}") split;
-                in {
-                  enabled = true;
-                  implementation = "lldap";
-                  address = "ldap://lldap-ldap.app-lldap.svc";
-
-                  inherit base_dn;
-                  user = "uid=authelia,ou=people,${base_dn}";
-                  password = {
-                    secret_name = "authelia-misc";
-                    path = "lldap-passwd";
-                  };
-                };
-              };
-
-              identity_providers.oidc = {
-                enabled = cfg.oidcClients != {};
-
-                hmac_secret = {
-                  secret_name = "authelia-misc";
-                  path = "hmac-secret";
-                };
-                jwks = [
-                  {
-                    key.path = "/secrets/authelia-misc/jwk-key";
-                    #certificate_chain = ""; # TODO?
-                  }
-                ];
-
-                #TODO?: authorization_policies = {};
-                clients = cfg.oidcClients;
-                claims_policies = cfg.oidcClaims;
-              };
-
-              server.endpoints.authz.ext-authz.implementation = "ExtAuthz";
-
-              session = {
-                expiration = "1h";
-                inactivity = "5m";
-                remember_me = "1M";
-
-                cookies = [
-                  {
-                    inherit domain;
-                    subdomain = "auth";
-                    #authelia_url = "https://auth.${domain}";
-                    default_redirection_url = "https://${domain}";
-                  }
-                ];
-
-                /*
-                redis = { # TODO
-                  enabled = true;
-                  deploy = true;
-                };
-                */
-              };
-
-              regulation = {
-                max_retries = 5;
-                find_time = "5m";
-                ban_time = "5m";
-              };
-              password_policy.zxcvbn = {
+              ldap = let
+                split = lib.strings.splitString "." domain;
+                base_dn = lib.strings.concatMapStringsSep "," (n: "dc=${n}") split;
+              in {
                 enabled = true;
-                min_score = 4;
-              };
+                implementation = "lldap";
+                address = "ldap://lldap-ldap.app-lldap.svc";
 
-              storage.encryption_key = {
-                secret_name = "authelia-misc";
-                path = "storage-encryption-key";
-              };
-              storage.postgres = {
-                enabled = true;
-                address = "tcp://authelia-cnpg-rw.app-authelia.svc:5432";
+                inherit base_dn;
+                user = "uid=authelia,ou=people,${base_dn}";
                 password = {
                   secret_name = "authelia-misc";
-                  path = "cnpg-passwd";
+                  path = "lldap-passwd";
                 };
               };
+            };
 
-              notifier.filesystem = {
-                enabled = true;
-                filename = "/tmp/notifier"; # TODO mail
+            identity_providers.oidc = {
+              enabled = cfg.oidcClients != {};
+
+              hmac_secret = {
+                secret_name = "authelia-misc";
+                path = "hmac-secret";
               };
+              jwks = [
+                {
+                  key.path = "/secrets/authelia-misc/jwk-key";
+                  #certificate_chain = ""; # TODO?
+                }
+              ];
+
+              #TODO?: authorization_policies = {};
+              clients = cfg.oidcClients;
+              claims_policies = cfg.oidcClaims;
+            };
+
+            server.endpoints.authz.ext-authz.implementation = "ExtAuthz";
+
+            session = {
+              expiration = "1h";
+              inactivity = "5m";
+              remember_me = "1M";
+
+              cookies = [
+                {
+                  inherit domain;
+                  subdomain = "auth";
+                  #authelia_url = "https://auth.${domain}";
+                  default_redirection_url = "https://${domain}";
+                }
+              ];
+
               /*
-              # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
-              notifier.smtp = {
+              redis = { # TODO
                 enabled = true;
-                address = "submission://mail.app-mail.svc";
-                sender = "authelia <noreply@${domain}>";
-                identifier = "app-authelia";
-                tls.skip_verify = true;
-                username = null;
-                password.enabled = false;
+                deploy = true;
               };
               */
+            };
 
-              access_control = {
-                default_policy = "deny";
-                rules = cfg.rules;
+            regulation = {
+              max_retries = 5;
+              find_time = "5m";
+              ban_time = "5m";
+            };
+            password_policy.zxcvbn = {
+              enabled = true;
+              min_score = 4;
+            };
+
+            storage.encryption_key = {
+              secret_name = "authelia-misc";
+              path = "storage-encryption-key";
+            };
+            storage.postgres = {
+              enabled = true;
+              address = "tcp://authelia-cnpg-rw.app-authelia.svc:5432";
+              password = {
+                secret_name = "authelia-misc";
+                path = "cnpg-passwd";
               };
             };
 
-            secret.additionalSecrets = {
-              authelia-misc = {};
+            notifier.filesystem = {
+              enabled = true;
+              filename = "/tmp/notifier"; # TODO mail
             };
+            /*
+            # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
+            notifier.smtp = {
+              enabled = true;
+              address = "submission://mail.app-mail.svc";
+              sender = "authelia <noreply@${domain}>";
+              identifier = "app-authelia";
+              tls.skip_verify = true;
+              username = null;
+              password.enabled = false;
+            };
+            */
+
+            access_control = {
+              default_policy = "deny";
+              rules = cfg.rules;
+            };
+          };
+
+          secret.additionalSecrets = {
+            authelia-misc = {};
           };
         };
       }
 
       # https://www.authelia.com/integration/proxies/envoy/#secure-gateway
-      # replaced w/ per-route policies because of the HTTP->HTTPS redirect + https://github.com/envoyproxy/gateway/issues/5384
+      # TODO: replaced w/ per-route policies because of the HTTP->HTTPS redirect + https://github.com/envoyproxy/gateway/issues/5384
       /*
       {
         apiVersion = "gateway.envoyproxy.io/v1alpha1";
@@ -357,7 +362,7 @@ in {
     az.server.rke2.clusterWideSecrets."rke2/authelia/lldap-passwd" = {};
     az.server.rke2.clusterWideSecrets."rke2/authelia/cnpg-passwd" = {};
 
-    az.server.rke2.manifests."envoy-gateway-routes" = lib.lists.flatten (builtins.map (route: [
+    services.rke2.manifests."envoy-gateway-routes".content = lib.lists.flatten (builtins.map (route: [
         {
           apiVersion = "gateway.envoyproxy.io/v1alpha1";
           kind = "SecurityPolicy";

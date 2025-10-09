@@ -77,7 +77,7 @@ in {
           name = "rke2-cilium";
           namespace = "kube-system";
         };
-        # TODO: remove operator.replicas wherever I get multiple nodes
+        # TODO: remove operator.replicas whenever I get multiple nodes
         spec.valuesContent = builtins.toJSON {
           operator.replicas = 1;
 

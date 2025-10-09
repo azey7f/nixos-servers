@@ -17,23 +17,16 @@ in {
     az.server.rke2.namespaces."cnpg-system" = {
       networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
-    az.server.rke2.manifests."cnpg" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "cnpg";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "cnpg-system";
 
-          repo = "https://cloudnative-pg.github.io/charts";
-          chart = "cloudnative-pg";
-          version = "0.26.0";
-        };
-      }
+    services.rke2.autoDeployCharts."cnpg" = {
+      repo = "https://cloudnative-pg.github.io/charts";
+      name = "cloudnative-pg";
+      version = "0.25.0";
+      hash = ""; # renovate: https://cloudnative-pg.github.io/charts cloudnative-pg
 
+      targetNamespace = "cnpg-system";
+    };
+    services.rke2.manifests."cnpg-network".content = [
       {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";

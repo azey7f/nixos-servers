@@ -24,7 +24,159 @@ in {
       ];
     };
 
-    az.server.rke2.manifests."metrics" = [
+    services.rke2.autoDeployCharts."metrics" = {
+      repo = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
+      version = "77.12.0";
+      hash = ""; # renovate: ghcr.io/prometheus-community/charts/kube-prometheus-stack
+
+      targetNamespace = "metrics-system";
+      values = {
+        alertmanager.alertmanagerSpec.externalUrl = "https://alerts.${domain}";
+        prometheus.prometheusSpec.externalUrl = "https://prometheus.${domain}";
+
+        grafana.envFromSecret = "grafana-env";
+        grafana."grafana.ini" = {
+          server.root_url = "https://metrics.${domain}";
+
+          dashboards.default_home_dashboard_path = "/var/lib/grafana/dashboards/default/k8s-dashboard.json";
+
+          #security.disable_initial_admin_creation = true; # FIXME: for some reason, this makes no data sources appear
+          #auth.disable_login_form = true;
+
+          #"auth.basic".enabled = false; # same problem as fixme
+          "auth.generic_oauth" = {
+            enabled = true;
+            auto_login = true;
+            name = "authelia";
+
+            # client_id = config.sops.placeholder."rke2/metrics/oidc-id";
+            # client_secret = config.sops.placeholder."rke2/metrics/oidc-secret";
+
+            auth_url = "https://auth.${domain}/api/oidc/authorization";
+            token_url = "https://auth.${domain}/api/oidc/token";
+            api_url = "https://auth.${domain}/api/oidc/userinfo";
+            scopes = "openid profile email groups";
+            use_pkce = true;
+            auth_style = "InHeader";
+
+            login_attribute_path = "preferred_username";
+            name_attribute_path = "name";
+            groups_attribute_path = "groups";
+
+            role_attribute_path = "contains(groups[*], 'admin') && 'GrafanaAdmin' || 'Viewer'";
+            role_attribute_strict = true;
+            allow_assign_grafana_admin = true;
+          };
+        };
+
+        grafana.dashboardProviders."dashboardproviders.yaml" = {
+          # https://github.com/grafana/helm-charts/blob/0af99fac51424d0e5bb19e0da25a7750d3062f42/charts/grafana/values.yaml#L738
+          apiVersion = 1;
+          providers = [
+            {
+              name = "default";
+              orgId = 1;
+              folder = "";
+              type = "file";
+              disableDeletion = false;
+              editable = true;
+              options.path = "/var/lib/grafana/dashboards/default";
+            }
+          ];
+        };
+        grafana.dashboards.default = {
+          k8s-dashboard = {
+            gnetId = 15661;
+            revision = 2;
+            datasource = [
+              {
+                name = "DS__VICTORIAMETRICS-PROD-ALL";
+                value = "prometheus";
+              }
+            ];
+          };
+          cert-manager = {
+            gnetId = 20842;
+            revision = 3;
+            datasource = "prometheus";
+          };
+        };
+
+        # https://github.com/prometheus-community/helm-charts/issues/3800
+        grafana.extraLabels.release = "metrics";
+
+        # https://stackoverflow.com/questions/73031228/getting-kubecontrollermanager-kubeproxy-kubescheduler-down-alert-in-kube-prome/73181797#73181797
+        kubeControllerManager = {
+          service = {
+            enabled = true;
+            ports.http = 10257;
+            targetPorts.http = 10257;
+          };
+          serviceMonitor = {
+            https = true;
+            insecureSkipVerify = "true";
+          };
+        };
+        kubeScheduler = {
+          service = {
+            enabled = true;
+            ports.http = 10259;
+            targetPorts.http = 10259;
+          };
+          serviceMonitor = {
+            https = true;
+            insecureSkipVerify = "true";
+          };
+        };
+        kubeProxy.enabled = false; # replaced w/ cilium
+
+        # https://github.com/prometheus-community/helm-charts/issues/2816
+        prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec = {
+          storageClassName = "default";
+          accessModes = ["ReadWriteOnce"];
+          resources.requests.storage = "50Gi";
+        };
+        alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec = {
+          storageClassName = "default";
+          accessModes = ["ReadWriteOnce"];
+          resources.requests.storage = "10Gi";
+        };
+      };
+
+      extraDeploy = [
+        {
+          apiVersion = "monitoring.coreos.com/v1alpha1";
+          kind = "AlertmanagerConfig";
+          metadata = {
+            name = "mail-alerts";
+            namespace = "metrics-system";
+          };
+          spec = {
+            route = {
+              groupBy = ["namespace" "severity"];
+              groupWait = "5s";
+              groupInterval = "5m";
+              repeatInterval = "8h";
+              receiver = "mail-alerts";
+            };
+            receivers = [
+              {
+                name = "mail-alerts";
+                emailConfigs = [
+                  {
+                    to = "alerts@${domain}";
+                    from = "metrics@${domain}";
+                    smarthost = "mail.app-mail.svc:587";
+                    tlsConfig.insecureSkipVerify = true;
+                  }
+                ];
+              }
+            ];
+          };
+        }
+      ];
+    };
+    az.server.rke2.secrets = [
       {
         apiVersion = "v1";
         kind = "Secret";
@@ -33,165 +185,9 @@ in {
           namespace = "metrics-system";
         };
         stringData = {
+          GF_AUTH_GENERIC_OAUTH_CLIENT_ID = config.sops.placeholder."rke2/metrics/oidc-id";
           GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET = config.sops.placeholder."rke2/metrics/oidc-secret";
           GF_SECURITY_ADMIN_PASSWORD = config.sops.placeholder."rke2/metrics/admin-passwd"; # unused, user should be deleted after first start
-        };
-      }
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
-        metadata = {
-          name = "metrics";
-          namespace = "kube-system";
-        };
-        spec = {
-          targetNamespace = "metrics-system";
-
-          chart = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
-          version = "77.13.0";
-
-          valuesContent = builtins.toJSON {
-            alertmanager.alertmanagerSpec.externalUrl = "https://alerts.${domain}";
-            prometheus.prometheusSpec.externalUrl = "https://prometheus.${domain}";
-
-            grafana.envFromSecret = "grafana-env";
-            grafana."grafana.ini" = {
-              server.root_url = "https://metrics.${domain}";
-
-              dashboards.default_home_dashboard_path = "/var/lib/grafana/dashboards/default/k8s-dashboard.json";
-
-              #security.disable_initial_admin_creation = true; # FIXME: for some reason, this makes no data sources appear
-              #auth.disable_login_form = true;
-
-              #"auth.basic".enabled = false; # same problem as fixme
-              "auth.generic_oauth" = {
-                enabled = true;
-                auto_login = true;
-                name = "authelia";
-
-                client_id = config.sops.placeholder."rke2/metrics/oidc-id";
-                # client_secret = config.sops.placeholder."rke2/metrics/oidc-secret";
-
-                auth_url = "https://auth.${domain}/api/oidc/authorization";
-                token_url = "https://auth.${domain}/api/oidc/token";
-                api_url = "https://auth.${domain}/api/oidc/userinfo";
-                scopes = "openid profile email groups";
-                use_pkce = true;
-                auth_style = "InHeader";
-
-                login_attribute_path = "preferred_username";
-                name_attribute_path = "name";
-                groups_attribute_path = "groups";
-
-                role_attribute_path = "contains(groups[*], 'admin') && 'GrafanaAdmin' || 'Viewer'";
-                role_attribute_strict = true;
-                allow_assign_grafana_admin = true;
-              };
-            };
-
-            grafana.dashboardProviders."dashboardproviders.yaml" = {
-              # https://github.com/grafana/helm-charts/blob/0af99fac51424d0e5bb19e0da25a7750d3062f42/charts/grafana/values.yaml#L738
-              apiVersion = 1;
-              providers = [
-                {
-                  name = "default";
-                  orgId = 1;
-                  folder = "";
-                  type = "file";
-                  disableDeletion = false;
-                  editable = true;
-                  options.path = "/var/lib/grafana/dashboards/default";
-                }
-              ];
-            };
-            grafana.dashboards.default = {
-              k8s-dashboard = {
-                gnetId = 15661;
-                revision = 2;
-                datasource = [
-                  {
-                    name = "DS__VICTORIAMETRICS-PROD-ALL";
-                    value = "prometheus";
-                  }
-                ];
-              };
-              cert-manager = {
-                gnetId = 20842;
-                revision = 3;
-                datasource = "prometheus";
-              };
-            };
-
-            # https://github.com/prometheus-community/helm-charts/issues/3800
-            grafana.extraLabels.release = "metrics";
-
-            # https://stackoverflow.com/questions/73031228/getting-kubecontrollermanager-kubeproxy-kubescheduler-down-alert-in-kube-prome/73181797#73181797
-            kubeControllerManager = {
-              service = {
-                enabled = true;
-                ports.http = 10257;
-                targetPorts.http = 10257;
-              };
-              serviceMonitor = {
-                https = true;
-                insecureSkipVerify = "true";
-              };
-            };
-            kubeScheduler = {
-              service = {
-                enabled = true;
-                ports.http = 10259;
-                targetPorts.http = 10259;
-              };
-              serviceMonitor = {
-                https = true;
-                insecureSkipVerify = "true";
-              };
-            };
-            kubeProxy.enabled = false; # replaced w/ cilium
-
-            # https://github.com/prometheus-community/helm-charts/issues/2816
-            prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec = {
-              storageClassName = "default";
-              accessModes = ["ReadWriteOnce"];
-              resources.requests.storage = "50Gi";
-            };
-            alertmanager.alertmanagerSpec.storage.volumeClaimTemplate.spec = {
-              storageClassName = "default";
-              accessModes = ["ReadWriteOnce"];
-              resources.requests.storage = "10Gi";
-            };
-          };
-        };
-      }
-      {
-        apiVersion = "monitoring.coreos.com/v1alpha1";
-        kind = "AlertmanagerConfig";
-        metadata = {
-          name = "mail-alerts";
-          namespace = "metrics-system";
-        };
-        spec = {
-          route = {
-            groupBy = ["namespace" "severity"];
-            groupWait = "5s";
-            groupInterval = "5m";
-            repeatInterval = "8h";
-            receiver = "mail-alerts";
-          };
-          receivers = [
-            {
-              name = "mail-alerts";
-              emailConfigs = [
-                {
-                  to = "alerts@${domain}";
-                  from = "metrics@${domain}";
-                  smarthost = "mail.app-mail.svc:587";
-                  tlsConfig.insecureSkipVerify = true;
-                }
-              ];
-            }
-          ];
         };
       }
     ];
