@@ -15,22 +15,30 @@
 	"customManagers": [
 		{
 			"customType": "regex",
-			"managerFilePatterns": [
-				"/\\.nix$/"
-			],
+			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"image\\s*=\\s*\"(?<depName>\\S+):(?<currentValue>\\S+)\"\\s*;",
-				"chart\\s*=\\s*\"\\S+:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*name\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+			],
+			"datasourceTemplate": "helm",
+			"depTypeTemplate": "{{{registryUrl}}}"
+		},
+		{
+			"depTypeTemplate": "helm-oci",
+			"customType": "regex",
+			"managerFilePatterns": ["/\\.nix$/"],
+			"matchStrings": [
+				"repo\\s*=\\s*\"oci:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
 			],
 			"datasourceTemplate": "docker"
 		},
 		{
+			"depTypeTemplate": "docker",
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*chart\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				"imageName\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*imageDigest\\s*=\\s*\"(?<currentDigest>\\S+)\"\\s*;\\s*finalImageTag\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
 			],
-			"datasourceTemplate": "helm"
+			"datasourceTemplate": "docker"
 		},
 		{
 			"customType": "regex",
@@ -44,6 +52,42 @@
 		}
 	],
 	"packageRules": [
+		{
+			"matchDatasources": ["helm"],
+			"postUpgradeTasks": {
+				"fileFilters": ["**/*.nix"],
+				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{depType}}} {{{depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
+				]
+			}
+		},
+		{
+			"matchDepTypes": ["helm-oci"],
+			"postUpgradeTasks": {
+				"fileFilters": ["**/*.nix"],
+				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//' > new-hash",
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
+				]
+			}
+		},
+		{
+			"matchDepTypes": ["docker"],
+			"postUpgradeTasks": {
+				"fileFilters": ["**/*.nix"],
+				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run \"skopeo --insecure-policy copy docker://{{{depName}}}:{{{newVersion}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newVersion}}}\"",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//' > new-hash",
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/\" {{{packageFile}}}"
+				]
+			}
+		},
 		{
 			"matchUpdateTypes": [
 				"patch"

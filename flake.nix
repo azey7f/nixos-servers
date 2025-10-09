@@ -48,7 +48,5 @@
         (builtins.attrNames cluster.nodes)
       ))
     infra.clusters;
-
-    hydraJobs = core.mkHydraJobs nixosConfigurations;
   };
 }

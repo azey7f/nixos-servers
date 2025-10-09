@@ -67,17 +67,26 @@ in {
               seccompProfile.type = "RuntimeDefault";
             };
 
-            # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
             extraVolumes = [
               {
                 name = "home";
                 emptyDir = {};
               }
+              {
+                name = "nix";
+                emptyDir = {};
+              }
             ];
             extraVolumeMounts = [
+              # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
               {
                 name = "home";
                 mountPath = "/home/ubuntu";
+              }
+              # rootless nix in postUpgradeTasks
+              {
+                name = "nix";
+                mountPath = "/nix";
               }
             ];
 
@@ -92,6 +101,13 @@ in {
               gitAuthor = "renovate-bot <renovate-bot@${domain}>";
               gitPrivateKey = "{{ secrets.RENOVATE_GIT_PRIVATE_KEY }}";
               autodiscover = true; # restricted account in forgejo
+
+              allowedCommands = [
+                "^.*$"
+                #"^helm pull --repo \\S* \\S*$"
+                #''^nix-hash --flat --type sha256 --sri *.tgz | sed 's/\//\\\//' > new-hash$''
+                #''sed -i "s/\\(hash = \"\\)\\S*\\(\"; # renovate: hello-world\\)/\\1$(cat new-hash)\\2/\" hosts/astra/misc.nix''
+              ];
 
               # envoy-gateway causes https://codeberg.org/forgejo/forgejo/issues/1929 because it 307s any %2F URIs to /
               # TODO: make an issue about this
@@ -168,7 +184,7 @@ in {
         	diff="$(git diff HEAD -U0 --color | grep -Pv '^\e\[1m' | grep -Pv '^\e\[36m' | sed 's/\x1b\[[0-9;]*m//g')"
 
         	# remove OK lines from $diff & check if it's empty
-        	for name in version image revision
+        	for name in version image imageDigest finalImageTag revision hash
         	do
         		diff="$(echo "$diff" | grep -vE "^[+|-]\s+$name\s+=\s+\"\S+\";")"
         	done

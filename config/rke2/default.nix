@@ -73,7 +73,8 @@ in {
     };
 
     # iptables modules for cilium
-    boot.kernelModules = [
+    /*
+      boot.kernelModules = [
       "iptable_raw"
       "iptable_mangle"
       "iptable_filter"
@@ -83,6 +84,7 @@ in {
       "ip6table_filter"
       "ip6table_nat"
     ];
+    */
 
     # networking
     az.server.net.ipv6.address = [
