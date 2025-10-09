@@ -39,9 +39,15 @@ in {
         };
         spec = {
           targetNamespace = "app-searxng";
-          chart = "oci://registry-1.docker.io/bitnamicharts/valkey"; # CRITICAL TODO: https://github.com/orgs/valkey-io/discussions/338#discussioncomment-13802901 & pin version
+
+          repo = "https://valkey.io/valkey-helm/";
+          chart = "valkey";
+          version = "0.7.4";
+
           valuesContent = builtins.toJSON {
-            auth.enabled = false; # TODO
+            auth.enabled = false; # TODO?
+            podSecurityContext.seccompProfile.type = "RuntimeDefault";
+            securityContext.allowPrivilegeEscalation = false;
           };
         };
       }
@@ -71,7 +77,7 @@ in {
               contact_url = "mailto:me@${domain}";
             };
             ui.theme_args.simple_style = "dark";
-            valkey.url = "valkey://searxng-valkey-primary.app-searxng.svc";
+            valkey.url = "valkey://searxng-valkey.app-searxng.svc";
             outgoing = {
               request_timeout = 5;
               max_request_timeout = 15;
