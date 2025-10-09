@@ -35,8 +35,8 @@ in {
       blocky = {
         imageName = "spx01/blocky";
         finalImageTag = "v0.26.2";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: spx01/blocky
+        imageDigest = "sha256:46150ee0a8a414170ac861343ab7640eb0182a736f7d59f4c0c41383443932fd";
+        hash = "sha256-m4aJGh9muJtQbdhn0v3i90jeT2ZQYr9XyXEuhx7jcYE="; # renovate: spx01/blocky
       };
     };
     az.server.rke2.manifests."app-resolver" = [

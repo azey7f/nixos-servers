@@ -25,8 +25,8 @@ in {
       searxng = {
         imageName = "searxng/searxng";
         finalImageTag = "2025.8.10-6cccb46";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: searxng/searxng
+        imageDigest = "sha256:fe702750a9ffbf923533c67c456951a3be77f298915cf632077f3650ed4b5e4b";
+        hash = "sha256-RPlb15UHD9mvNdPbSuDpgp3l5f733isxSFP/n97gJuU="; # renovate: searxng/searxng
       };
     };
     az.server.rke2.manifests."app-searxng" = [

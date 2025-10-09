@@ -67,8 +67,8 @@ in {
       knot = {
         imageName = "cznic/knot";
         finalImageTag = "v3.5.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: cznic/knot
+        imageDigest = "sha256:8148dd1e680ebe68b1d63d7d9b77513d3b7b70c720810ea3f3bd1b5f121da4e8";
+        hash = "sha256-1hs0KSz+iN2A9n0pzrsD4Lmyi3M18ENs5l4zWY16xeg="; # renovate: cznic/knot
       };
     };
     az.server.rke2.manifests."app-nameserver" = lib.lists.flatten (lib.attrsets.mapAttrsToList (

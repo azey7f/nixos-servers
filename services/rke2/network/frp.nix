@@ -49,8 +49,8 @@ in {
       frpc = {
         imageName = "snowdreamtech/frpc";
         finalImageTag = "0.64";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: snowdreamtech/frpc
+        imageDigest = "sha256:ad5419c376c38e74fa5e58e65aeff09f1d3c75f65116833ef0901b3026b14e4e";
+        hash = "sha256-CC4VaPaLtz0uZxgOIvXbznAZW9af9gsf6hFNm6pirHM="; # renovate: snowdreamtech/frpc
       };
     };
     az.server.rke2.manifests."app-frp" = [
