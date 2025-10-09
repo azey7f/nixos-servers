@@ -27,15 +27,15 @@ in {
     az.server.rke2.images = {
       git-sync = {
         imageName = "registry.k8s.io/git-sync/git-sync";
-        finalImageTag = "v4.4.0";
-        imageDigest = "sha256:0330739a707a2969d617e859f096659ab6d149212658ac0ad7e550b59482ebf0";
-        hash = "sha256-Mbe+YVtO+a6e3ucpp6Mr9YKMOs8aToXYrKXniolB1hw="; # renovate: registry.k8s.io/git-sync/git-sync
+        finalImageTag = "v4.5.0";
+        imageDigest = "sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f";
+        hash = "sha256-G4vi0NiCPc4+AyvY1S5Wf3tCBq2u9V+AhVwgvZTFIZ0="; # renovate: registry.k8s.io/git-sync/git-sync
       };
       nginx = {
         imageName = "nginxinc/nginx-unprivileged";
-        finalImageTag = "1.27";
-        imageDigest = "sha256:f9dfa9c20b2b0b7c5cc830374f22f23dee3f750b6c5291ca7e0330b5c88e6403";
-        hash = "sha256-Ls3VUVJb/KQwfU0uXuu4aXqfaWX6mfYPLSCIDFDOAdQ="; # renovate: nginxinc/nginx-unprivileged
+        finalImageTag = "1.29";
+        imageDigest = "sha256:d97a7c08c0ebcee8e7337527d28ef03da32390820eae72f376912f86d9cdcb45";
+        hash = "sha256-wNnNQ+2PUJPiM26/MctJS4H5NXv1zLk6bF2KNu+S37s="; # renovate: nginxinc/nginx-unprivileged
       };
     };
     az.server.rke2.manifests."app-nginx" = [
