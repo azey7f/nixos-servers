@@ -32,8 +32,8 @@ in {
 
     services.rke2.autoDeployCharts."woodpecker" = {
       repo = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
-      version = "3.3.0";
-      hash = ""; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker
+      version = "3.4.0";
+      hash = "sha256-9W7pxyxBg3XczMn+BJqa2FNXF2XdsMpO7yYXKAiPWOk="; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker
 
       targetNamespace = "app-woodpecker";
       values = let
