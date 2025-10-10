@@ -62,8 +62,8 @@
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/g\" {{{packageFile}}}",
-					"rm \"config/rke2/helm-images/{{{depName}}}_{{{currentVersion}}}.nix\" || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run 'sh ./utils/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}} > \"config/rke2/helm-images/{{{depName}}}_{{{newVersion}}}.nix\"'"
+					"rm \"config/rke2/helm-images/{{{depName}}}_*.nix\" || true",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{depName}}}_{{{newVersion}}}.nix'\""
 				]
 			}
 		},
@@ -77,8 +77,8 @@
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/g\" {{{packageFile}}}",
-					"rm \"config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{currentVersion}}}.nix\" || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run 'sh ./utils/helm-mkimages oci://{{{depName}}} --version {{{newVersion}}} > \"config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newVersion}}}.nix\"'"
+					"rm \"config/rke2/helm-images/{{{replace '/' '-' depName}}}_*.nix\" || true",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages oci://{{{depName}}} --version {{{newVersion}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newVersion}}}.nix'\""
 				]
 			}
 		},

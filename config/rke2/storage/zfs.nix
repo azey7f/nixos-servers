@@ -99,10 +99,12 @@ in {
     services.rke2.autoDeployCharts."openebs" = {
       repo = "https://openebs.github.io/openebs";
       name = "openebs";
-      version = "4.3.3";
-      hash = "sha256-w38hJuDcezhzkDAOuTbM0Q6Vz6x1rdRPPK2B8kg9YnM="; # renovate: https://openebs.github.io/openebs openebs
+      version = "4.3.0";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: https://openebs.github.io/openebs openebs
 
       targetNamespace = "openebs-system";
+
+      # renovate-args: --set engines.replicated.mayastor.enabled=false --set engines.local.lvm.enabled=false --set engines.local.zfs.enabled=true
       values = {
         engines = {
           local = {

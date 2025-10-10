@@ -31,9 +31,10 @@ in {
 
       repo = "https://docs.renovatebot.com/helm-charts";
       name = "renovate";
-      version = "44.15.1";
-      hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate
+      version = "44.0.0";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: https://docs.renovatebot.com/helm-charts renovate
 
+      # renovate-args: --set renovate.config=\"{}\"
       values = {
         renovate.securityContext = {
           privileged = false;
@@ -46,16 +47,11 @@ in {
           seccompProfile.type = "RuntimeDefault";
         };
 
-        extraVolumes = [
-          {
-            name = "home";
-            emptyDir = {};
-          }
-          {
-            name = "nix";
-            emptyDir = {};
-          }
-        ];
+        extraVolumes = builtins.map (name: {
+          inherit name;
+          emptyDir = {};
+        }) ["home" "nix" "nonexistent"];
+
         extraVolumeMounts = [
           # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
           {
@@ -66,6 +62,12 @@ in {
           {
             name = "nix";
             mountPath = "/nix";
+          }
+          # warning: $HOME ('/nix') is not owned by you, falling back to the one defined in the 'passwd' file ('/nonexistent')
+          # not stupid if it works, right?
+          {
+            name = "nonexistent";
+            mountPath = "/nonexistent";
           }
         ];
 
