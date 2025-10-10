@@ -31,8 +31,8 @@ in {
 
       repo = "https://docs.renovatebot.com/helm-charts";
       name = "renovate";
-      version = "44.0.0";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: https://docs.renovatebot.com/helm-charts renovate
+      version = "44.15.1";
+      hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate
 
       # renovate-args: --set renovate.config=\"{}\"
       values = {
