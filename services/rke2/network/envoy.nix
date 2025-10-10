@@ -85,8 +85,8 @@ in {
 
     services.rke2.autoDeployCharts."envoy-gateway" = {
       repo = "oci://docker.io/envoyproxy/gateway-helm";
-      version = "1.5.0";
-      hash = ""; # renovate: docker.io/envoyproxy/gateway-helm
+      version = "1.5.3";
+      hash = "sha256-ednyfz0Ke4rPXcX2WQ0+u2DYId2iDIFJEh1Fw3OLcU4="; # renovate: docker.io/envoyproxy/gateway-helm
 
       targetNamespace = "envoy-gateway";
       extraDeploy =

@@ -33,8 +33,8 @@ in {
 
     services.rke2.autoDeployCharts."forgejo" = {
       repo = "oci://code.forgejo.org/forgejo-helm/forgejo";
-      version = "14.0.0";
-      hash = ""; # renovate: code.forgejo.org/forgejo-helm/forgejo
+      version = "14.0.4";
+      hash = "sha256-kH8LiKpkg5AXwmH3ejuxqleP/LTKPlvicPMZiK4ikF0="; # renovate: code.forgejo.org/forgejo-helm/forgejo
 
       targetNamespace = "app-forgejo";
 
