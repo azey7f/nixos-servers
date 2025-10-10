@@ -4,7 +4,7 @@
 # outputs a .nix file that imports all images contained in helm chart
 # ./helm-mkimages --repo https://helm.github.io/examples hello-world --version 0.1.0
 
-img_list=$(helm template "$@" | yq -N '..|.image? | select(.)' | sort -u)
+img_list=$(helm template "$@" | yq -N '..|.image? | select(.)' | sort -u | grep -Px "\\S+:\\S+")
 
 echo -n "\
 {pkgs, ...}: {
