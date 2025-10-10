@@ -56,8 +56,8 @@ in {
     services.rke2.autoDeployCharts."authelia" = {
       repo = "https://charts.authelia.com";
       name = "authelia";
-      version = "0.10.45";
-      hash = ""; # renovate: https://charts.authelia.com authelia
+      version = "0.10.46";
+      hash = "sha256-ktKqQLAjMc4BkEVYU1+5r+RZhk9NkUrKzQigdhq/JrY="; # renovate: https://charts.authelia.com authelia
 
       targetNamespace = "app-authelia";
       # values defined in HelmChartConfig due to sops values
