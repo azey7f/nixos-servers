@@ -131,7 +131,7 @@
 			"matchDepNames": [
 				"renovate",
 				"ghcr.io/jeffvli/feishin",
-				"docker.io/searxng/searxng",
+				"searxng/searxng",
 				"^grafana-dashboard-"
 			],
 			"groupName": "automerge-reckless",
