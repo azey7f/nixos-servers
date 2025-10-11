@@ -13,11 +13,19 @@ echo -n "\
 
 for img in $img_list
 do
-	name=$(echo $img | cut -d: -f1)
-	tag=$(echo $img | cut -d: -f2)
-	digest=$(skopeo inspect docker://$img -f "{{.Digest}}")
+	nodigest=$(echo $img | cut -d@ -f1)
 
-	skopeo --insecure-policy copy docker://$name@$digest docker-archive:///tmp/helm-mkimages-skopeo:$img >/dev/null
+	name=$(echo $nodigest | cut -d: -f1)
+	tag=$(echo $nodigest | cut -d: -f2)
+
+	if [ "$name" = "$nodigest" ]
+	then
+		digest=$(skopeo inspect docker://$nodigest -f "{{.Digest}}")
+	else
+		digest=$(echo $img | cut -d@ -f2)
+	fi
+
+	skopeo --insecure-policy copy docker://$name@$digest docker-archive:///tmp/helm-mkimages-skopeo:$nodigest >/dev/null
 	hash=$(nix-hash --flat --type sha256 --sri /tmp/helm-mkimages-skopeo)
 	rm /tmp/helm-mkimages-skopeo; 
 
