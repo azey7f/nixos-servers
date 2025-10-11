@@ -68,8 +68,8 @@ in {
         autoDeployCharts."cilium" = {
           repo = "https://helm.cilium.io";
           name = "cilium";
-          version = "1.18.0";
-          hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: https://helm.cilium.io cilium 1.18.0
+          version = "1.18.2";
+          hash = "sha256-ObYqcvCJLdFlSL0I7pfV2y6XX3wfVxVVeKFEGG4imS8="; # renovate: https://helm.cilium.io cilium 1.18.2
 
           targetNamespace = "kube-system";
 
