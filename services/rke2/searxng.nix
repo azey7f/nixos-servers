@@ -26,14 +26,14 @@ in {
         imageName = "searxng/searxng";
         finalImageTag = "2025.8.10-6cccb46";
         imageDigest = "sha256:fe702750a9ffbf923533c67c456951a3be77f298915cf632077f3650ed4b5e4b";
-        hash = "sha256-RPlb15UHD9mvNdPbSuDpgp3l5f733isxSFP/n97gJuU="; # renovate: searxng/searxng
+        hash = "sha256-RPlb15UHD9mvNdPbSuDpgp3l5f733isxSFP/n97gJuU="; # renovate: searxng/searxng 2025.8.10-6cccb46
       };
     };
     services.rke2.autoDeployCharts."searxng-valkey" = {
       repo = "https://valkey.io/valkey-helm";
       name = "valkey";
       version = "0.7.4";
-      hash = "sha256-iMXdYlzAJQu4iKTIeRpKvkQnzo5p0Cwi2h8Rfmakuao="; # renovate: https://valkey.io/valkey-helm valkey
+      hash = "sha256-iMXdYlzAJQu4iKTIeRpKvkQnzo5p0Cwi2h8Rfmakuao="; # renovate: https://valkey.io/valkey-helm valkey 0.7.4
 
       targetNamespace = "app-searxng";
       values = {

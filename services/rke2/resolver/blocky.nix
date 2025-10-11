@@ -36,7 +36,7 @@ in {
         imageName = "spx01/blocky";
         finalImageTag = "v0.27.0";
         imageDigest = "sha256:d4bb3ad54b5b3471341d11609eabb8b3d9da0faf3244da7bb2d210107b2fbc30";
-        hash = "sha256-mWgXIribJJqnVs66LCOqAUJovyTqryuW+oRYUkuKb+4="; # renovate: spx01/blocky
+        hash = "sha256-mWgXIribJJqnVs66LCOqAUJovyTqryuW+oRYUkuKb+4="; # renovate: spx01/blocky v0.27.0
       };
     };
     services.rke2.manifests."resolver".content = [

@@ -51,8 +51,7 @@ in {
       services.frr.bgpd.enable = true;
     })
     {
-      # just testing, hardcoded stuff for now
-      az.server.rke2.manifests."cilium-bgp" = [
+      services.rke2.manifests."cilium-bgp".content = [
         {
           apiVersion = "cilium.io/v2alpha1";
           kind = "CiliumBGPClusterConfig";

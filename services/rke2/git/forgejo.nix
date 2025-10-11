@@ -33,8 +33,8 @@ in {
 
     services.rke2.autoDeployCharts."forgejo" = {
       repo = "oci://code.forgejo.org/forgejo-helm/forgejo";
-      version = "14.0.4";
-      hash = "sha256-kH8LiKpkg5AXwmH3ejuxqleP/LTKPlvicPMZiK4ikF0="; # renovate: code.forgejo.org/forgejo-helm/forgejo
+      version = "14.0.0";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: code.forgejo.org/forgejo-helm/forgejo 14.0.0
 
       targetNamespace = "app-forgejo";
 
@@ -145,6 +145,13 @@ in {
           };
           spec = {
             instances = 1; # TODO: HA
+
+            imageCatalogRef = {
+              apiGroup = "postgresql.cnpg.io";
+              kind = "ClusterImageCatalog";
+              name = "postgresql";
+              major = 17;
+            };
 
             bootstrap.initdb = {
               database = "forgejo";

@@ -32,7 +32,7 @@ in {
       repo = "https://docs.renovatebot.com/helm-charts";
       name = "renovate";
       version = "44.15.1";
-      hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate
+      hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate 44.15.1
 
       # renovate-args: --set renovate.config=\"{}\"
       values = {
@@ -84,10 +84,8 @@ in {
           autodiscover = true; # restricted account in forgejo
 
           allowedCommands = [
+            # too complex to be worth checking.
             "^.*$"
-            #"^helm pull --repo \\S* \\S*$"
-            #''^nix-hash --flat --type sha256 --sri *.tgz | sed 's/\//\\\//' > new-hash$''
-            #''sed -i "s/\\(hash = \"\\)\\S*\\(\"; # renovate: hello-world\\)/\\1$(cat new-hash)\\2/\" hosts/astra/misc.nix''
           ];
 
           # envoy-gateway causes https://codeberg.org/forgejo/forgejo/issues/1929 because it 307s any %2F URIs to /

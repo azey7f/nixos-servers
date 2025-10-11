@@ -116,11 +116,11 @@
     },
     "rke2-k3s-merge": {
       "locked": {
-        "lastModified": 1759936769,
-        "narHash": "sha256-RotDXm52ba+1JryoBQwWzTvsfZzDThvZ8bLbeNqV4nA=",
+        "lastModified": 1760183994,
+        "narHash": "sha256-lettFZWI0i8A7sI0NbjzSVe/efyiqQ4O78x1xhn7h2g=",
         "owner": "azey7f",
         "repo": "nixpkgs",
-        "rev": "a6b8675e3a411c931217c0b08ed9b29078cb9b61",
+        "rev": "6761d3d72ffdd5fc897e36f90663c28cfcca22d4",
         "type": "github"
       },
       "original": {

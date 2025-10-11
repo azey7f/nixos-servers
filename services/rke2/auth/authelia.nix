@@ -57,7 +57,7 @@ in {
       repo = "https://charts.authelia.com";
       name = "authelia";
       version = "0.10.46";
-      hash = "sha256-ktKqQLAjMc4BkEVYU1+5r+RZhk9NkUrKzQigdhq/JrY="; # renovate: https://charts.authelia.com authelia
+      hash = "sha256-ktKqQLAjMc4BkEVYU1+5r+RZhk9NkUrKzQigdhq/JrY="; # renovate: https://charts.authelia.com authelia 0.10.46
 
       targetNamespace = "app-authelia";
       # values defined in HelmChartConfig due to sops values
@@ -72,6 +72,13 @@ in {
           };
           spec = {
             instances = 1; # TODO: HA
+
+            imageCatalogRef = {
+              apiGroup = "postgresql.cnpg.io";
+              kind = "ClusterImageCatalog";
+              name = "postgresql";
+              major = 17;
+            };
 
             bootstrap.initdb = {
               database = "authelia";
@@ -117,7 +124,7 @@ in {
       }
 
       {
-        apiVersion = "v1";
+        apiVersion = "helm.cattle.io/v1";
         kind = "HelmChartConfig";
         metadata = {
           name = "authelia";

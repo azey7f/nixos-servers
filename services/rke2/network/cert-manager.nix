@@ -26,7 +26,7 @@ in {
       repo = "https://charts.jetstack.io";
       name = "cert-manager";
       version = "v1.19.0";
-      hash = "sha256-tYFjQGkVH86Ac9DgjUVOcS2vf5v7nfALNdX9y6AZNrg="; # renovate: https://charts.jetstack.io cert-manager
+      hash = "sha256-tYFjQGkVH86Ac9DgjUVOcS2vf5v7nfALNdX9y6AZNrg="; # renovate: https://charts.jetstack.io cert-manager v1.19.0
 
       targetNamespace = "cert-manager";
       values = {

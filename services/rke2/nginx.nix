@@ -30,13 +30,13 @@ in {
         imageName = "registry.k8s.io/git-sync/git-sync";
         finalImageTag = "v4.5.0";
         imageDigest = "sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f";
-        hash = "sha256-G4vi0NiCPc4+AyvY1S5Wf3tCBq2u9V+AhVwgvZTFIZ0="; # renovate: registry.k8s.io/git-sync/git-sync
+        hash = "sha256-G4vi0NiCPc4+AyvY1S5Wf3tCBq2u9V+AhVwgvZTFIZ0="; # renovate: registry.k8s.io/git-sync/git-sync v4.5.0
       };
       nginx = {
         imageName = "nginxinc/nginx-unprivileged";
         finalImageTag = "1.29";
         imageDigest = "sha256:39466f69197cbf5844a3aaa799b32318112aff7e07ce93557ceeee5825e0727d";
-        hash = "sha256-K9ZaixEykeVXCzI7zUbwiTyHATLZtNv6OZ4rTwOAPI8="; # renovate: nginxinc/nginx-unprivileged
+        hash = "sha256-K9ZaixEykeVXCzI7zUbwiTyHATLZtNv6OZ4rTwOAPI8="; # renovate: nginxinc/nginx-unprivileged 1.29
       };
     };
     services.rke2.manifests."nginx".content = [

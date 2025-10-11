@@ -67,7 +67,7 @@ in {
         imageName = "cznic/knot";
         finalImageTag = "v3.5.0";
         imageDigest = "sha256:8148dd1e680ebe68b1d63d7d9b77513d3b7b70c720810ea3f3bd1b5f121da4e8";
-        hash = "sha256-1hs0KSz+iN2A9n0pzrsD4Lmyi3M18ENs5l4zWY16xeg="; # renovate: cznic/knot
+        hash = "sha256-1hs0KSz+iN2A9n0pzrsD4Lmyi3M18ENs5l4zWY16xeg="; # renovate: cznic/knot v3.5.0
       };
     };
     services.rke2.manifests."nameserver".content = lib.lists.flatten (lib.attrsets.mapAttrsToList (
@@ -283,20 +283,22 @@ in {
           acmeTsig,
           gateways,
           ...
-        } @ domainConf: [
-          {
-            apiVersion = "v1";
-            kind = "Secret";
-            metadata = {
-              name = "knot-${id}-config";
-              namespace = "app-nameserver";
-            };
-            stringData = {
-              "${zonefile}.zone" = import ./zones/${zonefile}.nix domainConf args;
-              "knot.conf" = import ./config.nix domainConf args;
-            };
-          }
-          (lib.optionalAttrs acmeTsig {
+        } @ domainConf: (
+          [
+            {
+              apiVersion = "v1";
+              kind = "Secret";
+              metadata = {
+                name = "knot-${id}-config";
+                namespace = "app-nameserver";
+              };
+              stringData = {
+                "${zonefile}.zone" = import ./zones/${zonefile}.nix domainConf args;
+                "knot.conf" = import ./config.nix domainConf args;
+              };
+            }
+          ]
+          ++ lib.optional acmeTsig {
             apiVersion = "v1";
             kind = "Secret";
             metadata = {
@@ -304,8 +306,8 @@ in {
               namespace = "cert-manager";
             };
             stringData.secret = config.sops.placeholder."rke2/nameserver/${id}/tsig-secret";
-          })
-        ]
+          }
+        )
       )
       cfg.domains);
 

@@ -100,7 +100,7 @@ in {
       repo = "https://openebs.github.io/openebs";
       name = "openebs";
       version = "4.3.3";
-      hash = "sha256-w38hJuDcezhzkDAOuTbM0Q6Vz6x1rdRPPK2B8kg9YnM="; # renovate: https://openebs.github.io/openebs openebs
+      hash = "sha256-w38hJuDcezhzkDAOuTbM0Q6Vz6x1rdRPPK2B8kg9YnM="; # renovate: https://openebs.github.io/openebs openebs 4.3.3
 
       targetNamespace = "openebs-system";
 
@@ -119,7 +119,7 @@ in {
         minio.replicas = 1;
       };
     };
-    az.server.rke2.manifests."openebs-sc" = [
+    services.rke2.manifests."openebs-sc".content = [
       {
         apiVersion = "storage.k8s.io/v1";
         kind = "StorageClass";

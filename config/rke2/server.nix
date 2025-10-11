@@ -10,6 +10,7 @@ with lib; let
   top = config.az.server.rke2;
   cfg = top.server;
   cluster = outputs.infra.clusters.${server.networking.domain};
+  images = config.az.server.rke2.images;
 in {
   options.az.server.rke2 = with azLib.opt; {
     server = {
@@ -62,6 +63,93 @@ in {
             "--kube-controller-manager-arg=bind-address=::"
           ];
         cni = "cilium";
+
+        manifests."rke2-cilium-config".content = [
+          {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-cilium";
+              namespace = "kube-system";
+            };
+            # TODO: remove operator.replicas whenever I get multiple nodes
+            spec.valuesContent = builtins.toJSON {
+              operator.replicas = 1;
+
+              ipv6.enabled = true;
+              kubeProxyReplacement = true;
+              k8sServiceHost = "api.${config.networking.domain}";
+              k8sServicePort = 8443;
+              tunnelProtocol = "";
+
+              encryption = {
+                enabled = true;
+                nodeEncryption = true;
+                type = "wireguard";
+              };
+
+              authentication.mutual.spire = {
+                # TODO?: use a cnpg DB
+                enabled = true;
+                install.enabled = true;
+                install.existingNamespace = true;
+                install.namespace = "cilium-spire";
+
+                install.agent.image = builtins.toJSON {
+                  pullPolicy = "Never";
+                  useDigest = true;
+                  digest = images.spire-agent.imageDigest;
+                  repository = images.spire-agent.imageName;
+                  tag = images.spire-agent.finalTag;
+                };
+                install.server.image = builtins.toJSON {
+                  pullPolicy = "Never";
+                  useDigest = true;
+                  digest = images.spire-server.imageDigest;
+                  repository = images.spire-server.imageName;
+                  tag = images.spire-server.finalTag;
+                };
+              };
+
+              bgpControlPlane.enabled = top.bgp.enable;
+              l2announcements = {
+                enabled = !top.bgp.enable;
+                leaseDuration = "10s";
+                leaseRenewDeadline = "5s";
+                leaseRetryPeriod = "1s";
+              };
+            };
+            #routingMode: native
+            #enableIPv4Masquerade: false
+            #enableIPv6Masquerade: false # TODO
+          }
+        ];
+
+        manifests."cilium-net".content =
+          lib.lists.optional (!top.bgp.enable)
+          {
+            apiVersion = "cilium.io/v2alpha1";
+            kind = "CiliumL2AnnouncementPolicy";
+            metadata.name = "default";
+            spec = {
+              #interfaces = ["^lo$"]; #top.loadBalancing.interfaces;
+              loadBalancerIPs = false;
+              externalIPs = true;
+            };
+          }
+          ++ lib.lists.optional (top.loadBalancing.cidrs != null)
+          {
+            apiVersion = "cilium.io/v2alpha1";
+            kind = "CiliumLoadBalancerIPPool";
+            metadata = {
+              name = "default";
+              namespace = "kube-system";
+            };
+            spec = {
+              allowFirstLastIPs = "No"; # why is this not just a bool...
+              blocks = map (cidr: {inherit cidr;}) top.loadBalancing.cidrs;
+            };
+          };
       };
 
     az.server.rke2.namespaces."cilium-spire" = {
@@ -69,76 +157,20 @@ in {
       networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
       networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
     };
-    az.server.rke2.manifests."rke2-cilium-config" = [
-      {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChartConfig";
-        metadata = {
-          name = "rke2-cilium";
-          namespace = "kube-system";
-        };
-        # TODO: remove operator.replicas whenever I get multiple nodes
-        spec.valuesContent = builtins.toJSON {
-          operator.replicas = 1;
 
-          ipv6.enabled = true;
-          kubeProxyReplacement = true;
-          k8sServiceHost = "api.${config.networking.domain}";
-          k8sServicePort = 8443;
-          tunnelProtocol = "";
-
-          encryption = {
-            enabled = true;
-            nodeEncryption = true;
-            type = "wireguard";
-          };
-
-          authentication.mutual.spire = {
-            # TODO?: use a cnpg DB
-            enabled = true;
-            install.enabled = true;
-            install.existingNamespace = true;
-            install.namespace = "cilium-spire";
-          };
-
-          bgpControlPlane.enabled = top.bgp.enable;
-          l2announcements = {
-            enabled = !top.bgp.enable;
-            leaseDuration = "10s";
-            leaseRenewDeadline = "5s";
-            leaseRetryPeriod = "1s";
-          };
-        };
-        #routingMode: native
-        #enableIPv4Masquerade: false
-        #enableIPv6Masquerade: false # TODO
-      }
-    ];
-
-    az.server.rke2.manifests."cilium-net" =
-      lib.lists.optional (!top.bgp.enable)
-      {
-        apiVersion = "cilium.io/v2alpha1";
-        kind = "CiliumL2AnnouncementPolicy";
-        metadata.name = "default";
-        spec = {
-          #interfaces = ["^lo$"]; #top.loadBalancing.interfaces;
-          loadBalancerIPs = false;
-          externalIPs = true;
-        };
-      }
-      ++ lib.lists.optional (top.loadBalancing.cidrs != null)
-      {
-        apiVersion = "cilium.io/v2alpha1";
-        kind = "CiliumLoadBalancerIPPool";
-        metadata = {
-          name = "default";
-          namespace = "kube-system";
-        };
-        spec = {
-          allowFirstLastIPs = "No"; # why is this not just a bool...
-          blocks = map (cidr: {inherit cidr;}) top.loadBalancing.cidrs;
-        };
+    az.server.rke2.images = {
+      spire-agent = {
+        imageName = "ghcr.io/spiffe/spire-agent";
+        finalImageTag = "1.9.0";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/spiffe/spire-agent 1.9.0
       };
+      spire-server = {
+        imageName = "ghcr.io/spiffe/spire-server";
+        finalImageTag = "1.9.0";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/spiffe/spire-server 1.9.0
+      };
+    };
   };
 }

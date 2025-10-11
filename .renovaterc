@@ -59,11 +59,11 @@
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newValue}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
-					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/g\" {{{packageFile}}}",
-					"rm \"config/rke2/helm-images/{{{depName}}}_*.nix\" || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newVersion}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{depName}}}_{{{newVersion}}}.nix'\""
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}",
+					"rm config/rke2/helm-images/{{{depName}}}_*.nix || true",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') | tee 'config/rke2/helm-images/{{{depName}}}_{{{newValue}}}.nix'\""
 				]
 			}
 		},
@@ -74,11 +74,11 @@
 				"commands": [
 					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newVersion}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newValue}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
-					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/g\" {{{packageFile}}}",
-					"rm \"config/rke2/helm-images/{{{replace '/' '-' depName}}}_*.nix\" || true",
-					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages oci://{{{depName}}} --version {{{newVersion}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newVersion}}}.nix'\""
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}",
+					"rm config/rke2/helm-images/{{{replace '/' '-' depName}}}_*.nix || true",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages oci://{{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') | tee 'config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newValue}}}.nix'\""
 				]
 			}
 		},
@@ -91,7 +91,7 @@
 					"rm /nix/tmp-image || true",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run 'skopeo --insecure-policy copy docker://{{{depName}}}@{{{newDigest}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newValue}}}'",
 					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//g' > new-hash",
-					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\)/\\\\1$(cat new-hash)\\\\2/g\" {{{packageFile}}}"
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}"
 				]
 			}
 		},
@@ -119,7 +119,8 @@
 				"registry.k8s.io/git-sync/git-sync",
 				"nginxinc/nginx-unprivileged",
 				"px01/blocky",
-				"klutchell/unbound"
+				"klutchell/unbound",
+				"ghcr.io/cloudnative-pg/postgresql"
 			],
 			"groupName": "automerge-minor",
 			"automerge": true,
@@ -140,8 +141,15 @@
 			"matchDepNames": [
 				"authelia"
 			],
-			"groupName": "dont-automerge",
+			"groupName": "no-automerge",
 			"automerge": false
+		},
+		{
+			"matchDepNames": [
+				"ghcr.io/cloudnative-pg/postgresql"
+			],
+			"matchUpdateTypes": ["major"],
+			"enabled": false
 		}
 	]
 }

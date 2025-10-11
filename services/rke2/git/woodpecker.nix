@@ -32,8 +32,8 @@ in {
 
     services.rke2.autoDeployCharts."woodpecker" = {
       repo = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
-      version = "3.4.0";
-      hash = "sha256-9W7pxyxBg3XczMn+BJqa2FNXF2XdsMpO7yYXKAiPWOk="; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker
+      version = "3.0.0";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker 3.0.0
 
       targetNamespace = "app-woodpecker";
       values = let
@@ -53,6 +53,7 @@ in {
           replicaCount = cfg.agentCount;
 
           inherit securityContext podSecurityContext;
+          env.WOODPECKER_BACKEND_K8S_NAMESPACE = "app-woodpecker-steps";
           extraSecretNamesForEnvFrom = ["agent-env"];
         };
 
@@ -71,7 +72,6 @@ in {
           namespace = "app-woodpecker";
         };
         stringData = {
-          WOODPECKER_BACKEND_K8S_NAMESPACE = "app-woodpecker-steps";
           WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
         };
       }
@@ -83,18 +83,18 @@ in {
           namespace = "app-woodpecker";
         };
         stringData = {
-          WOODPECKER_OPEN = true;
+          WOODPECKER_OPEN = "true";
           WOODPECKER_HOST = "https://woodpecker.${domain}";
           WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
           WOODPECKER_ADMIN = ""; # admin accounts aren't really necessary
 
-          WOODPECKER_FORGEJO = true;
+          WOODPECKER_FORGEJO = "true";
           WOODPECKER_FORGEJO_URL = "https://git.${domain}";
           # oauth2 client, callback URL https://woodpecker.<domain>/authorize
           WOODPECKER_FORGEJO_CLIENT = config.sops.placeholder."rke2/woodpecker/forgejo-id";
           WOODPECKER_FORGEJO_SECRET = config.sops.placeholder."rke2/woodpecker/forgejo-secret";
 
-          WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = true;
+          WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = "true";
 
           WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
           WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";

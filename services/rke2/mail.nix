@@ -23,7 +23,7 @@ in {
       repo = "https://bokysan.github.io/docker-postfix";
       name = "mail";
       version = "4.4.0";
-      hash = "sha256-sBYpD7PGuMMjl0iUWK8ae+KQofyTxnBaHJNlKJJcfQw="; # renovate: https://bokysan.github.io/docker-postfix mail
+      hash = "sha256-sBYpD7PGuMMjl0iUWK8ae+KQofyTxnBaHJNlKJJcfQw="; # renovate: https://bokysan.github.io/docker-postfix mail 4.4.0
 
       targetNamespace = "app-mail";
       values.existingSecret = "mail-env";

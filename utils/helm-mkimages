@@ -21,7 +21,7 @@ do
 	hash=$(nix-hash --flat --type sha256 --sri /tmp/helm-mkimages-skopeo)
 	rm /tmp/helm-mkimages-skopeo; 
 
-	# tag at the end, so the renovate regex doesn't pick try updating these
+	# tag at the end, so the renovate regex doesn't try updating these
 	echo -n "
     {
       imageName = \"$name\";

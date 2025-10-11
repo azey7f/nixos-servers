@@ -29,7 +29,7 @@ in {
         imageName = "ghcr.io/zhaofengli/attic";
         finalImageTag = "59d60f266ce854e05143c5003b67fe07bcd562a6";
         imageDigest = "sha256:d7335b391f3a0a31f2bc7dfc34632bd9595b065079b20b52c71e99df070d8fab";
-        hash = "sha256-ju3Vi4p5dMLOPIHhV6Po+o1qT0DgWrALHx/6rwIrrO8="; # renovate: ghcr.io/zhaofengli/attic
+        hash = "sha256-ju3Vi4p5dMLOPIHhV6Po+o1qT0DgWrALHx/6rwIrrO8="; # renovate: ghcr.io/zhaofengli/attic 59d60f266ce854e05143c5003b67fe07bcd562a6
       };
     };
     az.server.rke2.secrets = [
@@ -96,6 +96,13 @@ in {
         };
         spec = {
           instances = 1; # TODO: HA
+
+          imageCatalogRef = {
+            apiGroup = "postgresql.cnpg.io";
+            kind = "ClusterImageCatalog";
+            name = "postgresql";
+            major = 17;
+          };
 
           bootstrap.initdb = {
             database = "attic";

@@ -31,7 +31,7 @@ in {
         imageName = "klutchell/unbound";
         finalImageTag = "1.24.0";
         imageDigest = "sha256:62816542e5dcecad24701a15aa5b31746b0319c12073b2ce9e5010a2cfcfd163";
-        hash = "sha256-DBCeQF5XNEEjrbh6aOukfxKdE9McR+JHErXDokgrT8k="; # renovate: klutchell/unbound
+        hash = "sha256-DBCeQF5XNEEjrbh6aOukfxKdE9McR+JHErXDokgrT8k="; # renovate: klutchell/unbound 1.24.0
       };
     };
     services.rke2.manifests."resolver".content = [
