@@ -24,9 +24,9 @@ in {
     az.server.rke2.images = {
       searxng = {
         imageName = "searxng/searxng";
-        finalImageTag = "2025.8.10-6cccb46"; # versioning: regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+).*$
-        imageDigest = "sha256:fe702750a9ffbf923533c67c456951a3be77f298915cf632077f3650ed4b5e4b";
-        hash = "sha256-RPlb15UHD9mvNdPbSuDpgp3l5f733isxSFP/n97gJuU="; # renovate: searxng/searxng 2025.8.10-6cccb46
+        finalImageTag = "2025.10.11-ced08e12a"; # versioning: regex:^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+).*$
+        imageDigest = "sha256:67ba98e59f96906bf806a83ccdb467bc9fd86c7e35f59faabdf8df9afdb2add1";
+        hash = "sha256-52lgSMgja+kw1gxSnvQWowNhfh6hrIHFZ1H0aDyA75M="; # renovate: searxng/searxng 2025.10.11-ced08e12a
       };
     };
     services.rke2.autoDeployCharts."searxng-valkey" = {
