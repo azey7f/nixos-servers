@@ -87,27 +87,27 @@ in {
     az.server.rke2.images = {
       pg-14 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "14.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/cloudnative-pg/postgresql 14.0
+        finalImageTag = "14.19";
+        imageDigest = "sha256:188a1ae91c689be7d0e958bc985647498a84055b5d1c580e96d030b55f68eca7";
+        hash = "sha256-oLgdMxDT2t2pPnIuGoAYkLvgyjivqGvrf0i0yX3LG5M="; # renovate: ghcr.io/cloudnative-pg/postgresql 14.19
       };
       pg-15 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "15.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.0
+        finalImageTag = "15.14";
+        imageDigest = "sha256:1db6ff2e7bbd12dcb77a4e840948cfd17f9e031df6a184151bcbe5f47e15bb43";
+        hash = "sha256-ldMQDJJ4FAusk8oI4iihS7Gt1AqwRJ/o5El4NC5pTl0="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.14
       };
       pg-16 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "16.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.0
+        finalImageTag = "16.10";
+        imageDigest = "sha256:d59c8f354500b05a856fe71cad6593099f31bac1f0e26c8b13c601579f55f3c2";
+        hash = "sha256-K4xYLM9bpMiDCwjSO3Q7rhkyEwWQlBRApyfY+/tIQ4Y="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.10
       };
       pg-17 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "17.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/cloudnative-pg/postgresql 17.0
+        finalImageTag = "17.6";
+        imageDigest = "sha256:8d39f0643fef1dacbbc50bf0b26a0b6e8f3bb354e8ac3bfaefb99e2f96027ad8";
+        hash = "sha256-AXFGHHB2xajrGPgOd8I79X1OY0kDwdiYF3D09OBAZ2k="; # renovate: ghcr.io/cloudnative-pg/postgresql 17.6
       };
       pg-18 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
