@@ -162,14 +162,14 @@ in {
       spire-agent = {
         imageName = "ghcr.io/spiffe/spire-agent";
         finalImageTag = "1.9.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/spiffe/spire-agent 1.9.0
+        imageDigest = "sha256:a51cc8d6ae37fd4221c6fd6c7a19d138fbd2fe005ae42e725666726fc735e600";
+        hash = "sha256-P7teqcBlXedvJn6sPDp7a6qkEJDB0oAQS8x6VNZ7nGQ="; # renovate: ghcr.io/spiffe/spire-agent 1.9.0
       };
       spire-server = {
         imageName = "ghcr.io/spiffe/spire-server";
         finalImageTag = "1.9.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/spiffe/spire-server 1.9.0
+        imageDigest = "sha256:d50b734d34e8eb9a5058d5efc3cef50bd6c3f68db972bd52f5376e1153dd889b";
+        hash = "sha256-3vJQQLLANw5n9uju09l6v0kPZ0/OJwRamB+JZm9243E="; # renovate: ghcr.io/spiffe/spire-server 1.9.0
       };
     };
   };
