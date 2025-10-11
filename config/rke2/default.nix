@@ -61,7 +61,7 @@ in {
 
       images = [
         config.services.rke2.package.images-core-linux-amd64-tar-zst
-        config.services.rke2.package.images-cilium-linux-amd64-tar-zst
+        # config.services.rke2.package.images-cilium-linux-amd64-tar-zst
       ];
 
       #gracefulNodeShutdown.enable = true; # TODO

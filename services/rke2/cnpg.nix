@@ -43,7 +43,7 @@ in {
               image = config.az.server.rke2.images."pg-${builtins.toString major}";
             in {
               inherit major;
-              image = "${image.imageName}:${image.finalTag}@${image.imageDigest}";
+              image = "${image.imageName}:${image.finalImageTag}@${image.imageDigest}";
             }) [14 15 16 17 18];
           };
         }
@@ -112,8 +112,8 @@ in {
       pg-18 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "18.0";
-        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.0
+        imageDigest = "sha256:acf136a97dea92d9121eba67b1ddf5548b7ec0ecab241d74bdb9945808aa8263";
+        hash = "sha256-1Dzw1uok+n0AiZ/OYR+y4fap+JGALl1L8gX2pxdRL1w="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.0
       };
     };
   };

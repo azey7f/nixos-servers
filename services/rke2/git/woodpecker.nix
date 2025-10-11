@@ -59,6 +59,19 @@ in {
 
         server = {
           inherit securityContext podSecurityContext;
+          env = {
+            WOODPECKER_OPEN = "true";
+            WOODPECKER_HOST = "https://woodpecker.${domain}";
+            WOODPECKER_ADMIN = ""; # admin accounts aren't really necessary
+
+            WOODPECKER_FORGEJO = "true";
+            WOODPECKER_FORGEJO_URL = "https://git.${domain}";
+
+            WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = "true";
+
+            WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
+            WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
+          };
           extraSecretNamesForEnvFrom = ["server-env"];
         };
       };
@@ -83,21 +96,10 @@ in {
           namespace = "app-woodpecker";
         };
         stringData = {
-          WOODPECKER_OPEN = "true";
-          WOODPECKER_HOST = "https://woodpecker.${domain}";
           WOODPECKER_AGENT_SECRET = config.sops.placeholder."rke2/woodpecker/agent-secret";
-          WOODPECKER_ADMIN = ""; # admin accounts aren't really necessary
-
-          WOODPECKER_FORGEJO = "true";
-          WOODPECKER_FORGEJO_URL = "https://git.${domain}";
           # oauth2 client, callback URL https://woodpecker.<domain>/authorize
           WOODPECKER_FORGEJO_CLIENT = config.sops.placeholder."rke2/woodpecker/forgejo-id";
           WOODPECKER_FORGEJO_SECRET = config.sops.placeholder."rke2/woodpecker/forgejo-secret";
-
-          WOODPECKER_AUTHENTICATE_PUBLIC_REPOS = "true";
-
-          WOODPECKER_MAX_PIPELINE_TIMEOUT = "10000"; # just under a week... even full nixos system builds shouldn't take that long, right?
-          WOODPECKER_DEFAULT_MAX_PIPELINE_TIMEOUT = "10000";
         };
       }
     ];
