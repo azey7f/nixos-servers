@@ -87,7 +87,7 @@ in {
     az.server.rke2.images = {
       envoy-proxy = {
         imageName = "docker.io/envoyproxy/envoy";
-        finalImageTag = "distroless-v1.35.0";
+        finalImageTag = "distroless-v1.35.0"; # versioning: regex:^distroless-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
         imageDigest = "sha256:da99c47f08546492d19973920dc76334c592f59ad5b732a514320d959db9fa40";
         hash = "sha256-GHHNWywV0tcp6oZN2QJw+7vncNWpMWBzKnU5xOS35XE="; # renovate: docker.io/envoyproxy/envoy distroless-v1.35.0
       };

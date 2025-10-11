@@ -17,7 +17,7 @@
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*name\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				"repo\\s*=\\s*\"(?<registryUrl>\\S+)\"\\s*;\\s*name\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;(\\s*# versioning: (?<versioning>\\S+))?"
 			],
 			"datasourceTemplate": "helm",
 			"depTypeTemplate": "{{{registryUrl}}}"
@@ -27,7 +27,7 @@
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"repo\\s*=\\s*\"oci:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;"
+				"repo\\s*=\\s*\"oci:\\/\\/(?<depName>\\S+)\"\\s*;\\s*version\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;(\\s*# versioning: (?<versioning>\\S+))?"
 			],
 			"datasourceTemplate": "docker"
 		},
@@ -36,7 +36,7 @@
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"imageName\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*finalImageTag\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;\\s*imageDigest\\s*=\\s*\"(?<currentDigest>\\S+)\"\\s*;"
+				"imageName\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*finalImageTag\\s*=\\s*\"(?<currentValue>\\S+)\"\\s*;(\\s*# versioning: (?<versioning>\\S+))?\\s*imageDigest\\s*=\\s*\"(?<currentDigest>\\S+)\"\\s*;"
 			],
 			"datasourceTemplate": "docker"
 		},
@@ -120,7 +120,8 @@
 				"nginxinc/nginx-unprivileged",
 				"px01/blocky",
 				"klutchell/unbound",
-				"ghcr.io/cloudnative-pg/postgresql"
+				"ghcr.io/cloudnative-pg/postgresql",
+				"docker.io/envoyproxy/envoy"
 			],
 			"groupName": "automerge-minor",
 			"automerge": true,
