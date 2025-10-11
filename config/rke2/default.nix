@@ -42,7 +42,7 @@ in {
 
     # combined w/ --disable-default-endpoint, this makes RKE2 use only images
     # provided by nix, and pretty much act as if it was airgapped
-    environment.etc."rancher/rke2/registries.yaml" = ''
+    environment.etc."rancher/rke2/registries.yaml".text = ''
       mirrors:
         "*":
     '';
