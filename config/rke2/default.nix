@@ -35,10 +35,17 @@ in {
 
   config = mkIf cfg.enable {
     # https://docs.rke2.io/install/requirements?cni-rules=Cilium
-    networking.firewall.allowedTCPPorts = [4240 10250];
+    networking.firewall.allowedTCPPorts = [4240 5001 10250 9345];
     networking.firewall.allowedUDPPorts = [51871];
 
     environment.systemPackages = with pkgs; [kubectl cilium-cli];
+
+    # combined w/ --disable-default-endpoint, this makes RKE2 use only images
+    # provided by nix, and pretty much act as if it was airgapped
+    environment.etc."rancher/rke2/registries.yaml" = ''
+      mirrors:
+        "*":
+    '';
 
     # TODO: https://distribution.github.io/distribution/about/deploying/#run-an-externally-accessible-registry
     # TODO: https://docs.rke2.io/install/airgap
@@ -54,6 +61,7 @@ in {
 
       extraFlags = [
         "--disable-kube-proxy" # replaced w/ cilium
+        "--disable-default-endpoint" # see environment.etc
         #"--snapshotter=native"
         #"--kubelet-arg=resolv-conf=/etc/resolv.conf"
         #"--debug"

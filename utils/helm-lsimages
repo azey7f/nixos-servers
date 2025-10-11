@@ -1,0 +1,4 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -i sh -p kubernetes-helm yq-go
+
+helm template "$@" | yq -N '..|.image? | select(.)' | sort -u | grep -Px "\\S+:\\S+"

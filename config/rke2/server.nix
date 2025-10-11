@@ -32,7 +32,7 @@ in {
 
   config = mkIf cfg.enable {
     # https://docs.rke2.io/install/requirements?cni-rules=Cilium
-    networking.firewall.allowedTCPPorts = [2379 2380 2381 6443 9345];
+    networking.firewall.allowedTCPPorts = [2379 2380 2381 6443];
 
     environment.sessionVariables.KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
 
@@ -56,6 +56,7 @@ in {
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
             "--tls-san=${config.networking.fqdn}"
+            "--embedded-registry"
           ]
           ++ lib.optionals config.az.svc.rke2.metrics.enable [
             "--etcd-expose-metrics"
@@ -68,14 +69,24 @@ in {
         autoDeployCharts."cilium" = {
           repo = "https://helm.cilium.io";
           name = "cilium";
-          version = "1.18.2";
-          hash = "sha256-ObYqcvCJLdFlSL0I7pfV2y6XX3wfVxVVeKFEGG4imS8="; # renovate: https://helm.cilium.io cilium 1.18.2
+          version = "1.17.8";
+          hash = "sha256-G4FNOw2zmprMdWztjC91v3ks4ieWFWou8bxwIF/xVUE="; # renovate: https://helm.cilium.io cilium 1.17.8
 
           targetNamespace = "kube-system";
 
           # TODO: remove operator.replicas whenever I get multiple nodes
-          # renovate-args: --set authentication.mutual.spire.enabled=true --set authentication.mutual.spire.install.enabled=true
-          values = {
+          # renovate-args: --set authentication.mutual.spire.enabled=true --set envoy.enabled=false
+          values = let
+            imageOpts = {
+              pullPolicy = "Never";
+              useDigest = false;
+            };
+          in {
+            envoy.enabled = false;
+
+            image = imageOpts;
+            operator.image = imageOpts;
+
             operator.replicas = 1;
 
             ipv6.enabled = true;
@@ -96,6 +107,10 @@ in {
               install.enabled = true;
               install.existingNamespace = true;
               install.namespace = "cilium-spire";
+
+              install.initImage = imageOpts;
+              install.agent.image = imageOpts;
+              install.server.image = imageOpts;
             };
 
             bgpControlPlane.enabled = top.bgp.enable;

@@ -8,6 +8,7 @@
 with lib; let
   cfg = config.az.svc.rke2.envoyGateway;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.envoyGateway = with azLib.opt; {
     enable = optBool false;
@@ -83,6 +84,15 @@ in {
       networkPolicy.extraIngress = [{fromEntities = ["all"];}];
     };
 
+    az.server.rke2.images = {
+      envoy-proxy = {
+        imageName = "docker.io/envoyproxy/envoy";
+        finalImageTag = "distroless-v1.35.0";
+        imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # renovate: docker.io/envoyproxy/envoy distroless-v1.35.0
+      };
+    };
+
     services.rke2.autoDeployCharts."envoy-gateway" = {
       repo = "oci://docker.io/envoyproxy/gateway-helm";
       version = "1.5.3";
@@ -101,7 +111,7 @@ in {
             spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
           }
 
-          # dual stack
+          # envoy proxy conf
           {
             apiVersion = "gateway.envoyproxy.io/v1alpha1";
             kind = "EnvoyProxy";
@@ -109,7 +119,13 @@ in {
               name = "envoy-proxy-config";
               namespace = "envoy-gateway";
             };
-            spec.ipFamily = "DualStack";
+            spec = {
+              ipFamily = "DualStack";
+              provider = {
+                type = "kubernetes";
+                kubernetes.envoyDeployment.container.image = "${images.envoy-proxy.imageName}:${images.envoy-proxy.finalImageTag}";
+              };
+            };
           }
 
           # TLS config & conn limit
