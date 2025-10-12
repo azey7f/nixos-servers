@@ -43,7 +43,7 @@ in {
               image = config.az.server.rke2.images."pg-${builtins.toString major}";
             in {
               inherit major;
-              image = "${image.imageName}:${image.finalImageTag}@${image.imageDigest}";
+              image = "${image.imageName}:${image.finalImageTag}";
             }) [14 15 16 17 18];
           };
         }

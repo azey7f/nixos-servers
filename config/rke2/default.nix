@@ -40,7 +40,7 @@ in {
 
     environment.systemPackages = with pkgs; [kubectl cilium-cli];
 
-    # combined w/ --disable-default-endpoint, this makes RKE2 use only images
+    # combined w/ --disable-default-registry-endpoint, this makes RKE2 use only images
     # provided by nix, and pretty much act as if it was airgapped
     environment.etc."rancher/rke2/registries.yaml".text = ''
       mirrors:
@@ -61,7 +61,7 @@ in {
 
       extraFlags = [
         "--disable-kube-proxy" # replaced w/ cilium
-        "--disable-default-endpoint" # see environment.etc
+        "--disable-default-registry-endpoint" # see environment.etc
         #"--snapshotter=native"
         #"--kubelet-arg=resolv-conf=/etc/resolv.conf"
         #"--debug"

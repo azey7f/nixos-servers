@@ -137,6 +137,7 @@ in {
         spec = {
           selector.matchLabels.app = "attic";
           template.metadata.labels.app = "attic";
+          serviceName = "attic";
 
           template.spec.securityContext = {
             runAsNonRoot = true;

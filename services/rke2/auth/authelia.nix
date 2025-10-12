@@ -164,7 +164,7 @@ in {
               in {
                 enabled = true;
                 implementation = "lldap";
-                address = "ldap://lldap-ldap.app-lldap.svc";
+                address = "ldap://lldap.app-lldap.svc";
 
                 inherit base_dn;
                 user = "uid=authelia,ou=people,${base_dn}";

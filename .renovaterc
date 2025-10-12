@@ -132,6 +132,7 @@
 				"renovate",
 				"ghcr.io/jeffvli/feishin",
 				"searxng/searxng",
+				"lldap/lldap",
 				"^grafana-dashboard-"
 			],
 			"groupName": "automerge-reckless",

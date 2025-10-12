@@ -12,7 +12,7 @@ lib: rec {
           knotPubkey = "Dz14HoMs3cuczSYTUscntbB7ZRb7JAGg98/pP+Rv0tk=";
         }
         {
-          # ns1.azey.net - uptime status page
+          # ns2.azey.net - uptime status page
           subdomains = ["ns2.vps" "status"];
           ipv4 = "95.217.221.156";
           ipv6 = "2a01:4f9:c012:dc23::53";

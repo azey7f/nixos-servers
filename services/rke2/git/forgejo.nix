@@ -11,22 +11,27 @@ with lib; let
 in {
   options.az.svc.rke2.forgejo = with azLib.opt; {
     enable = optBool false;
-    themesUrl = optStr "https://github.com/catppuccin/gitea/releases/latest/download/catppuccin-gitea.tar.gz";
+    themes = {
+      url = optStr "https://github.com/catppuccin/gitea/releases/download/v1.0.2/catppuccin-gitea.tar.gz";
+      hash = optStr "sha256-HP4Ap4l2K1BWP1zWdCKYS5Y5N+JcKAcXi+Hx1g6MVwc=";
+    };
   };
 
   config = mkIf cfg.enable {
     az.svc.rke2.cnpg.enable = true;
 
     az.server.rke2.namespaces = {
-      "app-forgejo".networkPolicy = {
-        fromNamespaces = ["envoy-gateway"];
-        toNamespaces = ["app-mail"];
-        toDomains = [
-          "auth.${domain}" # OIDC auto-discovery
-          "github.com" # themes dl (#TODO: local mirror), pull mirroring
-          "release-assets.githubusercontent.com"
-          "codeberg.org" # push mirrors
-        ];
+      "app-forgejo" = {
+        podSecurity = "privileged"; # /nix/store hostPath mount, otherwise passes restricted...
+        networkPolicy = {
+          fromNamespaces = ["envoy-gateway"];
+          toNamespaces = ["app-mail"];
+          toDomains = [
+            "auth.${domain}" # OIDC auto-discovery
+            "github.com" # pull mirroring
+            "codeberg.org" # push mirrors
+          ];
+        };
       };
       "app-mail".networkPolicy.fromNamespaces = ["app-forgejo"];
     };
@@ -114,6 +119,13 @@ in {
             name = "forgejo-themes";
             emptyDir = {};
           }
+          {
+            name = "forgejo-themes-src";
+            hostPath = {
+              path = toString (pkgs.fetchurl {inherit (cfg.themes) url hash;});
+              type = "File";
+            };
+          }
         ];
         extraContainerVolumeMounts = [
           {
@@ -127,11 +139,14 @@ in {
             name = "forgejo-themes";
             mountPath = "/themes";
           }
+          {
+            name = "forgejo-themes-src";
+            mountPath = "/themes.tar.gz";
+            readOnly = true;
+          }
         ];
         initPreScript = ''
-          curl -Lvo /themes/themes.tar.gz ${cfg.themesUrl}
-          tar -xzvf /themes/themes.tar.gz -C /themes
-          rm /themes/themes.tar.gz
+          tar -xzvf /themes.tar.gz -C /themes
         '';
       };
 

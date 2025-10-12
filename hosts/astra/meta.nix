@@ -14,7 +14,7 @@ in {
   # FIXME: UDPRoute doesn't work for some reason, so blocky can't be used directly
   services.dnsproxy = {
     enable = true;
-    settings.upstream = ["tcp://${cluster.publicSubnet}:fc6a::2"];
+    settings.upstream = ["tcp://${cluster.publicSubnet}:fc6a::1"];
     settings.listen-ports = [53];
     settings.listen-addrs = ["192.168.0.254" "::1"];
   };

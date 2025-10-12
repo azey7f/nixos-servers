@@ -14,15 +14,18 @@ in {
   options.az.svc.rke2.nginx = with azLib.opt; {
     enable = optBool false;
     repos = {
-      root = optStr "https://git.${domain}/infra/${domain}"; # TODO: https://ogp.me, also put this TODO in the site's repo
-      miku = optStr "https://git.${domain}/mirrors/ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
+      root = optStr "http://forgejo-http.app-forgejo.svc:3000/infra/${domain}"; # TODO: https://ogp.me, also put this TODO in the site's repo
+      miku = optStr "http://forgejo-http.app-forgejo.svc:3000/mirrors/ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
     };
   };
 
   config = mkIf cfg.enable {
-    az.server.rke2.namespaces."app-nginx" = {
-      networkPolicy.fromNamespaces = ["envoy-gateway"];
-      networkPolicy.toDomains = ["git.${domain}"]; # source code fetching
+    az.server.rke2.namespaces = {
+      "app-nginx" = {
+        networkPolicy.fromNamespaces = ["envoy-gateway"];
+        networkPolicy.toNamespaces = ["app-forgejo"]; # source code fetching
+      };
+      "app-forgejo".networkPolicy.fromNamespaces = ["app-nginx"];
     };
 
     az.server.rke2.images = {
@@ -202,7 +205,6 @@ in {
           worker-src = ["'self'" "blob:"];
           script-src = ["'self'" "blob:"];
           style-src = ["'self'" "'unsafe-inline'"]; # CSS in JS on a static page, there shouldn't be any XSS attack vectors anyways
-          frame-src = ["https://navidrome.${domain}"];
         };
         responseHeaders.x-robots-tag = "all";
       }

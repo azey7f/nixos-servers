@@ -18,9 +18,9 @@ do
 	name=$(echo $nodigest | cut -d: -f1)
 	tag=$(echo $nodigest | cut -d: -f2)
 
-	if [ "$name" = "$nodigest" ]
+	if [ "$img" = "$nodigest" ]
 	then
-		digest=$(skopeo inspect docker://$nodigest -f "{{.Digest}}")
+		digest=$(skopeo inspect docker://$img -f "{{.Digest}}")
 	else
 		digest=$(echo $img | cut -d@ -f2)
 	fi

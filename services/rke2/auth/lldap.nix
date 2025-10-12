@@ -3,11 +3,13 @@
   config,
   lib,
   azLib,
+  outputs,
   ...
 }:
 with lib; let
   cfg = config.az.svc.rke2.lldap;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.lldap = with azLib.opt; {
     enable = optBool false;
@@ -20,48 +22,140 @@ in {
       networkPolicy.fromNamespaces = ["envoy-gateway"];
     };
 
-    az.server.rke2.manifests."lldap" = [
+    az.server.rke2.images = {
+      lldap = {
+        imageName = "lldap/lldap";
+        finalImageTag = "2025-10-10"; # versioning: regex:^(?<major>\d+)-(?<minor>\d+)-(?<patch>\d+)$
+        imageDigest = "sha256:42a2b6512655b99be6f8afb01aae20bde35343d412daa125a26d0215ac0edeca";
+        hash = "sha256-iIAVrwV1+c5CHxUiuYuWMZS8LgjvCDTDbX2SuFVByHs="; # renovate: lldap/lldap 2025-10-10
+      };
+    };
+    az.server.rke2.secrets = [
       {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
+        apiVersion = "v1";
+        kind = "Secret";
+        type = "kubernetes.io/basic-auth";
         metadata = {
-          name = "lldap";
-          namespace = "kube-system";
+          name = "lldap-cnpg-user";
+          namespace = "app-lldap";
+        };
+        stringData = {
+          username = "lldap";
+          password = config.sops.placeholder."rke2/lldap/cnpg-passwd";
+        };
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "lldap-env";
+          namespace = "app-lldap";
+        };
+        stringData = let
+          split = lib.strings.splitString "." domain;
+        in {
+          TZ = config.az.core.locale.tz;
+
+          LLDAP_HTTP_HOST = "::";
+          LLDAP_HTTP_PORT = "80";
+          LLDAP_LDAP_HOST = "::";
+          LLDAP_LDAP_PORT = "389";
+          LLDAP_HTTP_URL = "https://lldap.${domain}";
+
+          LLDAP_LDAP_BASE_DN = lib.strings.concatMapStringsSep "," (n: "dc=${n}") split;
+          LLDAP_DATABASE_URL = "postgresql://lldap:${config.sops.placeholder."rke2/lldap/cnpg-passwd"}@lldap-cnpg-rw.app-lldap.svc/lldap";
+          LLDAP_JWT_SECRET = config.sops.placeholder."rke2/lldap/jwt-secret";
+          LLDAP_KEY_SEED = config.sops.placeholder."rke2/lldap/key-seed";
+          LLDAP_LDAP_USER_PASS = config.sops.placeholder."rke2/lldap/init-passwd"; # should be deleted after init
+        };
+      }
+    ];
+    services.rke2.manifests."lldap".content = [
+      {
+        apiVersion = "postgresql.cnpg.io/v1";
+        kind = "Cluster";
+        metadata = {
+          name = "lldap-cnpg";
+          namespace = "app-lldap";
         };
         spec = {
-          targetNamespace = "app-lldap";
+          instances = 1; # TODO: HA
 
-          chart = "oci://tccr.io/truecharts/lldap"; # TODO: move to raw deployment
-          version = "8.2.1";
-
-          valuesContent = builtins.toJSON {
-            service.main = {
-              ports.main.port = 80;
-              #ipFamilyPolicy = "PreferDualStack"; # for some reason the webUI doesn't really work w/ dual stack
-              #ipFamilies = ["IPv4" "IPv6"];
-            };
-            service.ldap = {
-              enabled = true;
-              ports.ldap = {
-                enabled = true;
-                port = 389;
-              };
-              ipFamilyPolicy = "PreferDualStack";
-              ipFamilies = ["IPv4" "IPv6"];
-            };
-
-            persistence.data = {
-              type = "pvc";
-              size = "1Gi";
-            };
-            workload.main.podSpec.containers.main.env = let
-              split = lib.strings.splitString "." domain;
-            in {
-              LLDAP_HTTP_URL = "https://lldap.${domain}";
-              LLDAP_LDAP_BASE_DN = lib.strings.concatMapStringsSep "," (n: "dc=${n}") split;
-              LLDAP_LDAP_USER_PASS = config.sops.placeholder."rke2/lldap/init-passwd"; # shouldn't actually be used, admin user should be deleted immediately after init
-            };
+          imageCatalogRef = {
+            apiGroup = "postgresql.cnpg.io";
+            kind = "ClusterImageCatalog";
+            name = "postgresql";
+            major = 18;
           };
+
+          bootstrap.initdb = {
+            database = "lldap";
+            owner = "lldap";
+            secret.name = "lldap-cnpg-user";
+          };
+
+          storage.size = "1Gi";
+        };
+      }
+
+      {
+        apiVersion = "apps/v1";
+        kind = "StatefulSet";
+        metadata = {
+          name = "lldap";
+          namespace = "app-lldap";
+        };
+        spec = {
+          selector.matchLabels.app = "lldap";
+          template.metadata.labels.app = "lldap";
+          serviceName = "lldap";
+
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65534;
+            runAsGroup = 65534;
+            fsGroup = 65534;
+          };
+
+          template.spec.containers = [
+            {
+              name = "lldap";
+              image = images.lldap.imageString;
+              command = ["/app/lldap" "run"];
+              envFrom = [{secretRef.name = "lldap-env";}];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
+            }
+          ];
+        };
+      }
+
+      {
+        apiVersion = "v1";
+        kind = "Service";
+        metadata = {
+          name = "lldap";
+          namespace = "app-lldap";
+        };
+        spec = {
+          selector.app = "lldap";
+          ipFamilyPolicy = "PreferDualStack";
+          ipFamilies = ["IPv4" "IPv6"];
+          ports = [
+            {
+              name = "http";
+              port = 80;
+              protocol = "TCP";
+            }
+            {
+              name = "ldap";
+              port = 389;
+              protocol = "TCP";
+            }
+          ];
         };
       }
     ];
@@ -93,5 +187,8 @@ in {
     ];
 
     az.server.rke2.clusterWideSecrets."rke2/lldap/init-passwd" = {};
+    az.server.rke2.clusterWideSecrets."rke2/lldap/cnpg-passwd" = {};
+    az.server.rke2.clusterWideSecrets."rke2/lldap/jwt-secret" = {};
+    az.server.rke2.clusterWideSecrets."rke2/lldap/key-seed" = {};
   };
 }

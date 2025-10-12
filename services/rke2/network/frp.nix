@@ -123,6 +123,7 @@ in {
           replicas = builtins.length cfg.remotes;
           selector.matchLabels.app = "frp";
           template.metadata.labels.app = "frp";
+          serviceName = "none";
 
           template.spec.securityContext = {
             runAsNonRoot = true;

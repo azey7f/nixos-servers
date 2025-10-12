@@ -3,11 +3,13 @@
   config,
   lib,
   azLib,
+  outputs,
   ...
 }:
 with lib; let
   cfg = config.az.svc.rke2.navidrome;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.navidrome = with azLib.opt; {
     enable = optBool false;
@@ -15,44 +17,112 @@ in {
 
   config = mkIf cfg.enable {
     az.svc.rke2.music.enable = true;
+
+    az.server.rke2.images = {
+      navidrome = {
+        imageName = "deluan/navidrome";
+        finalImageTag = "0.58.0";
+        imageDigest = "sha256:2ae037d464de9f802d047165a13b1c9dc2bdbb14920a317ae4aef1233adc0a3c";
+        hash = "sha256-gqHFoDTkXsy6glM8kizYdd/OTKnNWrKSXYG7o93JR34="; # renovate: deluan/navidrome 0.58.0
+      };
+    };
     services.rke2.manifests."music".content = [
       {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChart";
+        apiVersion = "v1";
+        kind = "PersistentVolumeClaim";
         metadata = {
-          name = "navidrome";
-          namespace = "kube-system";
+          name = "navidrome-data";
+          namespace = "app-music";
         };
         spec = {
-          targetNamespace = "app-music";
+          accessModes = ["ReadWriteOnce"];
+          resources.requests.storage = "1Gi";
+        };
+      }
 
-          chart = "oci://tccr.io/truecharts/navidrome"; # TODO: move to raw deployment
-          version = "22.3.0";
+      {
+        apiVersion = "apps/v1";
+        kind = "StatefulSet";
+        metadata = {
+          name = "navidrome";
+          namespace = "app-music";
+        };
+        spec = {
+          selector.matchLabels.app = "navidrome";
+          template.metadata.labels.app = "navidrome";
+          serviceName = "navidrome";
 
-          valuesContent = builtins.toJSON {
-            global.namespace = "app-music";
-            workload.main.podSpec.containers.main.env = {
-              ND_SCANNER_SCHEDULE = "0"; # manual only
-
-              ND_ENABLESHARING = "true";
-              ND_DEFAULTSHAREEXPIRATION = "2557920h";
-            };
-
-            persistence.data = {
-              type = "pvc";
-              size = "10Gi";
-            };
-
-            persistence.music = {
-              type = "pvc";
-              existingClaim = "music"; # see default.nix
-            };
-
-            service.main = {
-              ipFamilyPolicy = "PreferDualStack";
-              ipFamilies = ["IPv4" "IPv6"];
-            };
+          template.spec.securityContext = {
+            runAsNonRoot = true;
+            seccompProfile.type = "RuntimeDefault";
+            runAsUser = 65534;
+            runAsGroup = 65534;
+            fsGroup = 65534;
           };
+
+          template.spec.containers = [
+            {
+              name = "navidrome";
+              image = images.navidrome.imageString;
+              env = lib.attrsets.mapAttrsToList (name: value: {inherit name value;}) {
+                ND_DATAFOLDER = "/data";
+                ND_MUSICFOLDER = "/music";
+                ND_SCANNER_SCHEDULE = "0"; # manual only
+
+                ND_PORT = "80";
+                ND_ENABLEINSIGHTSCOLLECTOR = "false"; # container has no internet access anyways
+
+                ND_ENABLESHARING = "true";
+                ND_DEFAULTSHAREEXPIRATION = "2557920h";
+              };
+              volumeMounts = [
+                {
+                  name = "navidrome-data";
+                  mountPath = "/data";
+                }
+                {
+                  name = "navidrome-music";
+                  mountPath = "/music";
+                  readOnly = true;
+                }
+              ];
+              securityContext = {
+                allowPrivilegeEscalation = false;
+                capabilities.drop = ["ALL"];
+              };
+            }
+          ];
+          template.spec.volumes = [
+            {
+              name = "navidrome-data";
+              persistentVolumeClaim.claimName = "navidrome-data";
+            }
+            {
+              name = "navidrome-music";
+              persistentVolumeClaim.claimName = "music"; # see ./default.nix
+            }
+          ];
+        };
+      }
+
+      {
+        apiVersion = "v1";
+        kind = "Service";
+        metadata = {
+          name = "navidrome";
+          namespace = "app-music";
+        };
+        spec = {
+          selector.app = "navidrome";
+          ipFamilyPolicy = "PreferDualStack";
+          ipFamilies = ["IPv4" "IPv6"];
+          ports = [
+            {
+              name = "http";
+              port = 80;
+              protocol = "TCP";
+            }
+          ];
         };
       }
     ];
@@ -67,7 +137,7 @@ in {
             backendRefs = [
               {
                 name = "navidrome";
-                port = 4533;
+                port = 80;
               }
             ];
           }

@@ -122,7 +122,7 @@ in {
             spec = {
               ipFamily = "DualStack";
               provider = {
-                type = "kubernetes";
+                type = "Kubernetes";
                 kubernetes.envoyDeployment.container.image = "${images.envoy-proxy.imageName}:${images.envoy-proxy.finalImageTag}";
               };
             };
