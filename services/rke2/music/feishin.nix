@@ -19,9 +19,9 @@ in {
     az.server.rke2.images = {
       feishin = {
         imageName = "ghcr.io/jeffvli/feishin";
-        finalImageTag = "0.20.1";
-        imageDigest = "sha256:924ac0a6d2ff62d4ea2cbdff174394259cd801d03156ae0988f9d1c308208186";
-        hash = "sha256-M/2lvY5r/0rAIchEGxqst1FExe3+Z7DQywdz9McQRs4="; # renovate: ghcr.io/jeffvli/feishin 0.20.1
+        finalImageTag = "0.21.2";
+        imageDigest = "sha256:1f06ecead6541c1ff96fe4f9b061c37fd4c314201265ed2de501965713dee4fd";
+        hash = "sha256-/ymcjqpQwQDQNCc+wPzk8L2X2YB8dU8UsxGzHppNAWQ="; # renovate: ghcr.io/jeffvli/feishin 0.21.2
       };
     };
     services.rke2.manifests."music".content = [
