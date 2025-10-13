@@ -100,7 +100,6 @@
 				"patch",
 				"digest"
 			],
-			"groupName": "automerge-patch",
 			"automerge": true,
 			"automergeType": "branch"
 		},
@@ -123,7 +122,6 @@
 				"ghcr.io/cloudnative-pg/postgresql",
 				"docker.io/envoyproxy/envoy"
 			],
-			"groupName": "automerge-minor",
 			"automerge": true,
 			"automergeType": "branch"
 		},
@@ -135,7 +133,6 @@
 				"lldap/lldap",
 				"^grafana-dashboard-"
 			],
-			"groupName": "automerge-reckless",
 			"automerge": true,
 			"automergeType": "branch"
 		},
@@ -143,7 +140,6 @@
 			"matchDepNames": [
 				"authelia"
 			],
-			"groupName": "no-automerge",
 			"automerge": false
 		},
 		{
