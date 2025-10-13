@@ -94,26 +94,26 @@ in {
       pg-15 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "15.14";
-        imageDigest = "sha256:1db6ff2e7bbd12dcb77a4e840948cfd17f9e031df6a184151bcbe5f47e15bb43";
-        hash = "sha256-ldMQDJJ4FAusk8oI4iihS7Gt1AqwRJ/o5El4NC5pTl0="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.14
+        imageDigest = "sha256:15661a17359d2ff46961e03a2a6593d58c779624ba5e684780111c09291b49c8";
+        hash = "sha256-f/bQTdODWj2dPGvkDim/llIbTu5dhQn40oDkx+T+lcI="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.14
       };
       pg-16 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "16.10";
-        imageDigest = "sha256:d59c8f354500b05a856fe71cad6593099f31bac1f0e26c8b13c601579f55f3c2";
-        hash = "sha256-K4xYLM9bpMiDCwjSO3Q7rhkyEwWQlBRApyfY+/tIQ4Y="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.10
+        imageDigest = "sha256:697e6d8e15ace744fe3b0035d4ea633d3a2b2e59138e8a0481014e924dd1b4d4";
+        hash = "sha256-bw4D9/gVJ0QA9n5XqLrb/fC1PZphwPEipYCkABK4OXU="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.10
       };
       pg-17 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "17.6";
-        imageDigest = "sha256:8d39f0643fef1dacbbc50bf0b26a0b6e8f3bb354e8ac3bfaefb99e2f96027ad8";
-        hash = "sha256-AXFGHHB2xajrGPgOd8I79X1OY0kDwdiYF3D09OBAZ2k="; # renovate: ghcr.io/cloudnative-pg/postgresql 17.6
+        imageDigest = "sha256:b7f2855c5a419249e30d64616da38cbb7ed3397a21cb115a581a02da8cb21ee0";
+        hash = "sha256-2cU3nSSi+lQIHXlS3t3TLqyytFv6dq3kWP4+gA4ie3k="; # renovate: ghcr.io/cloudnative-pg/postgresql 17.6
       };
       pg-18 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "18.0";
-        imageDigest = "sha256:acf136a97dea92d9121eba67b1ddf5548b7ec0ecab241d74bdb9945808aa8263";
-        hash = "sha256-1Dzw1uok+n0AiZ/OYR+y4fap+JGALl1L8gX2pxdRL1w="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.0
+        imageDigest = "sha256:5f67a8c8ae429c8af5692024ad58408a3f70223bf5d1cb9f9dbc36dcead88919";
+        hash = "sha256-sNqekaRSdOHQK/UNqToBpzh/SXqLpJGL6z1XMlAwY6o="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.0
       };
     };
   };
