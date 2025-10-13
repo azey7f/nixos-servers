@@ -1,7 +1,7 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": [
-		"config:recommended"
+		"config:best-practices"
 	],
 	"customDatasources": {
 		"grafana-dashboards": {
@@ -54,6 +54,7 @@
 	"packageRules": [
 		{
 			"matchDatasources": ["helm"],
+			"pinDigests": false,
 			"postUpgradeTasks": {
 				"fileFilters": ["**/*.nix"],
 				"commands": [
@@ -69,6 +70,7 @@
 		},
 		{
 			"matchDepTypes": ["helm-oci"],
+			"pinDigests": false,
 			"postUpgradeTasks": {
 				"fileFilters": ["**/*.nix"],
 				"commands": [
@@ -143,11 +145,16 @@
 			"automerge": false
 		},
 		{
+			"matchUpdateTypes": ["major"],
 			"matchDepNames": [
 				"ghcr.io/cloudnative-pg/postgresql"
 			],
-			"matchUpdateTypes": ["major"],
 			"enabled": false
+		},
+		{
+			"matchManagers": ["woodpecker"],
+			"minimumReleaseAge": "16 days"
 		}
-	]
+	],
+	"minimumReleaseAge": "14 days"
 }
