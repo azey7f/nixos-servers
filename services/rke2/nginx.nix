@@ -38,8 +38,8 @@ in {
       nginx = {
         imageName = "nginxinc/nginx-unprivileged";
         finalImageTag = "1.29";
-        imageDigest = "sha256:1ed9133d03818da88225fc6930fa3a938328def27cb8cec7821ee72152b5feca";
-        hash = "sha256-5q2EdsPNc6L96vdButEzZTOT4idHCXZQgeB1ggBCC/8="; # renovate: nginxinc/nginx-unprivileged 1.29
+        imageDigest = "sha256:51d61dce5a452a3b4d0996147cc16fb3fc5386f21bbcf076bb54939be519bb20";
+        hash = "sha256-Et6fbIuRxYwbUlXuVtJmY+3DkDKSzlDbisTmVHA5iwk="; # renovate: nginxinc/nginx-unprivileged 1.29
       };
     };
     services.rke2.manifests."nginx".content = [
