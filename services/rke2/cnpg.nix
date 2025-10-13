@@ -100,8 +100,8 @@ in {
       pg-16 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
         finalImageTag = "16.10";
-        imageDigest = "sha256:d59c8f354500b05a856fe71cad6593099f31bac1f0e26c8b13c601579f55f3c2";
-        hash = "sha256-K4xYLM9bpMiDCwjSO3Q7rhkyEwWQlBRApyfY+/tIQ4Y="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.10
+        imageDigest = "sha256:697e6d8e15ace744fe3b0035d4ea633d3a2b2e59138e8a0481014e924dd1b4d4";
+        hash = "sha256-bw4D9/gVJ0QA9n5XqLrb/fC1PZphwPEipYCkABK4OXU="; # renovate: ghcr.io/cloudnative-pg/postgresql 16.10
       };
       pg-17 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
