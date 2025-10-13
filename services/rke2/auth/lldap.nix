@@ -25,9 +25,9 @@ in {
     az.server.rke2.images = {
       lldap = {
         imageName = "lldap/lldap";
-        finalImageTag = "2025-10-10"; # versioning: regex:^(?<major>\d+)-(?<minor>\d+)-(?<patch>\d+)$
-        imageDigest = "sha256:42a2b6512655b99be6f8afb01aae20bde35343d412daa125a26d0215ac0edeca";
-        hash = "sha256-iIAVrwV1+c5CHxUiuYuWMZS8LgjvCDTDbX2SuFVByHs="; # renovate: lldap/lldap 2025-10-10
+        finalImageTag = "2025-10-12"; # versioning: regex:^(?<major>\d+)-(?<minor>\d+)-(?<patch>\d+)$
+        imageDigest = "sha256:d67b1565dc72d3c89ab8da893ca300c886be4a8ac02cb1e58c9bddd75b503847";
+        hash = "sha256-BYH2m7890pjN4INnWr7v/kzumwhs9v1ccviE5LdSi3U="; # renovate: lldap/lldap 2025-10-12
       };
     };
     az.server.rke2.secrets = [
