@@ -41,6 +41,12 @@ in {
         finalImageTag = "2.32.0";
         imageDigest = "sha256:a3b5d472ca187c25c87a217bc730cdf7a3df7d07ee09eb37f5bc8c874f173a52";
         hash = "sha256-RXZj3q+VSEFDhdahJGYMzgOUXxk6zDgNB7NxqoWQe5g="; # renovate: nixos/nix 2.32.0
+
+        # https://github.com/NixOS/nixpkgs/issues/445481
+        overrideAttrs = {
+          __structuredAttrs = true;
+          unsafeDiscardReferences.out = true;
+        };
       };
       appleboy-drone-git-push = {
         imageName = "appleboy/drone-git-push";

@@ -28,6 +28,11 @@ in {
             hash = optStr "";
             finalImageTag = optStr "";
 
+            overrideAttrs = mkOption {
+              type = with types; nullOr (attrsOf anything);
+              default = null;
+            };
+
             imageString = optStr "${cfg.images.${name}.imageName}:${cfg.images.${name}.finalImageTag}";
           };
         }));
@@ -102,11 +107,16 @@ in {
       manifests;
 
     # images impl
-    services.rke2.images = lib.attrsets.mapAttrsToList (_: image:
-      pkgs.dockerTools.pullImage {
-        inherit (image) imageName imageDigest hash finalImageTag;
-      })
-    cfg.images;
+    services.rke2.images =
+      lib.attrsets.mapAttrsToList (
+        _: image: let
+          args = {inherit (image) imageName imageDigest hash finalImageTag;};
+        in
+          if image.overrideAttrs != null
+          then (pkgs.dockerTools.pullImage args).overrideAttrs image.overrideAttrs
+          else pkgs.dockerTools.pullImage args
+      )
+      cfg.images;
 
     # secrets impl
     az.server.rke2.manifests."00-secrets" = cfg.secrets;
