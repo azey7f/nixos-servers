@@ -357,7 +357,7 @@ in {
                             (
                               {
                                 cat = "~(=^.^=)"; # essential for (emotional) security
-                                contact = "me@${domain}";
+                                contact = "me@${domain} 2CCB340343FE8A2B91CE7F75F94F4A71C5C21E8F";
                                 x-powered-by = "NixOS; RKE2; hopes and dreams (and estrogen)";
                                 source-code = "https://git.${domain}/infra";
 
