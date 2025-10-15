@@ -95,10 +95,10 @@ in {
             DEFAULT_ACTIONS_URL = "https://code.forgejo.org";
           };
 
-	  "git.timeout" = {
-	    # nixpkgs b big
-	    MIGRATE = 3600;
-	  };
+          "git.timeout" = {
+            # nixpkgs b big
+            MIGRATE = 3600;
+          };
 
           ui = {
             DEFAULT_THEME = "catppuccin-macchiato-mauve";
