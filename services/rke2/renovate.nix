@@ -34,8 +34,10 @@ in {
       version = "44.15.1";
       hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate 44.15.1
 
-      # renovate-args: --set renovate.config=\"{}\"
+      # renovate-args: --set renovate.config=\"{}\" --set image.useFull=true
       values = {
+        image.useFull = true; # include all external tools in image
+
         renovate.securityContext = {
           privileged = false;
           allowPrivilegeEscalation = false;
@@ -47,27 +49,18 @@ in {
           seccompProfile.type = "RuntimeDefault";
         };
 
-        extraVolumes = builtins.map (name: {
-          inherit name;
-          emptyDir = {};
-        }) ["home" "nix" "nonexistent"];
+        extraVolumes = [
+          {
+            name = "home";
+            emptyDir = {};
+          }
+        ];
 
         extraVolumeMounts = [
           # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
           {
             name = "home";
             mountPath = "/home/ubuntu";
-          }
-          # rootless nix in postUpgradeTasks
-          {
-            name = "nix";
-            mountPath = "/nix";
-          }
-          # warning: $HOME ('/nix') is not owned by you, falling back to the one defined in the 'passwd' file ('/nonexistent')
-          # not stupid if it works, right?
-          {
-            name = "nonexistent";
-            mountPath = "/nonexistent";
           }
         ];
 
