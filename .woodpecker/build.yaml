@@ -17,14 +17,14 @@ when:
 
 clone:
   git:
-    image: woodpeckerci/plugin-git:2.7.0@sha256:1ce87890a4996596c0f6c28f69afe5e07bf106c294f49fb2cfe5971b4a04f70c
+    image: woodpeckerci/plugin-git:2.7.0
     settings:
       recursive: true
     backend_options: *secctx-backend-options
 
 steps:
   - name: build & cache
-    image: nixos/nix:2.32.0@sha256:a3b5d472ca187c25c87a217bc730cdf7a3df7d07ee09eb37f5bc8c874f173a52
+    image: nixos/nix:2.32.0
     environment:
       ATTIC_TOKEN:
         from_secret: ATTIC_TOKEN

@@ -49,18 +49,27 @@ in {
           seccompProfile.type = "RuntimeDefault";
         };
 
-        extraVolumes = [
-          {
-            name = "home";
-            emptyDir = {};
-          }
-        ];
+        extraVolumes = builtins.map (name: {
+          inherit name;
+          emptyDir = {};
+        }) ["home" "nix" "nonexistent"];
 
         extraVolumeMounts = [
           # Fatal: can't create directory '/home/ubuntu/.gnupg': Permission denied
           {
             name = "home";
             mountPath = "/home/ubuntu";
+          }
+          # rootless nix in postUpgradeTasks
+          {
+            name = "nix";
+            mountPath = "/nix";
+          }
+          # warning: $HOME ('/nix') is not owned by you, falling back to the one defined in the 'passwd' file ('/nonexistent')
+          # not stupid if it works, right?
+          {
+            name = "nonexistent";
+            mountPath = "/nonexistent";
           }
         ];
 
@@ -111,6 +120,7 @@ in {
 
     az.svc.cron.enable = lib.mkDefault cfg.autoUpgrade.enable;
     az.svc.cron.jobs = lib.lists.optionals cfg.autoUpgrade.enable [
+      # TODO: put this in a script in the repo
       "0 4 * * *  root  ${pkgs.writeScript "system-update" ''
         #!/usr/bin/env sh
         sleep $(shuf -i 0-60 -n 1)m # random delay 0-60m

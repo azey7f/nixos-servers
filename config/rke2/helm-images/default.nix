@@ -1,2 +1,2 @@
-# auto-generated helm chart dependencies, managed by renovate using utils/helm-mkimages
+# auto-generated helm chart dependencies, managed by renovate using scripts/helm-mkimages
 {azLib, ...}: {imports = azLib.scanPath ./.;}

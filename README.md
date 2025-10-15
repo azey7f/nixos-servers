@@ -5,7 +5,6 @@ Everything is hosted on an RKE2 cluster and *fully* defined in Nix;[^1] the K8s 
 See [the core flake](https://git.azey.net/infra/nixos-core) for the general structure, this is the non-standard stuff:
 - `sops/`: a private submodule with all the secrets, passwords, etc, decryptable with a machine-local `age.key` (also stored in bitwarden for backup reasons)
     - not mirrored to codeberg, but most of these are just randomly-generated secrets anyways
-- `utils/`: random collection of useful shell scripts
 - `infra.nix`: defines domains hosted by this flake, associated RKE2 clusters, VPSes, which servers belong to what, etc. See comment at top of the file for more info.
 
 ### Guides for future me:

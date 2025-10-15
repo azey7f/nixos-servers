@@ -1,7 +1,7 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": [
-		"config:best-practices"
+		"config:recommended"
 	],
 	"customDatasources": {
 		"grafana-dashboards": {
@@ -54,31 +54,31 @@
 	"packageRules": [
 		{
 			"matchDatasources": ["helm"],
-			"pinDigests": false,
 			"postUpgradeTasks": {
 				"fileFilters": ["**/*.nix"],
 				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz || true",
-					"nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newValue}}}'",
-					"nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull --repo {{{depType}}} {{{depName}}} --version {{{newValue}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depType}}} {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}",
 					"rm config/rke2/helm-images/{{{depName}}}_*.nix || true",
-					"nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{depName}}}_{{{newValue}}}.nix'\""
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./scripts/helm-mkimages --repo {{{depType}}} {{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{depName}}}_{{{newValue}}}.nix'\""
 				]
 			}
 		},
 		{
 			"matchDepTypes": ["helm-oci"],
-			"pinDigests": false,
 			"postUpgradeTasks": {
 				"fileFilters": ["**/*.nix"],
 				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm *.tgz || true",
-					"nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newValue}}}'",
-					"nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm --run 'helm pull oci://{{{depName}}} --version {{{newValue}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri *.tgz | sed 's/\\//\\\\\\//g' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}",
 					"rm config/rke2/helm-images/{{{replace '/' '-' depName}}}_*.nix || true",
-					"nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./utils/helm-mkimages oci://{{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newValue}}}.nix'\""
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p kubernetes-helm yq-go skopeo nix --run \"sh ./scripts/helm-mkimages oci://{{{depName}}} --version {{{newValue}}} $(grep '# renovate-args: ' {{{packageFile}}} | sed 's/.*# renovate-args: //') > 'config/rke2/helm-images/{{{replace '/' '-' depName}}}_{{{newValue}}}.nix'\""
 				]
 			}
 		},
@@ -87,9 +87,10 @@
 			"postUpgradeTasks": {
 				"fileFilters": ["**/*.nix"],
 				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
 					"rm /nix/tmp-image || true",
-					"nix-shell -p skopeo --run 'skopeo --insecure-policy copy docker://{{{depName}}}@{{{newDigest}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newValue}}}'",
-					"nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//g' > new-hash",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-shell -p skopeo --run 'skopeo --insecure-policy copy docker://{{{depName}}}@{{{newDigest}}} docker-archive:///nix/tmp-image:{{{depName}}}:{{{newValue}}}'",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp-image | sed 's/\\//\\\\\\//g' > new-hash",
 					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}"
 				]
 			}
