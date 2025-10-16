@@ -41,12 +41,12 @@
 			"datasourceTemplate": "docker"
 		},
 		{
+			"depTypeTemplate": "grafana-dashboard",
 			"customType": "regex",
 			"managerFilePatterns": ["/\\.nix$/"],
 			"matchStrings": [
-				"(?<depName>\\S+)\\s*=\\s*{\\s*gnetId\\s*=\\s*(?<packageName>[0-9]+)\\s*;\\s*revision\\s*=\\s*(?<currentValue>[0-9]+)\\s*;"
+				"(name\\s*=\\s*\"(?<depName>\\S+)\"\\s*;\\s*a)?url\\s*=\\s*\"https:\\/\\/grafana\\.com\\/api\\/dashboards\\/(?<packageName>[0-9]+)\\/revisions\\/(?<currentValue>[0-9]+)\\/download\"\\s*;"
 			],
-			"depNameTemplate": "grafana-dashboard-{{depName}}",
 			"versioningTemplate": "regex:^(?<major>\\d+)$",
 			"datasourceTemplate": "custom.grafana-dashboards"
 		}
@@ -96,6 +96,18 @@
 			}
 		},
 		{
+			"matchDepTypes": ["grafana-dashboard"],
+			"postUpgradeTasks": {
+				"fileFilters": ["**/*.nix"],
+				"commands": [
+					"curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | HOME=/nix sh -s -- --no-daemon --yes",
+					"curl --proto '=https' --tlsv1.2 -L https://grafana.com/api/dashboards/{{{packageName}}}/revisions/{{{newValue}}}/download > /nix/tmp.json",
+					"HOME=/nix /nonexistent/.nix-profile/bin/nix-hash --flat --type sha256 --sri /nix/tmp.json | sed 's/\\//\\\\\\//g' > new-hash",
+					"sed -i \"s/\\\\(hash = \\\"\\\\)\\\\S*\\\\(\\\"; # renovate: {{{replace '/' '\\\\/' depName}}}\\\\) {{{currentValue}}}/\\\\1$(cat new-hash)\\\\2 {{{newValue}}}/g\" {{{packageFile}}}"
+				]
+			}
+		},
+		{
 			"matchUpdateTypes": [
 				"patch",
 				"digest"
@@ -126,12 +138,13 @@
 			"automergeType": "branch"
 		},
 		{
+			"matchDepTypes": ["grafana-dashboard"],
 			"matchDepNames": [
 				"renovate",
 				"ghcr.io/jeffvli/feishin",
 				"searxng/searxng",
 				"lldap/lldap",
-				"^grafana-dashboard-"
+				"curlimages/curl"
 			],
 			"automerge": true,
 			"automergeType": "branch"

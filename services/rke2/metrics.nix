@@ -107,7 +107,7 @@ in {
               builtins.readFile (pkgs.fetchurl {
                 name = "k8s-dashboard";
                 url = "https://grafana.com/api/dashboards/15661/revisions/2/download";
-                hash = "sha256-2bMb41nbqXLhkHdWOyM4ZCdvTaOqWdr7YlYJnM0q7s0=";
+                hash = "sha256-2bMb41nbqXLhkHdWOyM4ZCdvTaOqWdr7YlYJnM0q7s0="; # renovate: k8s-dashboard 2
               })
             );
           };
@@ -115,7 +115,7 @@ in {
             json = builtins.readFile (pkgs.fetchurl {
               name = "cert-manager";
               url = "https://grafana.com/api/dashboards/20842/revisions/3/download";
-              hash = "sha256-p2OqJExFbOCHrCda9PqXBDlHxjCELo+mzE3+glFV+eI=";
+              hash = "sha256-p2OqJExFbOCHrCda9PqXBDlHxjCELo+mzE3+glFV+eI="; # renovate: cert-manager 3
             });
           };
         };
