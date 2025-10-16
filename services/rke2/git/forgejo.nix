@@ -41,8 +41,8 @@ in {
 
     services.rke2.autoDeployCharts."forgejo" = {
       repo = "oci://code.forgejo.org/forgejo-helm/forgejo";
-      version = "14.0.4";
-      hash = "sha256-kH8LiKpkg5AXwmH3ejuxqleP/LTKPlvicPMZiK4ikF0="; # renovate: code.forgejo.org/forgejo-helm/forgejo 14.0.4
+      version = "15.0.0";
+      hash = "sha256-YWTa0M3zpmIwXJ8dKohE8+D25sDC9RB58nQxaP7WwHM="; # renovate: code.forgejo.org/forgejo-helm/forgejo 15.0.0
 
       targetNamespace = "app-forgejo";
 
@@ -66,10 +66,7 @@ in {
 
         httpRoute.enabled = false; # created manually
 
-        gitea.admin = {
-          username = "";
-          password = "";
-        };
+        gitea.admin.username = "";
         gitea.additionalConfigSources = [{secret.secretName = "forgejo-db-config";}];
         gitea.config = {
           indexer = {
