@@ -8,6 +8,7 @@
 with lib; let
   cfg = config.az.svc.rke2.metrics;
   domain = config.az.server.rke2.baseDomain;
+  images = config.az.server.rke2.images;
 in {
   options.az.svc.rke2.metrics = with azLib.opt; {
     enable = optBool false;
@@ -17,13 +18,26 @@ in {
     az.server.rke2.namespaces."metrics-system" = {
       podSecurity = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
       networkPolicy.fromNamespaces = ["envoy-gateway"];
-      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
       networkPolicy.toDomains = [
         "auth.${domain}" # OIDC
-        "grafana.com" # dashboards - #TODO: cache locally
       ];
+      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
     };
 
+    az.server.rke2.images = {
+      prometheus-config-reloader = {
+        imageName = "quay.io/prometheus-operator/prometheus-config-reloader";
+        finalImageTag = "v0.86.0";
+        imageDigest = "sha256:5dcc707d52334e3493fa311816b03f9a9e3ecd3b275d7a3fe2f38c80d63e5d18";
+        hash = "sha256-Q10CcLykNZyXCyVXe9kzlZzxbtFxKdU2mYvDFMCg2u4="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader 0.86.0
+      };
+      curl = {
+        imageName = "curlimages/curl";
+        finalImageTag = "8.15.0";
+        imageDigest = "sha256:4026b29997dc7c823b51c164b71e2b51e0fd95cce4601f78202c513d97da2922";
+        hash = "sha256-8VgNN4L6idBIfB5aXnFFFCMEvtZuRxrZOFqfsJ3ul3k="; # renovate: curlimages/curl 8.15.0
+      };
+    };
     services.rke2.autoDeployCharts."metrics" = {
       repo = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
       version = "78.2.1";
@@ -31,6 +45,9 @@ in {
 
       targetNamespace = "metrics-system";
       values = {
+        prometheusOperator.prometheusConfigReloader.image.tag = images.prometheus-config-reloader.finalImageTag;
+        grafana.downloadDashboardsImage.tag = images.curl.finalImageTag;
+
         alertmanager.alertmanagerSpec.externalUrl = "https://alerts.${domain}";
         prometheus.prometheusSpec.externalUrl = "https://prometheus.${domain}";
 
@@ -86,19 +103,20 @@ in {
         };
         grafana.dashboards.default = {
           k8s-dashboard = {
-            gnetId = 15661;
-            revision = 2;
-            datasource = [
-              {
-                name = "DS__VICTORIAMETRICS-PROD-ALL";
-                value = "prometheus";
-              }
-            ];
+            json = builtins.replaceStrings ["\${DS__VICTORIAMETRICS-PROD-ALL}"] ["prometheus"] (
+              builtins.readFile (pkgs.fetchurl {
+                name = "k8s-dashboard";
+                url = "https://grafana.com/api/dashboards/15661/revisions/2/download";
+                hash = "sha256-2bMb41nbqXLhkHdWOyM4ZCdvTaOqWdr7YlYJnM0q7s0=";
+              })
+            );
           };
           cert-manager = {
-            gnetId = 20842;
-            revision = 3;
-            datasource = "prometheus";
+            json = builtins.readFile (pkgs.fetchurl {
+              name = "cert-manager";
+              url = "https://grafana.com/api/dashboards/20842/revisions/3/download";
+              hash = "sha256-p2OqJExFbOCHrCda9PqXBDlHxjCELo+mzE3+glFV+eI=";
+            });
           };
         };
 
