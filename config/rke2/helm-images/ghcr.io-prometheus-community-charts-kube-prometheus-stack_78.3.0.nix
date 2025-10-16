@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 78.2.1
+  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 78.3.0
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/bats/bats";
