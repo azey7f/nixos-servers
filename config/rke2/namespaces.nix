@@ -148,7 +148,7 @@ in {
                         ];
                       }
                       # toDomains
-                      {toFQDNs = builtins.map (name: {matchName = name;}) ns.networkPolicy.toDomains;}
+                      {toFQDNs = builtins.map (name: {matchPattern = name;}) ns.networkPolicy.toDomains;}
                     ]
                     # toWAN
                     ++ lib.lists.optionals ns.networkPolicy.toWAN [

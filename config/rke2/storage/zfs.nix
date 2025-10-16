@@ -128,6 +128,7 @@ in {
           annotations."storageclass.kubernetes.io/is-default-class" = "true";
         };
         provisioner = "zfs.csi.openebs.io";
+        allowVolumeExpansion = true;
         parameters = {
           fstype = "zfs";
           poolname = "${cfg.poolName}/${cfg.subvol}";

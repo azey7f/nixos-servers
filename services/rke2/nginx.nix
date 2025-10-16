@@ -15,7 +15,7 @@ in {
     enable = optBool false;
     repos = {
       root = optStr "http://forgejo-http.app-forgejo.svc:3000/infra/${domain}"; # TODO: https://ogp.me, also put this TODO in the site's repo
-      miku = optStr "http://forgejo-http.app-forgejo.svc:3000/mirrors/ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
+      miku = optStr "http://forgejo-http.app-forgejo.svc:3000/mirrors/ifd3f--ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
     };
   };
 

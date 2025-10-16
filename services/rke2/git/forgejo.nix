@@ -28,8 +28,11 @@ in {
           toNamespaces = ["app-mail"];
           toDomains = [
             "auth.${domain}" # OIDC auto-discovery
-            "github.com" # pull mirroring
             "codeberg.org" # push mirrors
+
+            # pull mirroring
+            "github.com"
+            "*.github.com"
           ];
         };
       };
@@ -59,6 +62,7 @@ in {
         global.namespaceOverride = "app-forgejo";
         clusterDomain = config.networking.domain;
         persistence.enabled = true;
+        persistence.size = "1Ti";
 
         httpRoute.enabled = false; # created manually
 
@@ -229,6 +233,9 @@ in {
                 port = 3000;
               }
             ];
+            # nixpkgs b *big*
+            timeouts.request = "1200s";
+            timeouts.backendRequest = "1200s";
           }
         ];
       }
