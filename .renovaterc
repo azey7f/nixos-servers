@@ -132,7 +132,8 @@
 				"px01/blocky",
 				"klutchell/unbound",
 				"ghcr.io/cloudnative-pg/postgresql",
-				"docker.io/envoyproxy/envoy"
+				"docker.io/envoyproxy/envoy",
+				"jellyfin"
 			],
 			"automerge": true,
 			"automergeType": "branch"

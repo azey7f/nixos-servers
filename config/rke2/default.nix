@@ -85,20 +85,6 @@ in {
       "fs.inotify.max_queued_events" = 2099999999;
     };
 
-    # iptables modules for cilium
-    /*
-      boot.kernelModules = [
-      "iptable_raw"
-      "iptable_mangle"
-      "iptable_filter"
-      "iptable_nat"
-      "ip6table_raw"
-      "ip6table_mangle"
-      "ip6table_filter"
-      "ip6table_nat"
-    ];
-    */
-
     # networking
     az.server.net.ipv6.address = [
       "${

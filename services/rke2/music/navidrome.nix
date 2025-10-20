@@ -7,11 +7,11 @@
   ...
 }:
 with lib; let
-  cfg = config.az.svc.rke2.navidrome;
+  cfg = config.az.svc.rke2.music.navidrome;
   domain = config.az.server.rke2.baseDomain;
   images = config.az.server.rke2.images;
 in {
-  options.az.svc.rke2.navidrome = with azLib.opt; {
+  options.az.svc.rke2.music.navidrome = with azLib.opt; {
     enable = optBool false;
   };
 

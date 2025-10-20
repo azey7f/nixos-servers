@@ -49,8 +49,15 @@ in {
     nginx.enable = true;
     searxng.enable = true;
     # media
-    navidrome.enable = true;
-    feishin.enable = true;
+    music = {
+      enable = true;
+      navidrome.enable = true;
+      feishin.enable = true;
+    };
+    media = {
+      enable = true;
+      jellyfin.enable = true;
+    };
     # source control, ci/cd
     forgejo.enable = true;
     woodpecker.enable = true;

@@ -7,11 +7,11 @@
   ...
 } @ args:
 with lib; let
-  cfg = config.az.svc.rke2.feishin;
+  cfg = config.az.svc.rke2.music.feishin;
   domain = config.az.server.rke2.baseDomain;
   images = config.az.server.rke2.images;
 in {
-  options.az.svc.rke2.feishin = with azLib.opt; {
+  options.az.svc.rke2.music.feishin = with azLib.opt; {
     enable = optBool false;
   };
 
