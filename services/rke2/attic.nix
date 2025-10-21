@@ -218,6 +218,8 @@ in {
                 port = 80;
               }
             ];
+            timeouts.request = "1200s";
+            timeouts.backendRequest = "1200s";
           }
         ];
       }
