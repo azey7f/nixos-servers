@@ -73,7 +73,14 @@ in {
           }
         ];
 
-        cronjob.schedule = cfg.schedule;
+        cronjob = {
+          schedule = cfg.schedule;
+          timeZone = config.az.core.locale.tz;
+
+          # https://github.com/kubernetes/kubernetes/issues/74741
+          failedJobsHistoryLimit = 0;
+          successfulJobsHistoryLimit = 0;
+        };
 
         existingSecret = "renovate-env";
         #envFrom = [{secretRef.name = "renovate-env";}];
