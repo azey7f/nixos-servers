@@ -9,11 +9,13 @@
 with lib; let
   top = config.az.server.rke2;
   cfg = top.keepalived;
-  cluster = outputs.infra.clusters.${config.networking.domain};
 in {
   options.az.server.rke2.keepalived = with azLib.opt; {
     enable = optBool false;
-    interface = optStr config.az.server.net.interface;
+    interface = mkOption {
+      type = types.str;
+      default = top.primaryInterface;
+    };
   };
 
   config = mkIf cfg.enable {
@@ -37,7 +39,7 @@ in {
       vrrpInstances.rke2 = {
         trackScripts = ["kube-apiserver"];
         interface = cfg.interface;
-        priority = 200 + config.az.server.id;
+        priority = 200 + config.az.cluster.meta.nodes.${config.networking.hostName}.id;
         virtualRouterId = 1;
         virtualIps = [
           {
@@ -51,21 +53,22 @@ in {
               null (builtins.attrNames config.networking.hosts);
           }
         ];
-        unicastSrcIp = builtins.elemAt config.az.server.net.ipv6.address 0;
+        unicastSrcIp = builtins.elemAt config.az.server.net.interfaces.${cfg.interface}.ipv6.addr 0;
         unicastPeers = lib.lists.flatten (
-          lib.attrsets.mapAttrsToList (serverName: server: (
+          lib.attrsets.mapAttrsToList (node: nodeMeta: (
             let
-              conf = outputs.nixosConfigurations.${serverName}.config;
+              selfMeta = config.az.cluster.meta.nodes.${config.networking.hostName};
+              conf = outputs.nixosConfigurations.${node}.config;
             in
-              lib.lists.optional (conf.az.server.id != config.az.server.id && conf.az.server.rke2.keepalived.enable) (
+              lib.lists.optional (selfMeta.id != nodeMeta.id && conf.az.server.rke2.keepalived.enable) (
                 lib.lists.findFirst (addr: (
-                  lib.lists.any (n: n == "${serverName}.${conf.networking.domain}")
+                  lib.lists.any (n: n == "${node}.${conf.networking.domain}")
                   config.networking.hosts.${addr}
                 ))
                 null (builtins.attrNames config.networking.hosts)
               )
           ))
-          cluster.nodes
+          config.az.cluster.meta.nodes
         );
       };
     };

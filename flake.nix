@@ -21,32 +21,36 @@
     formatter.x86_64-linux = core.inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
     formatter.aarch64-linux = core.inputs.nixpkgs.legacyPackages.aarch64-linux.alejandra;
 
-    # defines which servers belong to what k8s clusters/domains
-    infra = import ./infra.nix lib;
+    nixosConfigurations = builtins.listToAttrs (
+      lib.concatMap (
+        domain:
+        # TODO: reverseFQDN
+          builtins.map (hostName: {
+            #name = "${domain}.${hostName}"; # TODO?
+            name = hostName;
+            value =
+              core.mkHostConf {
+                path = ./hosts/${domain}/nodes;
 
-    nixosConfigurations = lib.attrsets.concatMapAttrs (domain: cluster:
-      builtins.listToAttrs (
-        lib.lists.imap0 (i: hostName: {
-          name = hostName;
-          value =
-            core.mkHostConf {
-              path = ./hosts;
+                modules = [
+                  inputs.sops-nix.nixosModules.sops
+                  ./config
+                  ./services
+                  ./cluster
+                  ./preset.nix
 
-              modules = [
-                inputs.sops-nix.nixosModules.sops
-                ./config
-                ./services
-                ./preset.nix
-                {networking = {inherit domain hostName;};}
-              ];
+                  ./hosts/${domain}
+                  {networking = {inherit domain hostName;};}
+                ];
 
-              extraArgs = {inherit inputs outputs;};
-              specialArgs = {inherit rke2-k3s-merge;};
-            }
-            hostName; # TODO?: fqdn for derivation name?
-        })
-        (builtins.attrNames cluster.nodes)
-      ))
-    infra.clusters;
+                extraArgs = {inherit inputs outputs;};
+                specialArgs = {inherit rke2-k3s-merge;};
+              }
+              hostName;
+          })
+          (builtins.attrNames (builtins.readDir ./hosts/${domain}/nodes))
+      )
+      (builtins.attrNames (builtins.readDir ./hosts))
+    );
   };
 }

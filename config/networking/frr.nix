@@ -7,19 +7,24 @@
 }:
 with lib; let
   cfg = config.az.server.net.frr;
-  inherit (config.az.server) net;
-  inherit (net) ipv4 ipv6;
 in {
   options.az.server.net.frr = with azLib.opt; {
     enable = optBool false;
-    extraInterfaces = mkOption {
+    interfaces = mkOption {
       type = with types; listOf str;
       default = [];
     };
-    extraConfig = optStr "";
+    extraConfig = mkOption {
+      type = types.lines;
+      default = "";
+    };
 
     ospf = {
       enable = optBool false;
+      routerId = mkOption {
+        type = types.str;
+        default = config.az.server.net.interfaces.${builtins.elemAt cfg.interfaces 0}.ipv4.addr;
+      };
       redistribute = mkOption {type = with types; listOf str;};
     };
   };
@@ -32,34 +37,41 @@ in {
       content = ''
         ! FRR Configuration
         !
-        	hostname ${config.networking.hostName}
+        hostname ${config.networking.hostName}
         	log syslog
         	service password-encryption
         	service integrated-vtysh-config
         !
-        ! OSPF
-        !
-        key chain lan
-        	key 0
-        	key-string ${config.sops.placeholder.ospf-key}
-        	cryptographic-algorithm hmac-sha-256
-        !
-        ${lib.strings.concatMapStrings (iface: ''
-          interface ${iface}
-          	ip ospf area 0.0.0.0
-          	ip ospf authentication key-chain lan
-          	ipv6 ospf6 area 0.0.0.0
-          	ipv6 ospf6 authentication keychain lan
-          !
-        '') ([net.interface] ++ cfg.extraInterfaces)}
-        router ospf
-        	ospf router-id ${ipv4.address}
-        	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
-        !
-        router ospf6
-        	ospf6 router-id ${ipv4.address}
-        	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
-        !
+        ${
+          if cfg.ospf.enable
+          then ''
+            ! OSPF
+            !
+            key chain lan
+            	key 0
+            	key-string ${config.sops.placeholder.ospf-key}
+            	cryptographic-algorithm hmac-sha-256
+            !
+            ${lib.strings.concatMapStrings (iface: ''
+                interface ${iface}
+                	ip ospf area 0.0.0.0
+                	ip ospf authentication key-chain lan
+                	ipv6 ospf6 area 0.0.0.0
+                	ipv6 ospf6 authentication keychain lan
+                !
+              '')
+              cfg.interfaces}
+            router ospf
+            	ospf router-id ${cfg.ospf.routerId}
+            	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
+            !
+            router ospf6
+            	ospf6 router-id ${cfg.ospf.routerId}
+            	${lib.strings.concatMapStrings (n: "	redistribute ${n}\n") cfg.ospf.redistribute}
+            !
+          ''
+          else ""
+        }
         ${cfg.extraConfig}
         end
       '';

@@ -9,24 +9,12 @@
 with lib; let
   top = config.az.server.rke2;
   cfg = top.server;
-  cluster = outputs.infra.clusters.${server.networking.domain};
   images = config.az.server.rke2.images;
 in {
   options.az.server.rke2 = with azLib.opt; {
     server = {
       enable = optBool false;
-      clusterInit = optBool (config.az.server.id == 0); # init only on first node
-    };
-
-    loadBalancing = {
-      cidrs = mkOption {
-        type = with types; nullOr (listOf str);
-        default = null;
-      };
-      interfaces = mkOption {
-        type = with types; listOf str;
-        default = ["^e+"];
-      };
+      clusterInit = optBool (config.az.cluster.meta.nodes.${config.networking.hostName}.id == 1); # init only on first node
     };
   };
 
@@ -51,14 +39,14 @@ in {
         extraFlags =
           [
             "--cluster-domain=${config.networking.domain}"
-            "--cluster-cidr=${top.clusterCidr}"
-            "--service-cidr=${top.serviceCidr}"
+            "--cluster-cidr=${config.az.cluster.clusterCidr}"
+            "--service-cidr=${config.az.cluster.serviceCidr}"
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
             "--tls-san=${config.networking.fqdn}"
             "--embedded-registry"
           ]
-          ++ lib.optionals config.az.svc.rke2.metrics.enable [
+          ++ lib.optionals config.az.cluster.core.metrics.enable [
             "--etcd-expose-metrics"
             "--kube-scheduler-arg=bind-address=::"
             "--kube-controller-manager-arg=bind-address=::"
@@ -83,6 +71,8 @@ in {
             };
           in {
             envoy.enabled = false;
+
+            extraArgs = ["--devices=${top.primaryInterface}"]; # https://github.com/cilium/cilium/issues/37427
 
             image = imageOpts;
             operator.image = imageOpts;
@@ -133,22 +123,8 @@ in {
               kind = "CiliumL2AnnouncementPolicy";
               metadata.name = "default";
               spec = {
-                #interfaces = ["^lo$"]; #top.loadBalancing.interfaces;
                 loadBalancerIPs = false;
                 externalIPs = true;
-              };
-            }
-            ++ lib.lists.optional (top.loadBalancing.cidrs != null)
-            {
-              apiVersion = "cilium.io/v2alpha1";
-              kind = "CiliumLoadBalancerIPPool";
-              metadata = {
-                name = "default";
-                namespace = "kube-system";
-              };
-              spec = {
-                allowFirstLastIPs = "No"; # why is this not just a bool...
-                blocks = map (cidr: {inherit cidr;}) top.loadBalancing.cidrs;
               };
             };
         };

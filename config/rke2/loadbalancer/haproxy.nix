@@ -9,7 +9,6 @@
 with lib; let
   top = config.az.server.rke2;
   cfg = top.haproxy;
-  cluster = outputs.infra.clusters.${config.networking.domain};
 in {
   options.az.server.rke2.haproxy = with azLib.opt; {
     enable = optBool false;
@@ -17,19 +16,19 @@ in {
     servers = mkOption {
       type = with types; listOf str;
       default = lib.lists.flatten (
-        lib.attrsets.mapAttrsToList (serverName: server: (
+        lib.attrsets.mapAttrsToList (node: nodeMeta: (
           let
-            conf = outputs.nixosConfigurations.${serverName}.config;
+            conf = outputs.nixosConfigurations.${node}.config;
           in
             lib.lists.optional conf.az.server.rke2.server.enable (
               lib.lists.findFirst (addr: (
-                lib.lists.any (n: n == "${serverName}.${config.networking.domain}")
+                lib.lists.any (n: n == "${node}.${config.networking.domain}")
                 config.networking.hosts.${addr}
               ))
               null (builtins.attrNames config.networking.hosts)
             )
         ))
-        cluster.nodes
+        config.az.cluster.meta.nodes
       );
     };
   };

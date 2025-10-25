@@ -16,6 +16,38 @@ in {
   };
 
   config = mkIf cfg.enable {
+    systemd.network = {
+      netdevs."10-${cfg.tunDevice}" = {
+        netdevConfig = {
+          Kind = "tun";
+          Name = cfg.tunDevice;
+        };
+      };
+
+      networks."20-${cfg.tunDevice}" = {
+        matchConfig.Name = cfg.tunDevice;
+        networkConfig = {
+          DHCP = "no";
+          IPv6AcceptRA = "no";
+          LinkLocalAddressing = "no";
+          ConfigureWithoutCarrier = "yes";
+        };
+        /*
+        address = [
+          "${cfg.ipv4.pool.address}/${toString cfg.ipv4.pool.prefixLength}"
+          "${cfg.ipv6.pool.address}/${toString cfg.ipv6.pool.prefixLength}"
+          #"${cfg.ipv4.router.address}/32"
+          #"${cfg.ipv6.router.address}/128"
+        ];
+        */
+        routes = [
+          {Destination = "${cfg.ipv4.pool.address}/${toString cfg.ipv4.pool.prefixLength}";}
+          {Destination = "${cfg.ipv6.pool.address}/${toString cfg.ipv6.pool.prefixLength}";}
+        ];
+        linkConfig.RequiredForOnline = "no-carrier";
+      };
+    };
+
     services.tayga = {
       enable = true;
       ipv6 = rec {

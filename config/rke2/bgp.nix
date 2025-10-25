@@ -26,17 +26,21 @@ in {
   config = mkIf cfg.enable (lib.mkMerge [
     (mkIf (cfg.router == "::1") {
       az.server.net.frr.ospf.redistribute = ["bgp"];
-      az.server.net.frr.extraConfig = ''
+      az.server.net.frr.extraConfig = let
+        # very janky & assumes a lot of stuff, but ::1 BGP is a huge hack anyways...
+        # here's hoping I'll be able to drop this whole mkIf soon
+        firstIface = builtins.elemAt (builtins.attrValues config.az.server.net.interfaces) 0;
+      in ''
         allow-reserved-ranges
         access-list all permit any
         route-map set-nexthop-v4 permit 10
         	match ip address all
-        	set ip next-hop ${config.az.server.net.ipv4.address}
+        	set ip next-hop ${firstIface.ipv4.addr}
         !
         route-map set-nexthop permit 10
         	match ipv6 address all
         	set ipv6 next-hop prefer-global
-        	set ipv6 next-hop global ${builtins.elemAt config.az.server.net.ipv6.address 0}
+        	set ipv6 next-hop global ${builtins.elemAt firstIface.ipv6.addr 0}
         !
         router bgp ${toString cfg.peerASN}
         	bgp allow-martian-nexthop

@@ -10,7 +10,6 @@
 }:
 with lib; let
   cfg = config.az.server.rke2;
-  cluster = outputs.infra.clusters.${config.networking.domain};
 in {
   disabledModules = ["services/cluster/rke2/default.nix" "services/cluster/k3s/default.nix"];
   imports = azLib.scanPath ./. ++ ["${rke2-k3s-merge}/nixos/modules/services/cluster/rancher/default.nix"];
@@ -18,19 +17,10 @@ in {
   options.az.server.rke2 = with azLib.opt; {
     enable = optBool false;
 
-    baseDomain = mkOption {
+    primaryInterface = mkOption {
       type = types.str;
-      default = lib.lists.findFirst (domain:
-        outputs.infra.domains.${
-          domain
-        }.clusters ? "${
-          lib.strings.removeSuffix ".${domain}" config.networking.domain
-        }") ""
-      (builtins.attrNames outputs.infra.domains);
+      # must be set
     };
-
-    clusterCidr = optStr "10.42.0.0/16,fd01::/48";
-    serviceCidr = optStr "10.43.0.0/16,fd98::/108";
   };
 
   config = mkIf cfg.enable {
@@ -86,35 +76,35 @@ in {
     };
 
     # networking
-    az.server.net.ipv6.address = [
+    az.server.net.interfaces.${cfg.primaryInterface}.ipv6.addr = [
       "${
-        cluster.publicSubnet
+        config.az.cluster.publicSubnet
       }${
-        cluster.nodeSubnet
+        config.az.cluster.nodeSubnet
       }::${
-        azLib.math.decToHex (config.az.server.id + 2) ""
+        azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""
       }"
     ];
     networking.hosts =
       lib.attrsets.concatMapAttrs (
-        serverName: server: let
-          conf = outputs.nixosConfigurations.${serverName}.config;
+        node: nodeMeta: let
+          conf = outputs.nixosConfigurations.${node}.config;
         in {
           # server
           "${
-            cluster.publicSubnet
+            config.az.cluster.publicSubnet
           }${
-            cluster.nodeSubnet
+            config.az.cluster.nodeSubnet
           }::${
-            azLib.math.decToHex (conf.az.server.id + 2) ""
+            azLib.math.decToHex nodeMeta.id ""
           }" = [
             conf.networking.hostName
             conf.networking.fqdn
           ];
           # K8s/RKE2 API virtual IP, see ./loadbalancer/keepalived.nix
-          "${cluster.publicSubnet}::ffff" = ["api.${config.networking.domain}"];
+          "${config.az.cluster.publicSubnet}::ffff" = ["api.${config.networking.domain}"];
         }
       )
-      cluster.nodes;
+      config.az.cluster.meta.nodes;
   };
 }
