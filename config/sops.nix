@@ -32,6 +32,8 @@ in {
       wantedBy = ["default.target"];
     };
 
+    sops.age.sshKeyPaths = lib.mkForce [];
+    sops.gnupg.sshKeyPaths = lib.mkForce [];
     sops.validateSopsFiles = false; # without this, build checks need access to nixos-sops
     sops.defaultSopsFile = "${cfg.path}/${azLib.reverseFQDN config.networking.fqdn}/default.yaml";
     sops.age.keyFile = cfg.keyPath;

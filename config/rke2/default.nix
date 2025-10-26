@@ -27,6 +27,7 @@ in {
     # https://docs.rke2.io/install/requirements?cni-rules=Cilium
     networking.firewall.allowedTCPPorts = [4240 5001 10250 9345];
     networking.firewall.allowedUDPPorts = [51871];
+    networking.firewall.checkReversePath = lib.mkForce false; # doesn't play well with cilium
 
     environment.systemPackages = with pkgs; [kubectl cilium-cli];
 
@@ -66,6 +67,21 @@ in {
     };
 
     az.server.rke2.clusterWideSecrets."rke2/token" = {};
+
+    boot.kernelModules = [
+      "iptable_raw"
+      "iptable_mangle"
+      "iptable_filter"
+      "iptable_nat"
+      "ip6table_raw"
+      "ip6table_mangle"
+      "ip6table_filter"
+      "ip6table_nat"
+      # https://github.com/NixOS/nixpkgs/issues/242853
+      "xt_mark"
+      "xt_comment"
+      "xt_multiport"
+    ];
 
     # file watch limit sysctls #TODO: is this really the best solution?
     # https://serverfault.com/questions/1137211/failed-to-create-fsnotify-watcher-too-many-open-files

@@ -1,13 +1,13 @@
 {
   lib,
   config,
-  outputs,
   ...
 }: {
   networking.hostId = "a6b703c2";
   system.stateVersion = config.system.nixos.release; # root is on tmpfs, this should be fine
 
   # FIXME: UDPRoute doesn't work for some reason, so blocky can't be used directly
+  /*
   services.dnsproxy = {
     enable = true;
     settings.upstream = ["tcp://10.33.1.2"]; # rTODO ["tcp://${config.az.cluster.publicSubnet}:fffe::2"];
@@ -15,9 +15,10 @@
     settings.listen-addrs = ["192.168.0.254" "::1"];
   };
   az.core.net.dns.nameservers = ["::1"];
+  */
 
   #systemd.services."rke2-server".enable = false;
-  az.server = rec {
+  az.server = {
     rke2 = {
       enable = true;
       server.enable = true;

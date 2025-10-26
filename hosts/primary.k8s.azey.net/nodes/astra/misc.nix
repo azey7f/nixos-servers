@@ -11,8 +11,6 @@ with lib; {
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXOe3PWMsjyWrXBG1hv1YSmNUNGBBLLWOJeqDGXoyhS main@Hyperion"
   ];
 
-  networking.firewall.enable = false;
-
   #svc.tor.enable = true;
 
   az.core.libvirt.hugepages = {

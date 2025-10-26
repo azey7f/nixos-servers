@@ -24,12 +24,10 @@ in {
         # security
         ipset
 
-        # backups
-        #TODO: unstable.zfs-autobackup
-
         # misc
         lm_sensors
         virtiofsd
+        disko
       ];
   };
 }

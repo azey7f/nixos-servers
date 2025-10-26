@@ -14,7 +14,11 @@ in {
   options.az.server.rke2 = with azLib.opt; {
     server = {
       enable = optBool false;
-      clusterInit = optBool (config.az.cluster.meta.nodes.${config.networking.hostName}.id == 1); # init only on first node
+      clusterInit = optBool (
+        if cfg.enable
+        then (config.az.cluster.meta.nodes.${config.networking.hostName}.id == 1)
+        else false
+      ); # init only on first node
     };
   };
 

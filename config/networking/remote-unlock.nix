@@ -49,7 +49,7 @@ in {
       (
         if config.az.server.disks.zfs.enable
         then ''
-          echo 'zfs load-key -a; zfs mount -a; killall zfs; rm -r /run/secrets' >> /root/.profile
+          echo 'zfs load-key -a; zfs mount -a; zpool import -a; zfs load-key -a; zfs mount -a; killall zfs; rm -r /run/secrets' >> /root/.profile
         ''
         else ""
       )

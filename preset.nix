@@ -4,12 +4,20 @@
   ...
 }:
 with lib; {
+  users.users.root.hashedPassword = "*";
+
   az.core = {
+    hardening.virtFlushCache = "never"; # only hosts are desktop VMs, which are mostly trusted
+    hardening.lockKmodules = false; # cilium does some iptables magic that needs this
+    hardening.extraDisabledWrappers = [
+      "sendmail" # non-root users shouldn't be sending mail anyways
+      "qemu-bridge-helper" # VMs run as root, unnecessary
+    ];
+    hardening.allowForwarding = mkDefault true;
+
     firmware.enable = mkDefault true;
     firmware.allowUnfree = mkDefault false;
     boot.loader.grub.enable = mkDefault true;
-
-    hardening.allowForwarding = mkDefault true;
 
     libvirt.enable = mkDefault true;
 
@@ -43,7 +51,7 @@ with lib; {
 
   az.svc = {
     ssh.enable = mkDefault true;
-    ssh.openFirewall = mkDefault false;
+    ssh.openFirewall = mkDefault true;
     ssh.ports = mkDefault [33];
     endlessh.enable = mkDefault true;
 

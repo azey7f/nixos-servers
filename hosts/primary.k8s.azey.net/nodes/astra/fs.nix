@@ -30,7 +30,7 @@ with lib; {
 
   ### SANOID ###
   az.server.disks.sanoid = {
-    enable = true;
+    enable = false; # CRITICAL TODO
     datasets = {
       "nvme" = {};
       "hdd/openebs" = {};
@@ -58,14 +58,6 @@ with lib; {
     device = "nvme/libvirt";
     fsType = "zfs";
     #options = ["noexec"];
-  };
-
-  fileSystems."/keys" = {
-    #TODO
-    device = "nvme/keys";
-    fsType = "zfs";
-    neededForBoot = true;
-    #options = ["noexec" "nodev"];
   };
 
   fileSystems."/var/lib/rancher/rke2" = {

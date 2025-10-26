@@ -55,7 +55,7 @@ in {
     services.rke2.autoDeployCharts."metrics" = {
       repo = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
       version = "78.3.0";
-      hash = "sha256-yPymlwMEzJirOX/mkEA4zNBElSsZw0tpHllPab/SaN0="; # renovate: ghcr.io/prometheus-community/charts/kube-prometheus-stack 78.3.0
+      hash = "sha256-w6U4FhVD+BYFYB0CvzL3oQDHQmi+DoIo/+JUMspll7Y="; # renovate: ghcr.io/prometheus-community/charts/kube-prometheus-stack 78.3.0
 
       targetNamespace = "metrics-system";
       values = {

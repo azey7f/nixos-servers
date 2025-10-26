@@ -4,8 +4,6 @@
   azLib,
   ...
 }: {
-  imports = lib.subtractLists [./nodes] (azLib.scanPath ./.);
-
   config.az.svc.mail = {
     enable = true;
     domain = "azey.net";
@@ -54,9 +52,9 @@
 
     core = {
       # networking
-      nameserver.external.enable = true; # rTODO: changed names, resetup
+      nameserver.external.enable = true;
       nameserver.internal.enable = true;
-      nameserver.internal.acmeTsig = false; # rTODO
+      nameserver.internal.acmeTsig = false; # TODO step-ca
       resolver.enable = true; # rTODO: can't reach nameserver because envoy ipv6 doesn't work
 
       envoyGateway.gateways.external = {
@@ -120,17 +118,17 @@
         };
         sites."miku".repo = "mirrors/ifd3f--ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
       };
-      searxng.enable = true; # rTOOD: recreate ns
+      searxng.enable = true;
 
       # media
-      navidrome.enable = true; # rTODO: namespace renamed
-      feishin.enable = true; # rTODO: namespace renamed
-      jellyfin.enable = true; # rTODO: namespace renamed
+      navidrome.enable = true;
+      feishin.enable = true;
+      jellyfin.enable = true;
 
       # source control, CI
-      forgejo.enable = true; # rTODO: namespace renamed
-      woodpecker.enable = true; # rTODO: namespace renamed
-      renovate.enable = true; # rTODO: namespace renamed
+      forgejo.enable = true;
+      woodpecker.enable = true;
+      renovate.enable = true;
       attic.enable = true;
     };
   };
