@@ -41,10 +41,8 @@ in {
         version = "44.15.1";
         hash = "sha256-d0YLoW8mzjLXyRrTbnUrEge88ilpc98sCgeQ03dwHSU="; # renovate: https://docs.renovatebot.com/helm-charts renovate 44.15.1
 
-        # renovate-args: --set renovate.config=\"{}\" --set image.useFull=true
+        # renovate-args: --set renovate.config=\"{}\"
         values = {
-          image.useFull = true; # include all external tools in image
-
           renovate.securityContext = {
             privileged = false;
             allowPrivilegeEscalation = false;

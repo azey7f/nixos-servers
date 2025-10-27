@@ -3,9 +3,9 @@
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "ghcr.io/renovatebot/renovate";
-      imageDigest = "sha256:a2f87b37f544bc8c29a606e683b02ca14e066ee165ff155831d820e87a748406";
-      hash = "sha256-hILDOpiPPVoa//6I/m9O02tnbCwCYRND7mbdT8Nhe28=";
-      finalImageTag = "41.140.1-full";
+      imageDigest = "sha256:9c70b9ee7010e5428710c52c37d6385e6420a1385205bd7e7e2048dafc802404";
+      hash = "sha256-32kMMwWb7uOXM5kHAp4ipN3KkZUfdZ2JM1uoYPPnvGA=";
+      finalImageTag = "41.140.1";
     }
   ];
 }
