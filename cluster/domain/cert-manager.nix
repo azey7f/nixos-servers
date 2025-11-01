@@ -5,7 +5,7 @@
   ...
 }: let
   domains = lib.filterAttrs (_: v: v.enable) config.az.cluster.domainSpecific.certManager;
-  nsConfig = config.az.cluster.core.nameserver.external;
+  nsConfig = config.az.cluster.core.nameserver;
 in {
   options.az.cluster.domainSpecific.certManager = lib.mkOption {
     type = with lib.types;
@@ -20,12 +20,14 @@ in {
   config = lib.mkIf (domains != {}) {
     az.server.rke2.namespaces."cert-manager" = {
       networkPolicy.fromNamespaces = ["metrics-system"];
+      networkPolicy.toNamespaces = ["app-nameserver"];
       networkPolicy.toDomains = ["acme-v02.api.letsencrypt.org"];
       networkPolicy.extraEgress = [
         {toEntities = ["kube-apiserver"];}
         {toPorts = [{ports = [{port = "53";}];}];} # DNS01
       ];
     };
+    az.server.rke2.namespaces."app-nameserver".networkPolicy.fromNamespaces = ["cert-manager"];
 
     services.rke2.autoDeployCharts."cert-manager" = {
       repo = "https://charts.jetstack.io";
@@ -37,6 +39,11 @@ in {
       values = {
         crds.enabled = true;
         config.enableGatewayAPI = true;
+        extraArgs = [
+          # use local NS directly
+          "--dns01-recursive-nameservers-only"
+          "--dns01-recursive-nameservers=knot.app-nameserver.svc:53"
+        ];
 
         prometheus = lib.optionalAttrs config.az.cluster.core.metrics.enable {
           enabled = true;
@@ -72,11 +79,11 @@ in {
                 domains);
 
                 dns01.rfc2136 = {
-                  nameserver = "knot-external.app-nameserver.svc";
+                  nameserver = "knot.app-nameserver.svc";
                   tsigKeyName = "acme";
                   tsigAlgorithm = "HMACSHA256";
                   tsigSecretSecretRef = {
-                    name = "external-rfc2136-tsig";
+                    name = "rfc2136-tsig";
                     key = "secret";
                   };
                 };

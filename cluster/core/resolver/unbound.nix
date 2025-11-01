@@ -75,23 +75,19 @@ in {
           	so-reuseport: yes
 
           ${
-            /*
-                      # rTODO
-            lib.optionalString config.az.cluster.core.nameserver.internal.enable (
-                     lib.concatMapStringsSep "\n" (domain: ''
-                       # resolve private addrs for ${domain}
-                       	private-domain: "${domain}."
-                       # use local authoritative NS for ${domain}
-                       	forward-zone:
-                       		name: "${domain}."
-                       		forward-addr: "${config.az.cluster.core.envoyGateway.gateways.internal.addresses.ipv6}@${toString config.az.cluster.core.nameserver.internal.gatewayPort}"
-                       		forward-no-cache: yes
-                       		forward-tcp-upstream: yes
-                     '')
-                     config.az.cluster.core.nameserver.internal.zones
-                   )
-            */
-            ""
+            lib.optionalString config.az.cluster.core.nameserver.enable (
+              lib.concatMapStringsSep "\n" (domain: ''
+                # resolve private addrs for ${domain}
+                	private-domain: "${domain}."
+                # use local authoritative NS for ${domain}
+                	forward-zone:
+                		name: "${domain}."
+                		forward-addr: "${config.az.cluster.core.envoyGateway.address}@53"
+                		forward-no-cache: yes
+                		forward-tcp-upstream: yes
+              '')
+              config.az.cluster.core.nameserver.zones
+            )
           }
         '';
       }
@@ -158,8 +154,8 @@ in {
         };
         spec = {
           selector.app = "unbound";
-          ipFamilyPolicy = "PreferDualStack";
-          ipFamilies = ["IPv4" "IPv6"];
+          ipFamilyPolicy = "SingleStack";
+          ipFamilies = ["IPv6"];
           ports = [
             {
               name = "dns-tcp";

@@ -34,7 +34,6 @@ with lib; {
 
     net = {
       enable = mkDefault true;
-      frr.enable = mkDefault true;
       remoteUnlock = {
         enable = mkDefault true;
         sshPort = mkDefault 33;

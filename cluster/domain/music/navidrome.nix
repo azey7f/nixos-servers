@@ -124,8 +124,8 @@ in {
           };
           spec = {
             selector.app = "navidrome";
-            ipFamilyPolicy = "PreferDualStack";
-            ipFamilies = ["IPv4" "IPv6"];
+            ipFamilyPolicy = "SingleStack";
+            ipFamilies = ["IPv6"];
             ports = [
               {
                 name = "http";

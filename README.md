@@ -2,15 +2,29 @@ Welcome! This is the NixOS flake defining most of the infrastructure hosting htt
 
 Everything is hosted on an RKE2 cluster and *fully* defined in Nix; all images and helm charts are fetched using `docker.pullImage`, and the whole cluster is running as if it was airgapped[^1] (except for services which explicitly need internet access, like [searxng](https://search.azey.net)).  Everything is also automatically updated through renovate (including nix hashes! just don't look at the .renovaterc script, it's a mess...)
 
-In addition to just being for selfhosting services, my end goal for this is to be pretty much a fully offline-ready infrastructure that doesn't rely on the internet for anything but updating itself (& interop, obviously I still need stuff like CA-approved certs for the public TLS proxy[^2]). Thanks to the power of Nix *everything* is built & cached via CI into a local cache, which means that theoretically it should be possible to install new systems, create configs & generally everything except for downloading brand new software should work the same with or without the internet.
-
-At time of writing I only have one node and it's behind CGNAT, so everything is proxied through [one of two VPSes](https://git.azey.net/infra/nixos-vps) which also host the domain's public-facing nameservers & [uptime page](https://status.azey.net).
+In addition to just being for selfhosting services, my end goal for this is to be pretty much a fully offline-ready infrastructure that doesn't rely on the internet for anything but updating itself (& interop, obviously I still need stuff like CA-approved certs for the public TLS proxy[^2]). Thanks to the power of Nix *everything* is built & cached via CI into a local cache, which means that theoretically it should be possible to install new systems, create configs & generally do everything except for downloading brand new software/updates fully offline.
 
 See [the core flake](https://git.azey.net/infra/nixos-core) for the general structure, this is the non-standard stuff:
 - `cluster/`: `az.cluster` defs, options to be set cluster-wide
 - `hosts/`: instead of each dir being a host, each dir is a cluster with a `nodes/` subdir
 - `sops/`: a private submodule with all the secrets, passwords, etc, decryptable with a machine-local `age.key` (also stored in bitwarden for backup reasons)
     - not mirrored to codeberg, but most of these are just randomly-generated secrets anyways
+
+The core infra is IPv6-only routed through a wireguard tunnel (courtesy of [as200242](https://as200242.net)!), but I also have [a VPS](https://git.azey.net/infra/nixos-vps) for the domain's secondary nameserver, [uptime page](https://status.azey.net) and a [mirror of the root site](https://v4.azey.net) on legacy IP[^3] for the people with ISPs still stuck in the 90s.
+
+Network layout:
+- `2a14:6f44:5608::/48` - public prefix
+  - `:0000::/52` - k8s clusters
+    - `:000::/56` - primary.k8s.azey.net
+      - `:00::/64` - reserved static IPs & ExternalIPs for gateways
+        - `::1` - envoy gateway
+        - `::53` - knot.app-nameserver.svc, aka ns1.azey.net
+        - `::ffff` - k8s apiserver VIP
+      - `:01::/64` - pods CIDR
+      - `:02::/64` - services CIDR (though only the first /112 of that is actually used because RKE2)
+      - `:f0::/60` - node addrs, really a /64 but reserved as /60 for possible future routing shenanigans
+        - `:f0::1` - astra
+- `2a01:4f9:c012:dc23::1/64` - ns2.azey.net, also hosts the legacy mirror & status page
 
 ### Guides for future me:
 
@@ -25,7 +39,7 @@ Setting up a domain:
 2. if selfhosting the nameservers:
     - if <2 nodes with separate public IPs, set up VPSes (see [nixos-vps](https://git.azey.net/infra/nixos-vps)) & add entries to `clusters.nix`
         - `exec` into the pod & run `knotc status cert-key` for the primary's pubkey
-    - set up glue & DS records with the registar, `exec` into the pod and run `keymgr <zone> ds` for the DS stuff
+    - set up glue & DS records with the registrar, `exec` into the pod and run `keymgr <zone> ds` for the DS stuff
 3. done!
 
 Setting up cluster from scratch:
@@ -56,3 +70,4 @@ Setting up cluster from scratch:
 
 [^1]: See `config/rke2/default.nix`, but the TLDR is that it's possible to use the RKE2 [embedded registry](https://docs.rke2.io/install/registry_mirror) to completely disable pulling any images and rely on those preinstalled on the node(s). Runtime airgappiness is handled with cilium's network policies.
 [^2]: In this example specifically I mean *only* for the public proxy, at time of writing this isn't implemented yet but eventually I'd like to run a local step-ca instance for local network connections
+[^3]: version four of the Internet Protocol as defined in RFC 791 (three digit RFC! and we're still using it in $YEAR).

@@ -62,7 +62,17 @@ in {
   };
 
   config = mkIf cfg.enable {
-    az.server.rke2.namespaces.default = {create = false;}; # nothing should be running in default anyways
+    az.server.rke2.namespaces = {
+      "default".create = false; # nothing should be running in default anyways
+      "kube-system" = {
+        create = false;
+        networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
+        networkPolicy.extraEgress = [
+          {toEntities = ["cluster"];}
+          {toPorts = [{ports = [{port = "53";}];}];} # coredns
+        ];
+      };
+    };
 
     az.server.rke2.manifests."00-namespaces" = let
       # https://en.wikipedia.org/wiki/Reserved_IP_addresses as of this commit

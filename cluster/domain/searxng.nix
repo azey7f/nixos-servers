@@ -43,6 +43,9 @@ in {
         auth.enabled = false; # TODO?
         podSecurityContext.seccompProfile.type = "RuntimeDefault";
         securityContext.allowPrivilegeEscalation = false;
+        valkeyConfig = ''
+          bind *
+        '';
       };
     };
     az.server.rke2.secrets =
@@ -65,9 +68,9 @@ in {
                 bind_address = "[::]";
                 secret_key = config.sops.placeholder."rke2/searxng/secret-key";
 
-                limiter = true; # TODO: frp probably messes this up
+                limiter = true;
                 public_instance = true;
-                image_proxy = false; # TODO - shitty uplink
+                image_proxy = false; # TODO - shitty uplink speed
               };
               general = {
                 instance_name = "search.${domain}";
@@ -144,8 +147,8 @@ in {
           };
           spec = {
             selector.app = "searxng-${id}";
-            ipFamilyPolicy = "PreferDualStack";
-            ipFamilies = ["IPv4" "IPv6"];
+            ipFamilyPolicy = "SingleStack";
+            ipFamilies = ["IPv6"];
             ports = [
               {
                 name = "searxng";

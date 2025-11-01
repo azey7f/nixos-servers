@@ -25,31 +25,31 @@ in {
 
   config = mkIf cfg.enable (lib.mkMerge [
     (mkIf (cfg.router == "::1") {
+      az.server.net.frr.enable = true;
       az.server.net.frr.ospf.redistribute = ["bgp"];
       az.server.net.frr.extraConfig = let
         # very janky & assumes a lot of stuff, but ::1 BGP is a huge hack anyways...
         # here's hoping I'll be able to drop this whole mkIf soon
-        firstIface = builtins.elemAt (builtins.attrValues config.az.server.net.interfaces) 0;
+        peerAddr = "${config.az.cluster.net.prefix}${config.az.cluster.net.nodes}::${toString config.az.cluster.meta.nodes.${config.networking.hostName}.id}";
       in ''
         allow-reserved-ranges
         access-list all permit any
-        route-map set-nexthop-v4 permit 10
-        	match ip address all
-        	set ip next-hop ${firstIface.ipv4.addr}
-        !
         route-map set-nexthop permit 10
         	match ipv6 address all
         	set ipv6 next-hop prefer-global
-        	set ipv6 next-hop global ${builtins.elemAt firstIface.ipv6.addr 0}
+        	set ipv6 next-hop global ${peerAddr}
         !
         router bgp ${toString cfg.peerASN}
         	bgp allow-martian-nexthop
         	no bgp ebgp-requires-policy
+        	no bgp network import-check
         	bgp router-id 0.0.0.1
         	neighbor ::1 remote-as ${toString cfg.selfASN}
         	neighbor ::1 route-map set-nexthop in
-        	neighbor ::1 route-map set-nexthop-v4 in
-        	neighbor ::1 soft-reconfiguration inbound
+        	address-family ipv6 unicast
+        		neighbor ::1 activate
+        		neighbor ::1 soft-reconfiguration inbound
+        	exit-address-family
         !
       '';
       services.frr.bgpd.enable = true;
@@ -80,6 +80,20 @@ in {
         }
         {
           apiVersion = "cilium.io/v2alpha1";
+          kind = "CiliumBGPNodeConfigOverride";
+          metadata = {
+            name = config.networking.fqdn;
+            namespace = "kube-system";
+          };
+          spec.bgpInstances = [
+            {
+              name = "instance-${toString cfg.selfASN}";
+              routerID = "0.0.0.2";
+            }
+          ];
+        }
+        {
+          apiVersion = "cilium.io/v2alpha1";
           kind = "CiliumBGPPeerConfig";
           metadata = {
             name = "cilium-peer";
@@ -95,11 +109,6 @@ in {
               restartTimeSeconds = 15;
             };
             families = [
-              {
-                afi = "ipv4";
-                safi = "unicast";
-                advertisements.matchLabels.advertise = "bgp";
-              }
               {
                 afi = "ipv6";
                 safi = "unicast";
@@ -118,7 +127,7 @@ in {
           spec.advertisements = [
             {
               advertisementType = "Service";
-              service.addresses = ["ExternalIP" "LoadBalancerIP"];
+              service.addresses = ["ExternalIP"];
               selector.matchExpressions = [
                 {
                   key = "dummy";

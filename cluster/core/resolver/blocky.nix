@@ -1,4 +1,4 @@
-# TODO?: redis
+# unused, probably doesn't work as-is
 {
   pkgs,
   config,
@@ -152,8 +152,8 @@ in {
           };
           spec = {
             selector.app = "blocky";
-            ipFamilyPolicy = "PreferDualStack";
-            ipFamilies = ["IPv4" "IPv6"];
+            ipFamilyPolicy = "SingleStack";
+            ipFamilies = ["IPv6"];
             ports = [
               {
                 name = "dns-udp";
@@ -174,7 +174,7 @@ in {
           };
         }
       ]
-      ++ lib.optionals config.az.cluster.core.envoyGateway.gateways.internal.enable [
+      ++ lib.optionals config.az.cluster.core.envoyGateway.enable [
         {
           apiVersion = "gateway.networking.k8s.io/v1alpha2";
           kind = "UDPRoute";
@@ -185,7 +185,7 @@ in {
           spec = {
             parentRefs = [
               {
-                name = "envoy-gateway-internal";
+                name = "envoy-gateway";
                 namespace = "envoy-gateway";
                 sectionName = "blocky-udp";
               }
@@ -215,7 +215,7 @@ in {
           spec = {
             parentRefs = [
               {
-                name = "envoy-gateway-internal";
+                name = "envoy-gateway";
                 namespace = "envoy-gateway";
                 sectionName = "blocky-tcp";
               }
@@ -240,7 +240,6 @@ in {
           name = "blocky";
           namespace = "app-resolver";
           hostnames = ["dns.${domain}"];
-          gateways = ["internal"];
           rules = [
             {
               backendRefs = [
@@ -270,7 +269,7 @@ in {
       ])
       cfg.httpDomains;
 
-    az.cluster.core.envoyGateway.gateways.internal.listeners = [
+    az.cluster.core.envoyGateway.listeners = [
       {
         name = "blocky-udp";
         protocol = "UDP";
@@ -286,6 +285,5 @@ in {
         allowedRoutes.kinds = [{kind = "TCPRoute";}];
       }
     ];
-    az.cluster.core.nameserver.internal.gatewayPort = lib.mkDefault 5353;
   };
 }

@@ -21,6 +21,10 @@ in {
       type = types.str;
       # must be set
     };
+    extraInterfaces = mkOption {
+      type = with types; listOf str;
+      default = [];
+    };
   };
 
   config = mkIf cfg.enable {
@@ -92,33 +96,31 @@ in {
     };
 
     # networking
-    az.server.net.interfaces.${cfg.primaryInterface}.ipv6.addr = [
-      "${
-        config.az.cluster.publicSubnet
-      }${
-        config.az.cluster.nodeSubnet
-      }::${
-        azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""
-      }"
-    ];
+    az.server.net.interfaces.${cfg.primaryInterface}.ipv6 = let
+      inherit (config.az.cluster) net;
+    in {
+      addr = [
+        "${net.prefix}${net.nodes}::${
+          azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""
+        }"
+      ];
+      subnetSize = net.subnetSize;
+    };
     networking.hosts =
       lib.attrsets.concatMapAttrs (
         node: nodeMeta: let
           conf = outputs.nixosConfigurations.${node}.config;
+          inherit (config.az.cluster) net;
         in {
           # server
-          "${
-            config.az.cluster.publicSubnet
-          }${
-            config.az.cluster.nodeSubnet
-          }::${
+          "${net.prefix}${net.nodes}::${
             azLib.math.decToHex nodeMeta.id ""
           }" = [
             conf.networking.hostName
             conf.networking.fqdn
           ];
           # K8s/RKE2 API virtual IP, see ./loadbalancer/keepalived.nix
-          "${config.az.cluster.publicSubnet}::ffff" = ["api.${config.networking.domain}"];
+          "${net.prefix}${net.static}::ffff" = ["api.${config.networking.domain}"];
         }
       )
       config.az.cluster.meta.nodes;

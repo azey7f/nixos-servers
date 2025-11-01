@@ -32,108 +32,110 @@ in {
         hash = "sha256-/ymcjqpQwQDQNCc+wPzk8L2X2YB8dU8UsxGzHppNAWQ="; # renovate: ghcr.io/jeffvli/feishin 0.21.2
       };
     };
-    services.rke2.manifests."feishin".content = [
-      {
-        apiVersion = "apps/v1";
-        kind = "Deployment";
-        metadata = {
-          name = "feishin";
-          namespace = "app-feishin";
-        };
-        spec = {
-          replicas = 1;
-          selector.matchLabels.app = "feishin";
-          template.metadata.labels.app = "feishin";
-
-          template.spec.securityContext = {
-            runAsNonRoot = true;
-            seccompProfile.type = "RuntimeDefault";
-            runAsUser = 65534;
-            runAsGroup = 65534;
+    services.rke2.manifests."feishin".content = lib.flatten (lib.mapAttrsToList (domain: cfg: let
+        id = builtins.replaceStrings ["."] ["-"] domain;
+      in [
+        {
+          apiVersion = "apps/v1";
+          kind = "Deployment";
+          metadata = {
+            name = "feishin-${id}";
+            namespace = "app-feishin";
           };
+          spec = {
+            replicas = 1;
+            selector.matchLabels.app = "feishin-${id}";
+            template.metadata.labels.app = "feishin-${id}";
 
-          template.spec.containers = [
-            {
-              name = "feishin";
-              image = images.feishin.imageString;
-              env = lib.attrsToList {
-                SERVER_NAME = "navidrome";
-                SERVER_TYPE = "navidrome";
-                #SERVER_URL = "https://navidrome.${domain}"; # doesn't work anyways
-                #SERVER_LOCK = "true";
-              };
-              securityContext = {
-                allowPrivilegeEscalation = false;
-                capabilities.drop = ["ALL"];
-              };
-              volumeMounts = [
-                {
-                  name = "nginx-cache";
-                  mountPath = "/var/cache/nginx";
-                }
-                {
-                  name = "run";
-                  mountPath = "/run";
-                }
-              ];
-            }
-          ];
-          template.spec.volumes = [
-            {
-              name = "nginx-cache";
-              emptyDir.sizeLimit = "100Mi";
-            }
-            {
-              name = "run";
-              emptyDir.sizeLimit = "100Mi";
-            }
-          ];
-        };
-      }
+            template.spec.securityContext = {
+              runAsNonRoot = true;
+              seccompProfile.type = "RuntimeDefault";
+              runAsUser = 65534;
+              runAsGroup = 65534;
+            };
 
-      {
-        apiVersion = "v1";
-        kind = "Service";
-        metadata = {
-          name = "feishin";
-          namespace = "app-feishin";
-        };
-        spec = {
-          selector.app = "feishin";
-          # listens on 0.0.0.0:80 by default, no way to change it seemingly - # TODO: make an issue
-          ipFamilyPolicy = "SingleStack";
-          ipFamilies = ["IPv4"];
-          ports = [
-            {
-              name = "feishin";
-              port = 80;
-              protocol = "TCP";
-            }
-          ];
-        };
-      }
-    ];
+            template.spec.containers = [
+              {
+                name = "feishin";
+                image = images.feishin.imageString;
+                env = lib.attrsToList {
+                  SERVER_NAME = "navidrome";
+                  SERVER_TYPE = "navidrome";
+                  SERVER_URL = "https://navidrome.${domain}";
+                  SERVER_LOCK = "true";
+                };
+                securityContext = {
+                  allowPrivilegeEscalation = false;
+                  capabilities.drop = ["ALL"];
+                };
+                volumeMounts = [
+                  {
+                    name = "nginx-cache";
+                    mountPath = "/var/cache/nginx";
+                  }
+                  {
+                    name = "run";
+                    mountPath = "/run";
+                  }
+                ];
+              }
+            ];
+            template.spec.volumes = [
+              {
+                name = "nginx-cache";
+                emptyDir.sizeLimit = "100Mi";
+              }
+              {
+                name = "run";
+                emptyDir.sizeLimit = "100Mi";
+              }
+            ];
+          };
+        }
 
-    az.cluster.core.envoyGateway.httpRoutes = [
-      {
-        name = "feishin";
+        {
+          apiVersion = "v1";
+          kind = "Service";
+          metadata = {
+            name = "feishin-${id}";
+            namespace = "app-feishin";
+          };
+          spec = {
+            selector.app = "feishin-${id}";
+            ipFamilyPolicy = "SingleStack";
+            ipFamilies = ["IPv6"];
+            ports = [
+              {
+                name = "feishin";
+                port = 80;
+                protocol = "TCP";
+              }
+            ];
+          };
+        }
+      ])
+      domains);
+
+    az.cluster.core.envoyGateway.httpRoutes =
+      lib.mapAttrsToList (domain: cfg: let
+        id = builtins.replaceStrings ["."] ["-"] domain;
+      in {
+        name = "feishin-${id}";
         namespace = "app-feishin";
-        hostnames = lib.mapAttrsToList (domain: cfg: "music.${domain}") domains;
+        hostnames = ["music.${domain}"];
         rules = [
           {
             backendRefs = [
               {
-                name = "feishin";
+                name = "feishin-${id}";
                 port = 80;
               }
             ];
           }
         ];
-        customCSP.default-src =
-          ["'self'" "data:" "blob:"]
-          ++ lib.mapAttrsToList (domain: cfg: "https://navidrome.${domain}") domains;
-      }
-    ];
+        customCSP.default-src = ["'self'" "data:" "blob:" "https://navidrome.${domain}"];
+      })
+      domains;
 
     az.cluster.core.auth.authelia.rules = [
       {

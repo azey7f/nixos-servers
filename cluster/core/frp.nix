@@ -1,4 +1,4 @@
-# TODO?: make this less opinionated at some point if I need to keep using it
+# unused, likely doesn't work as-is
 {
   pkgs,
   config,
@@ -20,8 +20,8 @@ in {
     };
 
     localIP = optStr (
-      if config.az.cluster.core.envoyGateway.gateways.external.enable
-      then config.az.cluster.core.envoyGateway.gateways.external.addresses.ipv4 # rTODO: ipv6
+      if config.az.cluster.core.envoyGateway.gateway.enable
+      then config.az.cluster.core.envoyGateway.gateway.addresses.ipv4 # rTODO: ipv6
       else ""
     );
   };

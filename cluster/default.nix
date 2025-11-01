@@ -19,21 +19,43 @@ in {
       # must be set
     };
 
-    # ${publicSubnet}::/64 is reserved for cluster stuff, e.g. network infra, API servers' VIP, etc
-    publicSubnet = lib.mkOption {
-      type = lib.types.str;
-      example = "2001:db8:1234";
-      # must be set
-    };
-    # nodes' addrs are generated dynamically in ../config/rke2/default.nix:
-    #   "${publicSubnet}${nodeSubnet}::${decToHex meta.nodes.${hostName}.id}/64"
-    nodeSubnet = lib.mkOption {
-      type = lib.types.str;
-      default = ":ffff";
-    };
+    net = {
+      subnetSize = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 64;
+      };
 
-    clusterCidr = optStr "10.42.0.0/16,fd01::/48";
-    serviceCidr = optStr "10.43.0.0/16,fd98::/108";
+      prefix = lib.mkOption {
+        type = lib.types.str;
+        example = "2001:db8:1234";
+        # must be set
+      };
+      prefixSubnetSize = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 48;
+      };
+
+      # nodes' addrs are generated dynamically in ../config/rke2/default.nix:
+      #   "${prefix}${nodes}::${decToHex meta.nodes.${hostName}.id}/${subnetSize}"
+      nodes = lib.mkOption {
+        type = lib.types.str;
+        example = ":ffff";
+        # must be set
+      };
+
+      # reserved static subnet used for apiserver and ExternalIP
+      #     apiserver: "${prefix}${static}::ffff/128"
+      #  gateway e.g.: "${prefix}${static}::1/128"
+      static = lib.mkOption {type = lib.types.str;};
+
+      # --cluster-cidr
+      #  "${prefix}${pods}::/${subnetSize}"
+      pods = lib.mkOption {type = lib.types.str;};
+
+      # --service-cidr
+      #  "${prefix}${pods}::/${subnetSize}"
+      services = lib.mkOption {type = lib.types.str;};
+    };
 
     # convenience mapping for .domainSpecific, so services can be
     # defined per-domain rather than the other way around
@@ -49,7 +71,9 @@ in {
         type = with lib.types;
           attrsOf (submodule {
             options = {
-              id = lib.mkOption {type = ints.positive;}; # ID 0 is reserved for default gateway IP
+              # IDs 0xffff and above are reserved
+              # at time of writing of those only 0xffff is actually used for the default gateway
+              id = lib.mkOption {type = ints.positive;};
             };
           });
         default = {};
@@ -60,13 +84,13 @@ in {
         type = with lib.types;
           attrsOf (submodule {
             options = {
+              ip = lib.mkOption {type = types.str;};
               ipv4 = lib.mkOption {type = types.str;};
-              ipv6 = lib.mkOption {type = types.str;};
 
               zones = lib.mkOption {
-                type = attrsOf (attrsOf (listOf str));
+                type = attrsOf (listOf str);
                 example = {
-                  "example.com".external = ["www" "@" "*"];
+                  "example.com" = ["www" "@"];
                 };
                 default = {};
               };

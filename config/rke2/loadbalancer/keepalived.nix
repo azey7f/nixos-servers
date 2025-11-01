@@ -53,6 +53,7 @@ in {
               null (builtins.attrNames config.networking.hosts);
           }
         ];
+        /*
         unicastSrcIp = builtins.elemAt config.az.server.net.interfaces.${cfg.interface}.ipv6.addr 0;
         unicastPeers = lib.lists.flatten (
           lib.attrsets.mapAttrsToList (node: nodeMeta: (
@@ -70,6 +71,7 @@ in {
           ))
           config.az.cluster.meta.nodes
         );
+        */
       };
     };
   };

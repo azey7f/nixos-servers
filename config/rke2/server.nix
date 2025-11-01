@@ -19,6 +19,8 @@ in {
         then (config.az.cluster.meta.nodes.${config.networking.hostName}.id == 1)
         else false
       ); # init only on first node
+
+      l2Announcements = optBool false;
     };
   };
 
@@ -40,11 +42,15 @@ in {
           "rke2-snapshot-controller-crd"
           "rke2-snapshot-validation-webhook"
         ];
-        extraFlags =
+        extraFlags = let
+          inherit (config.az.cluster) net;
+        in
           [
             "--cluster-domain=${config.networking.domain}"
-            "--cluster-cidr=${config.az.cluster.clusterCidr}"
-            "--service-cidr=${config.az.cluster.serviceCidr}"
+            "--cluster-cidr=${net.prefix}${net.pods}::/${toString net.subnetSize}"
+            "--service-cidr=${net.prefix}${net.services}::/112" # largest supported by k3s, probably also by rke2
+            "--node-ip=${builtins.elemAt config.az.server.net.interfaces.${top.primaryInterface}.ipv6.addr 0}"
+            "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString net.subnetSize}"
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
             "--tls-san=${config.networking.fqdn}"
@@ -73,27 +79,54 @@ in {
               pullPolicy = "Never";
               useDigest = false;
             };
+            inherit (config.az.cluster) net;
           in {
             envoy.enabled = false;
 
-            extraArgs = ["--devices=${top.primaryInterface}"]; # https://github.com/cilium/cilium/issues/37427
+            extraArgs = let
+              interfaces = lib.concatStringsSep "," ([top.primaryInterface] ++ top.extraInterfaces);
+            in ["--devices=${interfaces}"]; # https://github.com/cilium/cilium/issues/37427
 
             image = imageOpts;
             operator.image = imageOpts;
 
             operator.replicas = 1;
 
-            ipv6.enabled = true;
             kubeProxyReplacement = true;
             k8sServiceHost = "api.${config.networking.domain}";
             k8sServicePort = 8443;
+
+            ipv4.enabled = false; # cease
+            ipv6.enabled = true;
+            underlayProtocol = "ipv6";
+
+            routingMode = "native";
             tunnelProtocol = "";
+
+            enableIPv6Masquerade = false;
+            ipv6NativeRoutingCIDR = "${net.prefix}::/${toString net.prefixSubnetSize}";
+            autoDirectNodeRoutes = true;
+
+            ipam.operator = {
+              clusterPoolIPv6MaskSize = net.subnetSize + 16;
+              clusterPoolIPv6PodCIDRList = ["${net.prefix}${net.pods}::/${toString net.subnetSize}"];
+            };
+
+            # TODO https://docs.cilium.io/en/stable/operations/performance/tuning/
+            #bpf = {
+            #datapathMode = "netkit";
+            #distributedLRU.enabled = true;
+            #mapDynamicSizeRatio = 0.08;
+            #};
+            #bpfClockProbe = true;
+            # TODO loadBalancer.acceleration
 
             encryption = {
               enabled = true;
               nodeEncryption = true;
               type = "wireguard";
             };
+            # CRITICAL TODO policyEnforcementMode = "always";
 
             authentication.mutual.spire = {
               # TODO?: use a cnpg DB
@@ -109,19 +142,15 @@ in {
 
             bgpControlPlane.enabled = top.bgp.enable;
             l2announcements = {
-              enabled = !top.bgp.enable;
+              enabled = cfg.l2Announcements;
               leaseDuration = "10s";
               leaseRenewDeadline = "5s";
               leaseRetryPeriod = "1s";
             };
-
-            #routingMode: native
-            #enableIPv4Masquerade: false
-            #enableIPv6Masquerade: false # TODO
           };
 
           extraDeploy =
-            lib.lists.optional (!top.bgp.enable)
+            lib.lists.optional cfg.l2Announcements
             {
               apiVersion = "cilium.io/v2alpha1";
               kind = "CiliumL2AnnouncementPolicy";

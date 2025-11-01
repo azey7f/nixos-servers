@@ -53,7 +53,7 @@ in {
             # listens on 0.0.0.0 by default, can only be changed imperatively - https://github.com/jellyfin/jellyfin/issues/13930
             # hhhhhhhhgtdhfph why is it so hard for software to just bind to :: by default.
             ipFamilyPolicy = "SingleStack";
-            ipFamilies = ["IPv4"];
+            ipFamilies = ["IPv6"]; # rTODO
           };
           persistence.media.existingClaim = "media";
         };

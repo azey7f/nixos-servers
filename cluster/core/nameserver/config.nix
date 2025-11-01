@@ -1,5 +1,5 @@
 # knot uses a special yaml-*like* format, so (pkgs.formats.yaml {}).generate doesn't work
-id: {
+{
   zones,
   secondaryServers,
   acmeTsig,
@@ -10,7 +10,7 @@ id: {
   azLib,
   ...
 }: let
-  identity = "ns-${id}.${config.networking.fqdn}";
+  identity = "ns.${config.networking.fqdn}";
 
   hasSecondaries = secondaryServers != {};
 in ''
@@ -18,7 +18,7 @@ in ''
     key:
       - id: acme
         algorithm: hmac-sha256
-        secret: ${config.sops.placeholder."rke2/nameserver/${id}/tsig-secret"}
+        secret: ${config.sops.placeholder."rke2/nameserver/tsig-secret"}
   ''}
 
   server:
@@ -35,12 +35,7 @@ in ''
   ${lib.concatStringsSep "\n" (
     lib.mapAttrsToList (name: remote: ''
         - id: "${name}"
-          address: "${
-        remote.ipv4
-        /*
-        #TODO: .ipv6
-        */
-      }@853"
+          address: "${remote.ip}@853"
           cert-key: ${remote.knotPubkey}
           quic: "on"
       # <- indent here, nix

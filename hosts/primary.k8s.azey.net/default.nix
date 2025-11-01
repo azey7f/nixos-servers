@@ -9,36 +9,20 @@
     domain = "azey.net";
   };
 
-  config.az.cluster = {
+  config.az.cluster = rec {
     meta = {
       # IDs used for auto-setting IP addrs in config/rke2/default.nix
-      # ID 0 is reserved for routing infra
+      # IDs 0xffff and above are reserved
       nodes = {
         "astra".id = 1;
       };
 
-      # VPS defs, used in nameserver & frp
       vps = {
-        "ns1" = {
-          # ns, http proxy
-          zones."azey.net" = {
-            external = ["ns1" "@" "*"];
-            internal = ["ns1.vps"];
-          };
-
-          ipv4 = "188.245.84.161";
-          ipv6 = "2a01:4f8:c013:f05f::53";
-          knotPubkey = "Dz14HoMs3cuczSYTUscntbB7ZRb7JAGg98/pP+Rv0tk=";
-        };
         "ns2" = {
-          # ns, uptime status page
-          zones."azey.net" = {
-            external = ["ns2" "status"];
-            internal = ["ns2.vps"];
-          };
-
+          # backup ns, uptime status page & legacy IP site mirror
+          zones."azey.net" = ["ns2" "status" "v4"];
+          ip = "2a01:4f9:c012:dc23::1";
           ipv4 = "95.217.221.156";
-          ipv6 = "2a01:4f9:c012:dc23::53";
           knotPubkey = "jLWkMn4g5XD8oC4HRDzwGY8eWCkExNb/lDUPoiafyis=";
         };
       };
@@ -46,26 +30,21 @@
 
     contactMail = "me@azey.net";
 
-    publicSubnet = "fd95:3a23:dd1f"; # no native IPv6 :c
-    clusterCidr = "172.30.0.0/16,fd01::/48"; # TODO: proper IPv6 addrs
-    serviceCidr = "172.31.0.0/16,fd98::/108";
+    net = {
+      # see ../../README.md for full breakdown
+      prefix = "2a14:6f44:5608";
+      prefixSubnetSize = 48;
+
+      static = ""; # :00
+      pods = ":1"; # :01
+      services = ":2"; # :02
+      nodes = ":f0"; # :f0
+    };
 
     core = {
       # networking
-      nameserver.external.enable = true;
-      nameserver.internal.enable = true;
-      nameserver.internal.acmeTsig = false; # TODO step-ca
-      resolver.enable = true; # rTODO: can't reach nameserver because envoy ipv6 doesn't work
-
-      envoyGateway.gateways.external = {
-        enable = true;
-        addresses.ipv4 = "10.33.1.1"; # rTODO: remove v4
-      };
-      envoyGateway.gateways.internal = {
-        enable = true;
-        addresses.ipv4 = "10.33.1.2"; # rTODO: remove v4
-      };
-      frp.enable = true;
+      nameserver.enable = true; # rTODO namespace
+      envoyGateway.enable = true; # rTODO Gateway rename
 
       # monitoring, notifs
       metrics = {
@@ -123,7 +102,7 @@
       # media
       navidrome.enable = true;
       feishin.enable = true;
-      jellyfin.enable = true;
+      # TODO: jellyfin.enable = true;
 
       # source control, CI
       forgejo.enable = true;

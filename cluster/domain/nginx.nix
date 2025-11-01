@@ -207,8 +207,8 @@ in {
         };
         spec = {
           selector.app = "nginx";
-          ipFamilyPolicy = "PreferDualStack";
-          ipFamilies = ["IPv4" "IPv6"];
+          ipFamilyPolicy = "SingleStack";
+          ipFamilies = ["IPv6"];
           ports = [
             {
               name = "nginx";
@@ -225,7 +225,7 @@ in {
         lib.mapAttrsToList (
           sub: site:
             {
-              name = "nginx";
+              name = "nginx-${builtins.replaceStrings ["."] ["-"] (mkFQDN sub domain)}";
               namespace = "app-nginx";
               hostnames = [(mkFQDN sub domain)];
               rules = [

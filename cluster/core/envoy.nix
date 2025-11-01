@@ -6,42 +6,21 @@
   ...
 }: let
   inherit (lib) mkOption types;
+  inherit (config.az.cluster) net;
 
   cfg = config.az.cluster.core.envoyGateway;
-  gateways = lib.filterAttrs (_: v: v.enable) cfg.gateways;
   images = config.az.server.rke2.images;
 in {
   options.az.cluster.core.envoyGateway = with azLib.opt; {
+    enable = optBool false;
+
     infraSourceAvailableAt = optStr "https://git.azey.net/infra";
 
-    gatewaysSubnet = optStr ":fffe";
-    gateways = let
-      gwOptions = id: {
-        enable = optBool false;
+    address = optStr "${net.prefix}${net.static}::1";
 
-        id = mkOption {
-          type = types.ints.positive;
-          default = id;
-        };
-
-        addresses = {
-          ipv4 = mkOption {
-            type = with types; nullOr str;
-            default = null;
-          };
-          ipv6 = optStr "${config.az.cluster.publicSubnet}${cfg.gatewaysSubnet}::${azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""}";
-        };
-
-        listeners = mkOption {
-          type = with types; listOf attrs;
-          default = [];
-        };
-      };
-    in {
-      # external = accessible from the internet, routed, frp reverse-proxied, etc
-      # internal = only accessible from LAN/via VPN
-      external = gwOptions 1;
-      internal = gwOptions 2;
+    listeners = mkOption {
+      type = with types; listOf attrs;
+      default = [];
     };
 
     httpRoutes = mkOption {
@@ -57,10 +36,6 @@ in {
               default = [];
             };
             gatewaySection = optStr "https";
-            gateways = mkOption {
-              type = with types; listOf str;
-              default = ["external" "internal"];
-            };
 
             csp = optStr "lax";
             customCSP = mkOption {
@@ -81,7 +56,7 @@ in {
     };
   };
 
-  config = lib.mkIf (gateways != {}) {
+  config = lib.mkIf cfg.enable {
     /*
     az.server.rke2.remoteManifests."gateway-api-latest" = {
       url = "https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/experimental-install.yaml";
@@ -90,8 +65,8 @@ in {
     */
 
     az.server.rke2.namespaces."envoy-gateway" = {
-      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
       networkPolicy.extraIngress = [{fromEntities = ["all"];}];
+      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
     };
 
     az.server.rke2.images = {
@@ -130,7 +105,7 @@ in {
               namespace = "envoy-gateway";
             };
             spec = {
-              ipFamily = "DualStack";
+              ipFamily = "IPv6";
               provider = {
                 type = "Kubernetes";
                 kubernetes.envoyDeployment.container.image = "${images.envoy-proxy.imageName}:${images.envoy-proxy.finalImageTag}";
@@ -147,13 +122,13 @@ in {
               namespace = "envoy-gateway";
             };
             spec = {
-              targetRefs =
-                lib.mapAttrsToList (name: _: {
+              targetRefs = [
+                {
                   group = "gateway.networking.k8s.io";
                   kind = "Gateway";
-                  name = "envoy-gateway-${name}";
-                })
-                gateways;
+                  name = "envoy-gateway";
+                }
+              ];
 
               # TODO: http3 doesn't seem to work for some reason
               # [source/common/quic/envoy_quic_proof_source.cc:81] No certificate is configured in transport socket config.
@@ -178,13 +153,13 @@ in {
               namespace = "envoy-gateway";
             };
             spec = {
-              parentRefs =
-                lib.mapAttrsToList (name: _: {
-                  name = "envoy-gateway-${name}";
+              parentRefs = [
+                {
+                  name = "envoy-gateway";
                   namespace = "envoy-gateway";
                   sectionName = "http";
-                })
-                gateways;
+                }
+              ];
               rules = [
                 {
                   filters = [
@@ -200,40 +175,35 @@ in {
               ];
             };
           }
-        ]
-        ++ lib.mapAttrsToList (name: gw: (
-          # Gateway objects
+
+          # Gateway CR
           {
             apiVersion = "gateway.networking.k8s.io/v1";
             kind = "Gateway";
             metadata = {
-              name = "envoy-gateway-${name}";
+              name = "envoy-gateway";
               namespace = "envoy-gateway";
             };
             spec = {
               gatewayClassName = "envoy-gateway";
-              listeners = gw.listeners;
+              listeners = cfg.listeners;
               infrastructure.parametersRef = {
                 group = "gateway.envoyproxy.io";
                 kind = "EnvoyProxy";
                 name = "envoy-proxy-config";
               };
-              addresses =
-                [
-                  {
-                    type = "IPAddress";
-                    value = gw.addresses.ipv6;
-                  }
-                ]
-                ++ lib.optional (gw.addresses.ipv4 != null) {
+              addresses = [
+                {
                   type = "IPAddress";
-                  value = gw.addresses.ipv4;
-                };
+                  value = cfg.address;
+                }
+              ];
             };
           }
-        ))
-        gateways
-        ++ lib.flatten (lib.mapAttrsToList (domain: svc: (
+        ]
+        ++ lib.flatten (lib.mapAttrsToList (domain: svc: let
+            id = builtins.replaceStrings ["."] ["-"] domain;
+          in (
             # 404 redirect to root
             lib.singleton {
               apiVersion = "gateway.networking.k8s.io/v1";
@@ -243,13 +213,13 @@ in {
                 namespace = "envoy-gateway";
               };
               spec = {
-                parentRefs =
-                  lib.mapAttrsToList (name: _: {
-                    name = "envoy-gateway-${name}";
+                parentRefs = [
+                  {
+                    name = "envoy-gateway";
                     namespace = "envoy-gateway";
                     sectionName = "https";
-                  })
-                  gateways;
+                  }
+                ];
                 hostnames = ["*.${domain}"];
                 rules = [
                   {
@@ -275,11 +245,11 @@ in {
               apiVersion = "cert-manager.io/v1";
               kind = "Certificate";
               metadata = {
-                name = "wildcard";
+                name = "wildcard-${id}";
                 namespace = "envoy-gateway";
               };
               spec = {
-                secretName = "wildcard-tlscert";
+                secretName = "wildcard-tlscert-${id}";
 
                 privateKey = {
                   algorithm = "ECDSA";
@@ -303,35 +273,30 @@ in {
           config.az.cluster.domains);
     };
 
-    # default value of gateways.*.listeners
-    az.cluster.core.envoyGateway.gateways = let
-      listeners = [
-        {
-          name = "http";
-          protocol = "HTTP";
-          port = 80;
-          allowedRoutes.namespaces.from = "Same";
-        }
-        {
-          name = "https";
-          protocol = "HTTPS";
-          port = 443;
-          allowedRoutes.namespaces.from = "All";
-          tls = {
-            mode = "Terminate";
-            certificateRefs = [
-              {
-                kind = "Secret";
-                name = "wildcard-tlscert";
-              }
-            ];
-          };
-        }
-      ];
-    in {
-      external = {inherit listeners;};
-      internal = {inherit listeners;};
-    };
+    # default value of listeners
+    az.cluster.core.envoyGateway.listeners = [
+      {
+        name = "http";
+        protocol = "HTTP";
+        port = 80;
+        allowedRoutes.namespaces.from = "Same";
+      }
+      {
+        name = "https";
+        protocol = "HTTPS";
+        port = 443;
+        allowedRoutes.namespaces.from = "All";
+        tls = {
+          mode = "Terminate";
+          certificateRefs =
+            lib.mapAttrsToList (domain: _: {
+              kind = "Secret";
+              name = "wildcard-tlscert-${builtins.replaceStrings ["."] ["-"] domain}";
+            })
+            config.az.cluster.domains;
+        };
+      }
+    ];
 
     # cfg.httpRoutes impl
     services.rke2.manifests."envoy-gateway-routes".content =
@@ -343,13 +308,13 @@ in {
           namespace = route.namespace;
         };
         spec = {
-          parentRefs =
-            map (name: {
-              name = "envoy-gateway-${name}";
+          parentRefs = [
+            {
+              name = "envoy-gateway";
               namespace = "envoy-gateway";
               sectionName = route.gatewaySection;
-            })
-            route.gateways;
+            }
+          ];
           hostnames = route.hostnames;
           rules =
             map (

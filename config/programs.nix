@@ -28,6 +28,7 @@ in {
         lm_sensors
         virtiofsd
         disko
+        nix-prefetch-docker
       ];
   };
 }

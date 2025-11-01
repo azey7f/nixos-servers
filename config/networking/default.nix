@@ -65,6 +65,10 @@ in {
                 type = with types; nullOr (listOf str);
                 default = null;
               };
+              subnetSize = mkOption {
+                type = types.ints.u8;
+                default = 64;
+              };
               gateway = mkOption {
                 type = with types; nullOr str;
                 default = null;
@@ -75,6 +79,11 @@ in {
             };
 
             onlineWhen = optStr "routable";
+
+            extraRoutes = mkOption {
+              type = with types; listOf attrs;
+              default = [];
+            };
 
             vlans = mkOption {
               # final vlan interfaces will be named "${name}.${id}"
@@ -171,12 +180,14 @@ in {
               (lists.optional (iface.ipv4.addr != null)
                 "${iface.ipv4.addr}/${toString iface.ipv4.subnetSize}")
               (lists.optional (iface.ipv6.addr != null)
-                (map (ip: "${ip}/64") iface.ipv6.addr))
+                (map (ip: "${ip}/${toString iface.ipv6.subnetSize}") iface.ipv6.addr))
             ];
-            routes = lib.lists.flatten [
-              (lib.lists.optional (iface.ipv4.gateway != null) {Gateway = iface.ipv4.gateway;})
-              (lib.lists.optional (iface.ipv6.gateway != null) {Gateway = iface.ipv6.gateway;})
-            ];
+            routes =
+              lib.lists.flatten [
+                (lib.lists.optional (iface.ipv4.gateway != null) {Gateway = iface.ipv4.gateway;})
+                (lib.lists.optional (iface.ipv6.gateway != null) {Gateway = iface.ipv6.gateway;})
+              ]
+              ++ iface.extraRoutes;
             linkConfig.RequiredForOnline = iface.onlineWhen;
 
             vlan = builtins.map (vlan: "${iface.name}.${toString vlan}") iface.vlans;

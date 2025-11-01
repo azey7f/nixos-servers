@@ -96,6 +96,14 @@ in {
       networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
     };
 
+    az.server.rke2.images = {
+      openebs-linux-utils = {
+        imageName = "openebs/linux-utils";
+        finalImageTag = "4.2.0";
+        imageDigest = "sha256:f205fb89c88aaa35a1d46490b7ebbdac45d5c48d2924ca73b67d8eb14d4e735e";
+        hash = "sha256-J7DiBQCph/D5QNAby+XE/f0bkLzZt5Py9gblJDHv/uo="; # renovate: openebs/linux-utils 4.2.0
+      };
+    };
     services.rke2.autoDeployCharts."openebs" = {
       repo = "https://openebs.github.io/openebs";
       name = "openebs";
@@ -104,7 +112,7 @@ in {
 
       targetNamespace = "openebs-system";
 
-      # renovate-args: --set engines.replicated.mayastor.enabled=false --set engines.local.lvm.enabled=false --set engines.local.zfs.enabled=true
+      # renovate-args: --set engines.replicated.mayastor.enabled=false --set engines.local.lvm.enabled=false --set engines.local.zfs.enabled=true --set loki.enabled=false
       values = {
         engines = {
           local = {
@@ -114,8 +122,9 @@ in {
           replicated.mayastor.enabled = false;
         };
 
-        loki.singleBinary.replicas = 1;
-        loke.loki.commonConfig.replication_factor = 1;
+        loki.enabled = false;
+        #loki.singleBinary.replicas = 1;
+        #loke.loki.commonConfig.replication_factor = 1;
         minio.replicas = 1;
       };
     };
