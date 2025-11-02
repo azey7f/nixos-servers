@@ -54,8 +54,8 @@ in {
     in
       lib.nameValuePair "forgejo-${id}" {
         repo = "oci://code.forgejo.org/forgejo-helm/forgejo";
-        version = "15.0.0";
-        hash = "sha256-YWTa0M3zpmIwXJ8dKohE8+D25sDC9RB58nQxaP7WwHM="; # renovate: code.forgejo.org/forgejo-helm/forgejo 15.0.0
+        version = "15.0.2";
+        hash = "sha256-1ATEsGDmEgYZvIJG50zENb3d0MoL3fPd/i5OR8zuxdc="; # renovate: code.forgejo.org/forgejo-helm/forgejo 15.0.2
 
         targetNamespace = "app-forgejo-${id}";
 
