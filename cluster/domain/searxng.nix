@@ -44,8 +44,8 @@ in {
         podSecurityContext.seccompProfile.type = "RuntimeDefault";
         securityContext.allowPrivilegeEscalation = false;
         valkeyConfig = ''
-          bind *
-        '';
+          bind * -::*
+        ''; # TODO: github.com/valkey-io/valkey-helm/pull/68
       };
     };
     az.server.rke2.secrets =
