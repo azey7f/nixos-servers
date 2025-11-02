@@ -140,6 +140,10 @@
 		},
 		{
 			"matchDepTypes": ["grafana-dashboard"],
+			"automerge": true,
+			"automergeType": "branch"
+		},
+		{
 			"matchDepNames": [
 				"renovate",
 				"ghcr.io/jeffvli/feishin",
