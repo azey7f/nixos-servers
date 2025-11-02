@@ -26,6 +26,10 @@ in {
 
     config = {config, ...}: {
       system.stateVersion = config.system.nixos.release;
+      boot.kernel.sysctl = {
+        "net.ipv6.conf.default.forwarding" = true;
+        "net.ipv6.conf.all.forwarding" = true;
+      };
       networking.firewall = {
         enable = true;
         extraCommands = "ip6tables -I POSTROUTING -t nat -o eth0 -j MASQUERADE";
