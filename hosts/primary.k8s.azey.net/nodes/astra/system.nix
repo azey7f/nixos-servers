@@ -60,16 +60,12 @@
     extraStopCommands = lib.concatMapStringsSep "\n" (rule: "ip6tables -D ${rule}") cmds;
   };
 
-  # FIXME: UDPRoute doesn't work for some reason, so blocky can't be used directly
-  /*
-  services.dnsproxy = {
-    enable = true;
-    settings.upstream = ["tcp://10.33.1.2"]; # rTODO ["tcp://${config.az.cluster.publicSubnet}:fffe::2"];
-    settings.listen-ports = [53];
-    settings.listen-addrs = ["192.168.0.254" "::1"];
-  };
-  az.core.net.dns.nameservers = ["::1"];
-  */
+  swapDevices = [
+    {
+      device = "/dev/zvol/nvme/swap";
+      randomEncryption.enable = true;
+    }
+  ];
 
   #systemd.services."rke2-server".enable = false;
   az.server = {

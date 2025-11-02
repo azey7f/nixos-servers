@@ -67,6 +67,11 @@ in {
         # config.services.rke2.package.images-cilium-linux-amd64-tar-zst
       ];
 
+      extraKubeletConfig = {
+        failSwapOn = false;
+        memorySwap.swapBehavior = "LimitedSwap";
+      };
+
       #gracefulNodeShutdown.enable = true; # TODO
     };
 
