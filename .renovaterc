@@ -165,8 +165,12 @@
 		},
 		{
 			"matchManagers": ["woodpecker"],
-			"minimumReleaseAge": "16 days"
+			"minimumReleaseAge": "14 days"
+		},
+		{
+			"matchUpdateTypes": ["patch", "digest"],
+			"matchManagers": ["woodpecker"],
+			"enabled": false
 		}
-	],
-	"minimumReleaseAge": "14 days"
+	]
 }
