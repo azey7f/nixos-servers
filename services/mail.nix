@@ -11,8 +11,11 @@ in {
   options.az.svc.mail = with azLib.opt; {
     enable = optBool false;
 
-    host = optStr (builtins.elemAt (lib.splitString ":" clusterMail.host) 0);
-    port = optStr (builtins.elemAt (lib.splitString ":" clusterMail.host) 1);
+    host = optStr clusterMail.host;
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = clusterMail.port;
+    };
     user = optStr clusterMail.username;
     passwordPlaceholder = optStr clusterMail.passwordPlaceholder;
 
@@ -34,7 +37,8 @@ in {
         tls = true;
         tls_starttls = true;
 
-        inherit (cfg) host port user from to;
+        inherit (cfg) host user from to;
+        port = toString cfg.port;
         passwordeval = "cat /run/secrets/${cfg.passwordPlaceholder}";
       };
     };

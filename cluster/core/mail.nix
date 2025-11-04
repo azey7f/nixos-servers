@@ -11,6 +11,10 @@ in {
     enable = optBool false;
 
     host = lib.mkOption {type = lib.types.str;};
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 587;
+    };
     username = lib.mkOption {type = lib.types.str;};
     passwordPlaceholder = lib.mkOption {type = lib.types.str;};
   };
@@ -18,10 +22,10 @@ in {
   config = lib.mkIf cfg.enable {
     az.server.rke2.namespaces."app-mail" = {
       podSecurity = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
+      networkPolicy.toDomains = [cfg.host];
     };
 
     services.rke2.autoDeployCharts."mail" = {
-      # CRITICAL TODO: convert to raw manifest
       repo = "https://bokysan.github.io/docker-postfix";
       name = "mail";
       version = "4.4.0"; # no update
@@ -40,13 +44,15 @@ in {
         };
         stringData = {
           ALLOWED_SENDER_DOMAINS = lib.concatStringsSep " " (builtins.attrNames config.az.cluster.domains);
-          RELAYHOST = cfg.host;
+          POSTFIX_mynetworks = "[${config.az.cluster.net.prefix}::]/${toString config.az.cluster.net.prefixSubnetSize}";
+
+          RELAYHOST = "${cfg.host}:${toString cfg.port}";
           RELAYHOST_USERNAME = cfg.username;
           RELAYHOST_PASSWORD = config.sops.placeholder.${cfg.passwordPlaceholder};
         };
       }
     ];
 
-    az.server.rke2.clusterWideSecrets."rke2/mail/zoho-passwd" = {};
+    az.server.rke2.clusterWideSecrets.${cfg.passwordPlaceholder} = {};
   };
 }

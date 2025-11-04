@@ -54,7 +54,7 @@
 
       mail = {
         enable = true;
-        host = "smtp.zoho.eu:587";
+        host = "smtp.zoho.eu";
         username = "noreply@azey.net";
         passwordPlaceholder = "rke2/mail/zoho-passwd";
       };
