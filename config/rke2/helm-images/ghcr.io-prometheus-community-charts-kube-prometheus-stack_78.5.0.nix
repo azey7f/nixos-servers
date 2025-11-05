@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 78.3.0
+  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 78.5.0
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/bats/bats";
@@ -21,9 +21,9 @@
     }
     {
       imageName = "quay.io/prometheus-operator/prometheus-operator";
-      imageDigest = "sha256:bbd4ff793b3677369005d2c167e5bba362ed31e4ad5f7a0085bdea2e84200c41";
-      hash = "sha256-5YGIu+VqbtZPK+oM569MTV2WUXvWvbMfNACsTQN6Wto=";
-      finalImageTag = "v0.86.0";
+      imageDigest = "sha256:8f132dc8c2e8a5c852e864231fc85bcb8edecea184dfff34c77593f8f454cb06";
+      hash = "sha256-4lH/u6Ipg7rEhNbJgs17oy3lXmgPdUCZstIm9VY3w5g=";
+      finalImageTag = "v0.86.1";
     }
     {
       imageName = "quay.io/prometheus/alertmanager";
@@ -39,9 +39,9 @@
     }
     {
       imageName = "quay.io/prometheus/prometheus";
-      imageDigest = "sha256:76947e7ef22f8a698fc638f706685909be425dbe09bd7a2cd7aca849f79b5f64";
-      hash = "sha256-WW/jyCD7nYrLbyou3PNpXTyzwc+3C7DINS8I73/5ybU=";
-      finalImageTag = "v3.6.0";
+      imageDigest = "sha256:23031bfe0e74a13004252caaa74eccd0d62b6c6e7a04711d5b8bf5b7e113adc7";
+      hash = "sha256-kzwA60kxbPozU4hynDHIM+JcmlA8hIz++v97uiRynRY=";
+      finalImageTag = "v3.7.2";
     }
     {
       imageName = "registry.k8s.io/ingress-nginx/kube-webhook-certgen";
