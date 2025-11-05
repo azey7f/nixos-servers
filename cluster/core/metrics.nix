@@ -47,9 +47,9 @@ in {
       };
       curl = {
         imageName = "curlimages/curl";
-        finalImageTag = "8.15.0";
-        imageDigest = "sha256:4026b29997dc7c823b51c164b71e2b51e0fd95cce4601f78202c513d97da2922";
-        hash = "sha256-8VgNN4L6idBIfB5aXnFFFCMEvtZuRxrZOFqfsJ3ul3k="; # renovate: curlimages/curl 8.15.0
+        finalImageTag = "8.17.0";
+        imageDigest = "sha256:1e809b44e4cdf8a64a1bfe37875d4758a39454d686c2ff3c4a0fbeda93aae519";
+        hash = "sha256-7cyXb3brqgtGLOm3nssW+Fyk8OGUThVAyBX3LMinj5c="; # renovate: curlimages/curl 8.17.0
       };
     };
     services.rke2.autoDeployCharts."metrics" = {
