@@ -82,6 +82,8 @@ in {
             schedule = cfg.schedule;
             timeZone = config.az.core.locale.tz;
 
+            concurrencyPolicy = "Forbid";
+
             # https://github.com/kubernetes/kubernetes/issues/74741
             failedJobsHistoryLimit = 0;
             successfulJobsHistoryLimit = 0;
