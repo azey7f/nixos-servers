@@ -29,6 +29,7 @@ in {
         virtiofsd
         disko
         nix-prefetch-docker
+        kubernetes-helm
       ];
   };
 }
