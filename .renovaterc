@@ -183,6 +183,15 @@
 			"matchUpdateTypes": ["patch", "digest"],
 			"matchManagers": ["woodpecker"],
 			"enabled": false
+		},
+		{
+			"matchDepNames": [
+			  "woodpeckerci/plugin-git",
+			  "nixos/nix",
+			  "appleboy/drone-git-push"
+			],
+			"matchManagers": ["woodpecker"],
+			"enabled": false
 		}
 	]
 }
