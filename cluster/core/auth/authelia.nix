@@ -238,22 +238,24 @@ in {
               };
             };
 
+            /*
             notifier.filesystem = {
               enabled = true;
               filename = "/tmp/notifier"; # TODO mail
             };
-            /*
-            # FIXME: error="failed to dial connection: SMTP AUTH failed: unsupported SMTP AUTH types: "
+            */
             notifier.smtp = {
               enabled = true;
-              address = "submission://mail.app-mail.svc";
+
               sender = "authelia <noreply@${top.domain}>";
               identifier = "app-authelia-${top.domain}";
+              startup_check_address = "test@${top.domain}";
+
+              address = "submission://mail.app-mail.svc";
               tls.skip_verify = true;
               username = null;
-              password.enabled = false;
+              password.disabled = true;
             };
-            */
 
             access_control = {
               default_policy = "deny";
