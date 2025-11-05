@@ -13,7 +13,7 @@ in {
       attrsOf (submodule {
         options = with azLib.opt; {
           enable = optBool false;
-          schedule = optStr "0 */2 * * *"; # bi-hourly
+          schedule = optStr "*/15 * * * *"; # bi-hourly
         };
       });
     default = {};
