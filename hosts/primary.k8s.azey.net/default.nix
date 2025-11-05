@@ -33,7 +33,7 @@
     net = {
       # see ../../README.md for full breakdown
       prefix = "2a14:6f44:5608";
-      prefixSubnetSize = 48;
+      prefixSubnetSize = 56;
 
       static = ""; # :00
       pods = ":1"; # :01
