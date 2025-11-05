@@ -37,7 +37,8 @@ in {
         tls = true;
         tls_starttls = true;
 
-        inherit (cfg) host user from to;
+        auth = true;
+        inherit (cfg) host user from;
         port = toString cfg.port;
         passwordeval = "cat /run/secrets/${cfg.passwordPlaceholder}";
       };
