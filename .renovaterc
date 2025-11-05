@@ -113,7 +113,8 @@
 				"digest"
 			],
 			"automerge": true,
-			"automergeStrategy": "merge-commit",
+			"automergeStrategy": "fast-forward",
+			"platformAutomerge": false,
 			"automergeType": "branch"
 		},
 		{
@@ -137,13 +138,15 @@
 				"jellyfin"
 			],
 			"automerge": true,
-			"automergeStrategy": "merge-commit",
+			"automergeStrategy": "fast-forward",
+			"platformAutomerge": false,
 			"automergeType": "branch"
 		},
 		{
 			"matchDepTypes": ["grafana-dashboard"],
 			"automerge": true,
-			"automergeStrategy": "merge-commit",
+			"automergeStrategy": "fast-forward",
+			"platformAutomerge": false,
 			"automergeType": "branch"
 		},
 		{
@@ -155,15 +158,15 @@
 				"curlimages/curl"
 			],
 			"automerge": true,
-			"automergeStrategy": "merge-commit",
+			"automergeStrategy": "fast-forward",
+			"platformAutomerge": false,
 			"automergeType": "branch"
 		},
 		{
 			"matchDepNames": [
 				"authelia"
 			],
-			"automerge": false,
-			"automergeStrategy": "merge-commit"
+			"automerge": false
 		},
 		{
 			"matchUpdateTypes": ["major"],
