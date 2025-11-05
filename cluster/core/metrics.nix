@@ -41,21 +41,21 @@ in {
     az.server.rke2.images = {
       prometheus-config-reloader = {
         imageName = "quay.io/prometheus-operator/prometheus-config-reloader";
-        finalImageTag = "v0.86.0";
-        imageDigest = "sha256:5dcc707d52334e3493fa311816b03f9a9e3ecd3b275d7a3fe2f38c80d63e5d18";
+        finalImageTag = "v0.86.1";
+        imageDigest = "sha256:d163d8eeab29cdc2e60e60510b19c328d49f090dc7adc27cb89289748c3b6a1e";
         hash = "sha256-U+IFa29QbqUinlZ3l3TV83o5RS7R0bwcjp10nQ8jKEs="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader 0.86.0
       };
       curl = {
         imageName = "curlimages/curl";
-        finalImageTag = "8.15.0";
-        imageDigest = "sha256:4026b29997dc7c823b51c164b71e2b51e0fd95cce4601f78202c513d97da2922";
-        hash = "sha256-8VgNN4L6idBIfB5aXnFFFCMEvtZuRxrZOFqfsJ3ul3k="; # renovate: curlimages/curl 8.15.0
+        finalImageTag = "8.17.0";
+        imageDigest = "sha256:1e809b44e4cdf8a64a1bfe37875d4758a39454d686c2ff3c4a0fbeda93aae519";
+        hash = "sha256-7cyXb3brqgtGLOm3nssW+Fyk8OGUThVAyBX3LMinj5c="; # renovate: curlimages/curl 8.17.0
       };
     };
     services.rke2.autoDeployCharts."metrics" = {
       repo = "oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack";
-      version = "78.3.0";
-      hash = "sha256-w6U4FhVD+BYFYB0CvzL3oQDHQmi+DoIo/+JUMspll7Y="; # renovate: ghcr.io/prometheus-community/charts/kube-prometheus-stack 78.3.0
+      version = "78.5.0";
+      hash = "sha256-jWQPzZk5LR7g+o5ezaszW9huUu8SqP7zxiWPHzSC7n4="; # renovate: ghcr.io/prometheus-community/charts/kube-prometheus-stack 78.5.0
 
       targetNamespace = "metrics-system";
       values = {
