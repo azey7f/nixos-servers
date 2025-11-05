@@ -67,7 +67,7 @@ do
 	echo "OK [renovate-bot]"
 	echo -n "processing origin/HEAD~$((++i)) ($(git rev-parse origin/HEAD~$i))..."
 done
-echo "OK [me@azey.net]"
+echo "OK [$trustedKey]"
 echo "COMMIT CHAIN VERIFIED"
 
 # commits are good, pull & apply
@@ -75,5 +75,5 @@ if [ "$@" != "--test" ]
 then
 	git pull || exit 1
 	nixos-rebuild switch || exit 1
+	systemctl restart rke2-server
 fi
-systemctl restart rke2-server
