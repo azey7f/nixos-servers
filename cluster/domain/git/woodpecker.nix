@@ -53,9 +53,9 @@ in {
       };
       nixos-nix = {
         imageName = "nixos/nix";
-        finalImageTag = "2.32.0";
-        imageDigest = "sha256:a3b5d472ca187c25c87a217bc730cdf7a3df7d07ee09eb37f5bc8c874f173a52";
-        hash = "sha256-RXZj3q+VSEFDhdahJGYMzgOUXxk6zDgNB7NxqoWQe5g="; # renovate: nixos/nix 2.32.0
+        finalImageTag = "2.32.2";
+        imageDigest = "sha256:04abdb9c74e0bd20913ca84e4704419af31e49e901cd57253ed8f9762def28fd";
+        hash = "sha256-tiDPbmYPqybfRwbzPb849+ALjUDetK0Z/D6B0k+Q7cg="; # renovate: nixos/nix 2.32.2
 
         # https://github.com/NixOS/nixpkgs/issues/445481
         overrideAttrs = {
