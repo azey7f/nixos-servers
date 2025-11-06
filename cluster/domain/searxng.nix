@@ -35,8 +35,8 @@ in {
     services.rke2.autoDeployCharts."searxng-valkey" = {
       repo = "https://valkey.io/valkey-helm";
       name = "valkey";
-      version = "0.7.4";
-      hash = "sha256-iMXdYlzAJQu4iKTIeRpKvkQnzo5p0Cwi2h8Rfmakuao="; # renovate: https://valkey.io/valkey-helm valkey 0.7.4
+      version = "0.7.7";
+      hash = "sha256-u16EI5qM8Y2AzvQK0BeWEjbN9m4Ohko6NlsPGFs3J7E="; # renovate: https://valkey.io/valkey-helm valkey 0.7.7
 
       targetNamespace = "app-searxng";
       values = {
