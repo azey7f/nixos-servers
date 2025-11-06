@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 78.5.0
+  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 79.2.1
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/bats/bats";
@@ -9,9 +9,9 @@
     }
     {
       imageName = "docker.io/grafana/grafana";
-      imageDigest = "sha256:74144189b38447facf737dfd0f3906e42e0776212bf575dc3334c3609183adf7";
-      hash = "sha256-MwW7RazW0GBJe2mg5/KGp+kcMmHKe2orlIWxKarPzvU=";
-      finalImageTag = "12.2.0";
+      imageDigest = "sha256:35c41e0fd0295f5d0ee5db7e780cf33506abfaf47686196f825364889dee878b";
+      hash = "sha256-W1UMbHsxfDTdPlEm5ecksfMgWsBP+DNhY7cHDA4ymLY=";
+      finalImageTag = "12.2.1";
     }
     {
       imageName = "quay.io/kiwigrid/k8s-sidecar";
@@ -27,27 +27,27 @@
     }
     {
       imageName = "quay.io/prometheus/alertmanager";
-      imageDigest = "sha256:27c475db5fb156cab31d5c18a4251ac7ed567746a2483ff264516437a39b15ba";
-      hash = "sha256-8ZuCk3GSdCgcWGkOm1lvVeCVywCmW3yFy2F4lkGczZM=";
-      finalImageTag = "v0.28.1";
+      imageDigest = "sha256:88743b63b3e09ea6e31e140ced5bf45f4a8e82c617c2a963f78841f4995ad1d7";
+      hash = "sha256-J/Fw7l/bI1OOrzyj/pKMTGe3qZ6DKZ77CjyBjNZxW5Q=";
+      finalImageTag = "v0.29.0";
     }
     {
       imageName = "quay.io/prometheus/node-exporter";
-      imageDigest = "sha256:d00a542e409ee618a4edc67da14dd48c5da66726bbd5537ab2af9c1dfc442c8a";
-      hash = "sha256-ERdH5bx6U8vljQXiNTHFC4Xq+7SQmldZxmnj/7kJOIE=";
-      finalImageTag = "v1.9.1";
+      imageDigest = "sha256:337ff1d356b68d39cef853e8c6345de11ce7556bb34cda8bd205bcf2ed30b565";
+      hash = "sha256-Us01w7MzoSLV6441UT+TqTZ7pyZubg1KpTi/qfXFQ/o=";
+      finalImageTag = "v1.10.2";
     }
     {
       imageName = "quay.io/prometheus/prometheus";
-      imageDigest = "sha256:23031bfe0e74a13004252caaa74eccd0d62b6c6e7a04711d5b8bf5b7e113adc7";
-      hash = "sha256-kzwA60kxbPozU4hynDHIM+JcmlA8hIz++v97uiRynRY=";
-      finalImageTag = "v3.7.2";
+      imageDigest = "sha256:49214755b6153f90a597adcbff0252cc61069f8ab69ce8411285cd4a560e8038";
+      hash = "sha256-FiRygVk9FRRKsHA4kpkiDre2ORLYI7CSkV7+odUcBSw=";
+      finalImageTag = "v3.7.3";
     }
     {
       imageName = "registry.k8s.io/ingress-nginx/kube-webhook-certgen";
-      imageDigest = "sha256:3d671cf20a35cd94efc5dcd484970779eb21e7938c98fbc3673693b8a117cf39";
-      hash = "sha256-RRbAmdQNFTyW3BAvYpBN0wB+zBoDPfzL9HGguDEvV3c=";
-      finalImageTag = "v1.6.3";
+      imageDigest = "sha256:bcfc926ed57831edf102d62c5c0e259572591df4796ef1420b87f9cf6092497f";
+      hash = "sha256-UupAvyZMUlJQMZnAMe4QKxPZUw9ejpZ4FQQ57FvmyT0=";
+      finalImageTag = "v1.6.4";
     }
     {
       imageName = "registry.k8s.io/kube-state-metrics/kube-state-metrics";
