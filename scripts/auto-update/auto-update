@@ -3,7 +3,7 @@
 trustedKey=me@azey.net
 trustedKeyFP=2CCB340343FE8A2B91CE7F75F94F4A71C5C21E8F
 
-if [ "$@" != "--test" ]
+if [ -z "$@" ]
 then
 	sleep $(shuf -i 0-60 -n 1)m # random delay 0-60m
 fi
@@ -37,8 +37,8 @@ do
 		exit 1
 	}
 
-	{ ! git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status | grep -vqE '^M'; } || {
-		echo -e "FAIL\nSECURITY ERROR: signed renovate-bot commit moved/deleted/added files"
+	{ ! git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status | grep -vqE '^M' | grep -vqP '^R\d\d\d\t(config/rke2/helm-images/[a-zA-z.-]+_)[a-zA-z.-]+\.nix\t\1[a-zA-z.-]+\.nix$'; } || {
+		echo -e "FAIL\nSECURITY ERROR: signed renovate-bot commit moved/deleted/added files outside of config/rke2/helm-images"
 		echo
 		git diff origin/HEAD~$((i+1)) origin/HEAD~$i --name-status
 		exit 1
@@ -71,7 +71,7 @@ echo "OK [$trustedKey]"
 echo "COMMIT CHAIN VERIFIED"
 
 # commits are good, pull & apply
-if [ "$@" != "--test" ]
+if [ -z "$@" ]
 then
 	git pull || exit 1
 	nixos-rebuild switch || exit 1
