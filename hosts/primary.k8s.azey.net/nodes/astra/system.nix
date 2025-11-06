@@ -17,27 +17,6 @@
     count = 48;
   };
 
-  sops.secrets."wg-uplink-key" = {};
-  networking.wireguard = {
-    useNetworkd = true;
-    interfaces."wg-uplink" = {
-      ips = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1/64"];
-      privateKeyFile = "/run/secrets/wg-uplink-key";
-
-      peers = [
-        {
-          allowedIPs = ["2a14:6f42:4969:5608::/128" "::/0"];
-          publicKey = "9k3URy2qxlqdmw43p4LE6ERXAAcyAuuweDt9c2ma2hc=";
-          endpoint = "193.148.249.170:35608";
-        }
-        {
-          allowedIPs = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1/128" "2a14:6f44:5608::/48"];
-          publicKey = "AlCGtkENzNAsMQX9UhrOWgjvAyp+T/yIAvrnodzbeRY=";
-          persistentKeepalive = 25;
-        }
-      ];
-    };
-  };
   az.core.net.dns.nameservers = [
     # https://nat64.net
     "2a01:4f8:c2c:123f::1"
@@ -124,7 +103,29 @@
             subnetSize = 24;
           };
         };
+
+        "wg-uplink" = {
+          ipv6.addr = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1"];
+
+          wireguard.privateKeyFile = "/run/secrets/wg-uplink-key";
+          wireguard.peers = [
+            {
+              AllowedIPs = ["2a14:6f42:4969:5608::/128" "::/0"];
+              PublicKey = "9k3URy2qxlqdmw43p4LE6ERXAAcyAuuweDt9c2ma2hc=";
+              Endpoint = "193.148.249.170:35608";
+            }
+            {
+              AllowedIPs = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1/128" "2a14:6f44:5608::/48"];
+              PublicKey = "AlCGtkENzNAsMQX9UhrOWgjvAyp+T/yIAvrnodzbeRY=";
+              PersistentKeepalive = 25;
+            }
+          ];
+        };
       };
     };
+  };
+
+  sops.secrets."wg-uplink-key" = {
+    owner = config.users.users.systemd-network.name;
   };
 }

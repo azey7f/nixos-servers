@@ -1,3 +1,4 @@
+# TODO: move this to core
 {
   config,
   azLib,
@@ -90,6 +91,19 @@ in {
               type = with types; listOf ints.positive; # physical VLAN ids
               default = [];
             };
+
+            wireguard = {
+              # a wg netdev is created if privateKeyFile != null
+              privateKeyFile = mkOption {
+                type = with types; nullOr str;
+                default = null;
+              };
+              peers = mkOption {
+                type = with types; listOf attrs;
+                default = [];
+              };
+	      routeTable = optStr "main"; # see systemd-netdev(5)
+            };
           };
         }));
       default = {};
@@ -131,11 +145,26 @@ in {
         (attrsets.mapAttrs' (name: bridge:
           nameValuePair "10-${name}" {
             netdevConfig = {
-              Name = bridge.name;
               Kind = "bridge";
+              Name = bridge.name;
             };
           })
         cfg.bridges)
+
+        # define wireguard ifaces
+        (attrsets.mapAttrs' (name: iface:
+          nameValuePair "10-${name}" {
+            netdevConfig = {
+              Kind = "wireguard";
+              Name = iface.name;
+            };
+            wireguardConfig = {
+              PrivateKeyFile = iface.wireguard.privateKeyFile;
+	      RouteTable = iface.wireguard.routeTable;
+            };
+            wireguardPeers = iface.wireguard.peers;
+          })
+        (lib.filterAttrs (_: v: v.wireguard.privateKeyFile != null) cfg.interfaces))
       ]);
 
       networks = lib.attrsets.mergeAttrsList (lib.lists.flatten [
