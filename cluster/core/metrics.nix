@@ -43,7 +43,7 @@ in {
         imageName = "quay.io/prometheus-operator/prometheus-config-reloader";
         finalImageTag = "v0.86.1";
         imageDigest = "sha256:d163d8eeab29cdc2e60e60510b19c328d49f090dc7adc27cb89289748c3b6a1e";
-        hash = "sha256-U+IFa29QbqUinlZ3l3TV83o5RS7R0bwcjp10nQ8jKEs="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader 0.86.0
+        hash = "sha256-GmhDVPrROxmClMxMhDsF/1kEEIdtpVvaKgDBpd7CDC0="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader v0.86.1
       };
       curl = {
         imageName = "curlimages/curl";
