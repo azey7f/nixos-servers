@@ -33,8 +33,8 @@ in {
 
         repo = "https://jellyfin.github.io/jellyfin-helm";
         name = "jellyfin";
-        version = "2.4.0";
-        hash = "sha256-bRvEoIGeTXQRzC5FGpj5q/1jGnMnwNLrBVLynNRSxNY="; # renovate: https://jellyfin.github.io/jellyfin-helm jellyfin 2.4.0
+        version = "2.5.0";
+        hash = "sha256-GzyLqPAXGQTVICEeq9RnWs9IF4ceqp9WZR3XLgEEsPU="; # renovate: https://jellyfin.github.io/jellyfin-helm jellyfin 2.5.0
 
         values = {
           podSecurityContext = {fsGroup = 65534;};
