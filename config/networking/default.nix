@@ -102,7 +102,7 @@ in {
                 type = with types; listOf attrs;
                 default = [];
               };
-	      routeTable = optStr "main"; # see systemd-netdev(5)
+              routeTable = optStr "main"; # see systemd-netdev(5)
             };
           };
         }));
@@ -160,7 +160,7 @@ in {
             };
             wireguardConfig = {
               PrivateKeyFile = iface.wireguard.privateKeyFile;
-	      RouteTable = iface.wireguard.routeTable;
+              RouteTable = iface.wireguard.routeTable;
             };
             wireguardPeers = iface.wireguard.peers;
           })
