@@ -33,7 +33,7 @@ in {
     networking.firewall.allowedUDPPorts = [51871];
     networking.firewall.checkReversePath = lib.mkForce false; # doesn't play well with cilium
 
-    environment.systemPackages = with pkgs; [kubectl cilium-cli];
+    environment.systemPackages = with pkgs; [kubectl calicoctl];
 
     # combined w/ --disable-default-registry-endpoint, this makes RKE2 use only images
     # provided by nix, and pretty much act as if it was airgapped
@@ -101,14 +101,12 @@ in {
     };
 
     # networking
-    az.server.net.interfaces.${cfg.primaryInterface}.ipv6 = let
+    az.core.net.interfaces.${cfg.primaryInterface}.ipv6 = let
       inherit (config.az.cluster) net;
     in {
-      addr = [
-        "${net.prefix}${net.nodes}::${
-          azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""
-        }"
-      ];
+      addr = let
+        hexId = azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id "";
+      in ["${net.prefix}${net.nodes}::${hexId}"];
       subnetSize = net.subnetSize;
     };
     networking.hosts =

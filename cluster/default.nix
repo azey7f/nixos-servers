@@ -30,7 +30,7 @@ in {
         example = "2001:db8:1234";
         # must be set
       };
-      prefixSubnetSize = lib.mkOption {
+      prefixSize = lib.mkOption {
         type = lib.types.ints.positive;
         default = 48;
       };
@@ -55,6 +55,16 @@ in {
       # --service-cidr
       #  "${prefix}${pods}::/${subnetSize}"
       services = lib.mkOption {type = lib.types.str;};
+
+      # mullvad-routed pod CIDRs
+      # used in e.g. searxng
+      mullvad = {
+        enable = optBool false;
+        # always /${subnetSize}
+        ipv6 = lib.mkOption {type = lib.types.str;};
+        # always a /16
+        ipv4 = optStr "172.30.0.0";
+      };
     };
 
     # convenience mapping for .domainSpecific, so services can be

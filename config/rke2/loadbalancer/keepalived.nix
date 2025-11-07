@@ -54,7 +54,7 @@ in {
           }
         ];
         /*
-        unicastSrcIp = builtins.elemAt config.az.server.net.interfaces.${cfg.interface}.ipv6.addr 0;
+        unicastSrcIp = builtins.elemAt config.az.core.net.interfaces.${cfg.interface}.ipv6.addr 0;
         unicastPeers = lib.lists.flatten (
           lib.attrsets.mapAttrsToList (node: nodeMeta: (
             let

@@ -44,7 +44,7 @@ in {
         };
         stringData = {
           ALLOWED_SENDER_DOMAINS = lib.concatStringsSep " " (builtins.attrNames config.az.cluster.domains);
-          POSTFIX_mynetworks = "[${config.az.cluster.net.prefix}::]/${toString config.az.cluster.net.prefixSubnetSize}";
+          POSTFIX_mynetworks = "[${config.az.cluster.net.prefix}::]/${toString config.az.cluster.net.prefixSize}";
 
           RELAYHOST = "${cfg.host}:${toString cfg.port}";
           RELAYHOST_USERNAME = cfg.username;

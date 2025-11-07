@@ -49,7 +49,7 @@ in {
             "--cluster-domain=${config.networking.domain}"
             "--cluster-cidr=${net.prefix}${net.pods}::/${toString net.subnetSize}"
             "--service-cidr=${net.prefix}${net.services}::/112" # largest supported by k3s, probably also by rke2
-            "--node-ip=${builtins.elemAt config.az.server.net.interfaces.${top.primaryInterface}.ipv6.addr 0}"
+            "--node-ip=${builtins.elemAt config.az.core.net.interfaces.${top.primaryInterface}.ipv6.addr 0}"
             "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString net.subnetSize}"
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
@@ -67,8 +67,8 @@ in {
         autoDeployCharts."cilium" = {
           repo = "https://helm.cilium.io";
           name = "cilium";
-          version = "1.17.8";
-          hash = "sha256-G4FNOw2zmprMdWztjC91v3ks4ieWFWou8bxwIF/xVUE="; # renovate: https://helm.cilium.io cilium 1.17.8
+          version = "1.19.0-pre.2";
+          hash = "sha256-eReMFKw3eREker4LbYVam4y0xFTCiAC1St604QQ8D0Y="; # renovate: https://helm.cilium.io cilium 1.19.0-pre.2
 
           targetNamespace = "kube-system";
 
@@ -85,7 +85,10 @@ in {
 
             extraArgs = let
               interfaces = lib.concatStringsSep "," ([top.primaryInterface] ++ top.extraInterfaces);
-            in ["--devices=${interfaces}"]; # https://github.com/cilium/cilium/issues/37427
+            in [
+	      "--devices=${interfaces}" # https://github.com/cilium/cilium/issues/37427
+	      #"--ipv6-cluster-alloc-cidr=${net.prefix}${net.pods}::/${toString net.subnetSize}"
+	    ];
 
             image = imageOpts;
             operator.image = imageOpts;
@@ -96,21 +99,40 @@ in {
             k8sServiceHost = "api.${config.networking.domain}";
             k8sServicePort = 8443;
 
-            ipv4.enabled = false; # cease
+            ipv4.enabled = false;
             ipv6.enabled = true;
             underlayProtocol = "ipv6";
 
             routingMode = "native";
             tunnelProtocol = "";
 
+            # TODO: hack to masq mullvad IPs until https://github.com/cilium/cilium/pull/40132 gets merged
             enableIPv6Masquerade = false;
-            ipv6NativeRoutingCIDR = "${net.prefix}::/${toString net.prefixSubnetSize}";
+            ipv6NativeRoutingCIDR = "::/0";
             autoDirectNodeRoutes = true;
 
-            ipam.operator = {
-              clusterPoolIPv6MaskSize = net.subnetSize + 16;
-              clusterPoolIPv6PodCIDRList = ["${net.prefix}${net.pods}::/${toString net.subnetSize}"];
-            };
+	    #bpf.masquerade = true;
+
+            ipam.mode = "multi-pool";
+            ipam.operator.autoCreateCiliumPodIPPools =
+              {
+                default.ipv6 = {
+                  cidrs = ["${net.prefix}${net.pods}::/${toString net.subnetSize}"];
+                  maskSize = net.subnetSize + 16;
+                };
+              }
+              // lib.optionalAttrs net.mullvad.enable {
+                mullvad = {
+		  ipv6 = {
+                    cidrs = ["${net.mullvad.ipv6}::/64"];
+                    maskSize = 64 + 16;
+                  };
+                  ipv4 = {
+                    cidrs = ["${net.mullvad.ipv4}/16"];
+                    maskSize = 24;
+                  };
+                };
+              };
 
             # TODO https://docs.cilium.io/en/stable/operations/performance/tuning/
             #bpf = {

@@ -32,12 +32,9 @@ with lib; {
     disks.zfs.enable = mkDefault true;
     disks.sataMaxPerf = mkDefault true; #hotswap
 
-    net = {
+    net.remoteUnlock = {
       enable = mkDefault true;
-      remoteUnlock = {
-        enable = mkDefault true;
-        sshPort = mkDefault 33;
-      };
+      sshPort = mkDefault 33;
     };
 
     programs.enable = mkDefault true;

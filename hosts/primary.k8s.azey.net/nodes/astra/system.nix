@@ -17,28 +17,6 @@
     count = 48;
   };
 
-  az.core.net.dns.nameservers = [
-    # https://nat64.net
-    "2a01:4f8:c2c:123f::1"
-    "2a00:1098:2b::1"
-    "2a01:4f9:c010:3f02::1"
-  ];
-
-  #networking.nftables.enable = true; # TODO: set globally
-  networking.firewall = let
-    cmds = lib.reverseList [
-      "INPUT -i wg-uplink -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
-      "INPUT -i wg-uplink -j DROP"
-
-      "FORWARD -o wg-uplink -j ACCEPT"
-      "FORWARD -i wg-uplink -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
-      "FORWARD -i wg-uplink -j DROP"
-    ];
-  in {
-    extraCommands = lib.concatMapStringsSep "\n" (rule: "ip6tables -I ${rule}") cmds;
-    extraStopCommands = lib.concatMapStringsSep "\n" (rule: "ip6tables -D ${rule}") cmds;
-  };
-
   swapDevices = [
     {
       device = "/dev/zvol/nvme/swap";
@@ -92,60 +70,87 @@
       primaryInterface = "vbr-uplink";
       extraInterfaces = ["wg-uplink"];
     };
+  };
 
-    net = {
-      bridges."vbr-uplink".interfaces = ["eno1"];
-      interfaces = {
-        "vbr-uplink" = {
-          ipv4 = {
-            addr = "192.168.0.254";
-            subnetSize = 24;
-          };
-          extraRoutes = [
-            # wg-uplink endpoint
-            {
-              Destination = "193.148.249.170/32";
-              Gateway = "192.168.0.1";
-            }
-          ];
+  az.core.net = {
+    dns.nameservers = [
+      # https://nat64.net
+      # TODO: perform nat64 locally?
+      "2a01:4f8:c2c:123f::1"
+      "2a00:1098:2b::1"
+      "2a01:4f9:c010:3f02::1"
+    ];
+
+    firewall.all.filter = {
+      INPUT.rules = [
+        "-i wg+ -m conntrack ! --ctstate RELATED,ESTABLISHED -j DROP"
+      ];
+
+      FORWARD.default = lib.mkForce "ACCEPT"; # desktop vm - TODO
+      FORWARD.rules = [
+        "-i wg+ -m conntrack ! --ctstate RELATED,ESTABLISHED -j DROP"
+        "-i vbr-uplink -j ACCEPT"
+      ];
+    };
+    firewall.v4.nat.POSTROUTING.rules = [
+      "-o wg+ -s ${config.az.cluster.net.mullvad.ipv4}/16 -j MASQUERADE"
+    ];
+    firewall.v6.nat.POSTROUTING.rules = [
+      "-o wg+ -s ${config.az.cluster.net.mullvad.ipv6}::/48 -j MASQUERADE"
+    ];
+
+    bridges."vbr-uplink".interfaces = ["eno1"];
+    interfaces = {
+      "vbr-uplink" = {
+        ipv4 = {
+          addr = "192.168.0.254";
+          subnetSize = 24;
         };
-
-        "wg-uplink" = {
-          ipv6.addr = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1"];
-
-          wireguard.routeTable = "off"; # manually added, see extraRoutes
-          wireguard.privateKeyFile = "/run/secrets/wg-uplink-key";
-          wireguard.peers = [
-            {
-              AllowedIPs = ["2a14:6f42:4969:5608::/128" "::/0"];
-              PublicKey = "9k3URy2qxlqdmw43p4LE6ERXAAcyAuuweDt9c2ma2hc=";
-              Endpoint = "193.148.249.170:35608";
-            }
-            {
-              AllowedIPs = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1/128" "2a14:6f44:5608::/48"];
-              PublicKey = "AlCGtkENzNAsMQX9UhrOWgjvAyp+T/yIAvrnodzbeRY=";
-              PersistentKeepalive = 25;
-            }
-          ];
-
-          extraRoutes = [
-            {
-              Destination = "::/0";
-              Source = "2a14:6f44:5608::/48"; # source-based, since actual ::/0 goes through mullvad
-            }
-          ];
-        };
+        ipv6.addr = ["${config.az.cluster.net.mullvad.ipv6}:1000::1"];
+        extraRoutes = [
+          # wg-uplink endpoint
+          {
+            Destination = "193.148.249.170/32";
+            Gateway = "192.168.0.1";
+          }
+        ];
       };
 
-      mullvad = {
-        enable = true;
-        tunnelAddr = ["fc00:bbbb:bbbb:bb01::3:e7c7"];
-        tunnelAddr4 = "10.66.231.200";
-        endpoints = {
-          interface = "vbr-uplink";
-          gateway = "192.168.0.1";
-          gatewayProtoVer = 4;
-        };
+      "wg-uplink" = {
+        ipv6.addr = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1"];
+
+        wireguard.routeTable = "off"; # manually added, see extraRoutes
+        wireguard.privateKeyFile = "/run/secrets/wg-uplink-key";
+        wireguard.peers = [
+          {
+            AllowedIPs = ["2a14:6f42:4969:5608::/128" "::/0"];
+            PublicKey = "9k3URy2qxlqdmw43p4LE6ERXAAcyAuuweDt9c2ma2hc=";
+            Endpoint = "193.148.249.170:35608";
+          }
+          {
+            AllowedIPs = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1/128" "2a14:6f44:5608::/48"];
+            PublicKey = "AlCGtkENzNAsMQX9UhrOWgjvAyp+T/yIAvrnodzbeRY=";
+            PersistentKeepalive = 25;
+          }
+        ];
+
+        extraRoutes = [
+          {
+            Destination = "::/0";
+            Source = "2a14:6f44:5608::/48"; # source-based, since actual ::/0 goes through mullvad
+          }
+        ];
+      };
+    };
+
+    mullvad = {
+      enable = true;
+      tunnelAddr = ["fc00:bbbb:bbbb:bb01::3:e7c7"];
+      tunnelAddr4 = "10.66.231.200";
+      endpoints = {
+        interface = "vbr-uplink";
+        gateway = "192.168.0.1";
+        gatewayProtoVer = 4;
       };
     };
   };
