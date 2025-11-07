@@ -33,12 +33,17 @@
     net = {
       # see ../../README.md for full breakdown
       prefix = "2a14:6f44:5608";
-      prefixSubnetSize = 56;
+      prefixSize = 56;
 
       static = ""; # :00
       pods = ":1"; # :01
       services = ":2"; # :02
       nodes = ":f0"; # :f0
+
+      mullvad = {
+        enable = false;
+        ipv6 = "fd33:7b36:fc28";
+      };
     };
 
     core = {

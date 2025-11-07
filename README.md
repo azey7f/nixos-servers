@@ -24,6 +24,9 @@ Network layout:
       - `:02::/64` - services CIDR (though only the first /112 of that is actually used because RKE2)
       - `:f0::/60` - node addrs, really a /64 but reserved as /60 for possible future routing shenanigans
         - `:f0::1` - astra
+  - `:1000::/52` - misc personal devices - desktops/laptops/etc
+- `fd33:7b36:fc28::/48` - ULA prefix routed through mullvad
+  - uses same addressing scheme as public prefix, though only the /64 pod CIDRs are actually used
 - `2a01:4f9:c012:dc23::1/64` - ns2.azey.net, also hosts the legacy mirror & status page
 
 ### Guides for future me:

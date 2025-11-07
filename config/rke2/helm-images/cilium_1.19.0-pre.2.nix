@@ -1,10 +1,10 @@
 {pkgs, ...}: {
-  # args: --repo https://helm.cilium.io cilium --version 1.17.8 --set authentication.mutual.spire.enabled=true --set envoy.enabled=false
+  # args: --repo https://helm.cilium.io cilium --version v1.19.0-pre.2 --set authentication.mutual.spire.enabled=true --set envoy.enabled=false
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/library/busybox";
-      imageDigest = "sha256:d82f458899c9696cb26a7c02d5568f81c8c8223f8661bb2a7988b269c8b9051e";
-      hash = "sha256-O+GkFMTRxfRWI6qcvdYMosRa7U/ZM5iaQsxBOiL5OIk=";
+      imageDigest = "sha256:e3652a00a2fabd16ce889f0aa32c38eec347b997e73bd09e69c962ec7f8732ee";
+      hash = "sha256-1TjL/fxdyyDUHHm7ozYztwlAIf9PgoSpoTeA79ybkSU=";
       finalImageTag = "1.37.0";
     }
     {
@@ -21,15 +21,15 @@
     }
     {
       imageName = "quay.io/cilium/cilium";
-      imageDigest = "sha256:6d7ea72ed311eeca4c75a1f17617a3d596fb6038d30d00799090679f82a01636";
-      hash = "sha256-w++P9ODN+JI35Lh/q322fI+t4oyY2m7rzpUqqYpcBsQ=";
-      finalImageTag = "v1.17.8";
+      imageDigest = "sha256:507852b22e347fc1c6c0d2f3bd68096e466cf9022524e5057a648b9505a5e35b";
+      hash = "sha256-urN+oEtlVw+kLBCfOLBGoS565Il+CeS9uTOZQNa7cR4=";
+      finalImageTag = "v1.19.0-pre.2";
     }
     {
       imageName = "quay.io/cilium/operator-generic";
-      imageDigest = "sha256:5468807b9c31997f3a1a14558ec7c20c5b962a2df6db633b7afbe2f45a15da1c";
-      hash = "sha256-2IibMIkeX2a7mbQ7FhtyPWVjid+JJr7t3FjnAHsOvX8=";
-      finalImageTag = "v1.17.8";
+      imageDigest = "sha256:6da95faf2094a02fd8c0ca023adb3c2a0971f73ca4e365e9b72d005a514609b7";
+      hash = "sha256-/iO6S4QGMngQXeOoHeqLknO7tL0daF8sSuim+hu6CWY=";
+      finalImageTag = "v1.19.0-pre.2";
     }
   ];
 }

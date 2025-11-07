@@ -9,7 +9,7 @@
   contAddr = "${nodePrefix}::ffff";
   hostAddr = "${nodePrefix}::${toString config.az.cluster.meta.nodes.${config.networking.hostName}.id}";
 in {
-  az.server.net.interfaces."vbr-uplink".extraRoutes = [
+  az.core.net.interfaces."vbr-uplink".extraRoutes = [
     {
       Destination = "${config.az.cluster.net.prefix}${config.az.cluster.net.static}::/64";
       Gateway = contAddr;

@@ -17,6 +17,8 @@ in {
             name = optStr name;
             create = optBool true;
 
+            mullvadRouted = optBool false;
+
             podSecurity = mkOption {
               type = nullOr str;
               default = null;
@@ -105,6 +107,9 @@ in {
                 {name = ns.name;}
                 // lib.attrsets.optionalAttrs (ns.podSecurity != null)
                 {"pod-security.kubernetes.io/enforce" = ns.podSecurity;};
+              metadata.annotations = lib.optionalAttrs (config.az.cluster.net.mullvad.enable && ns.mullvadRouted) {
+                "ipam.cilium.io/ip-pool" = "mullvad";
+              };
             }
             ++ [
               {

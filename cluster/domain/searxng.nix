@@ -20,6 +20,7 @@ in {
 
   config = lib.mkIf (domains != {}) {
     az.server.rke2.namespaces."app-searxng" = {
+      mullvadRouted = true;
       networkPolicy.fromNamespaces = ["envoy-gateway"];
       networkPolicy.toWAN = true; # default engines could change at any time, so this is safer than toDomains
     };
