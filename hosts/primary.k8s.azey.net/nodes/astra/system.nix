@@ -99,14 +99,21 @@
         "vbr-uplink" = {
           ipv4 = {
             addr = "192.168.0.254";
-            gateway = "192.168.0.1";
             subnetSize = 24;
           };
+          extraRoutes = [
+            # wg-uplink endpoint
+            {
+              Destination = "193.148.249.170/32";
+              Gateway = "192.168.0.1";
+            }
+          ];
         };
 
         "wg-uplink" = {
           ipv6.addr = ["2a14:6f42:4969:5608:f7d2:29ff:fe34:11c1"];
 
+          wireguard.routeTable = "off"; # manually added, see extraRoutes
           wireguard.privateKeyFile = "/run/secrets/wg-uplink-key";
           wireguard.peers = [
             {
@@ -120,12 +127,33 @@
               PersistentKeepalive = 25;
             }
           ];
+
+          extraRoutes = [
+            {
+              Destination = "::/0";
+              Source = "2a14:6f44:5608::/48"; # source-based, since actual ::/0 goes through mullvad
+            }
+          ];
+        };
+      };
+
+      mullvad = {
+        enable = true;
+        tunnelAddr = ["fc00:bbbb:bbbb:bb01::3:e7c7"];
+        tunnelAddr4 = "10.66.231.200";
+        endpoints = {
+          interface = "vbr-uplink";
+          gateway = "192.168.0.1";
+          gatewayProtoVer = 4;
         };
       };
     };
   };
 
   sops.secrets."wg-uplink-key" = {
+    owner = config.users.users.systemd-network.name;
+  };
+  sops.secrets."wg-mullvad-key" = {
     owner = config.users.users.systemd-network.name;
   };
 }
