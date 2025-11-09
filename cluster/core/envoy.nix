@@ -106,6 +106,7 @@ in {
             };
             spec = {
               ipFamily = "IPv6";
+              telemetry.accessLog.disable = true;
               provider = {
                 type = "Kubernetes";
                 kubernetes.envoyDeployment.container.image = "${images.envoy-proxy.imageName}:${images.envoy-proxy.finalImageTag}";
