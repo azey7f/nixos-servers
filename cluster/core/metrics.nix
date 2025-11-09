@@ -48,8 +48,8 @@ in {
       curl = {
         imageName = "curlimages/curl";
         finalImageTag = "8.17.0";
-        imageDigest = "sha256:1e809b44e4cdf8a64a1bfe37875d4758a39454d686c2ff3c4a0fbeda93aae519";
-        hash = "sha256-7cyXb3brqgtGLOm3nssW+Fyk8OGUThVAyBX3LMinj5c="; # renovate: curlimages/curl 8.17.0
+        imageDigest = "sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40";
+        hash = "sha256-yAexhlXRAsnIbg/GGFlHQxKOnpRQbyRqDfpOLKIgXvE="; # renovate: curlimages/curl 8.17.0
       };
     };
     services.rke2.autoDeployCharts."metrics" = {
