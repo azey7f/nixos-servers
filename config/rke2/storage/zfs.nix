@@ -93,7 +93,7 @@ in {
 
     az.server.rke2.namespaces."openebs-system" = {
       podSecurity = "privileged";
-      networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
+      networkPolicy.toCluster = true; # apiserver
     };
 
     az.server.rke2.images = {

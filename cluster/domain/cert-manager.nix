@@ -21,11 +21,13 @@ in {
     az.server.rke2.namespaces."cert-manager" = {
       networkPolicy.fromNamespaces = ["metrics-system"];
       networkPolicy.toNamespaces = ["app-nameserver"];
-      networkPolicy.toDomains = ["acme-v02.api.letsencrypt.org"];
-      networkPolicy.extraEgress = [
-        {toEntities = ["kube-apiserver"];}
-        {toPorts = [{ports = [{port = "53";}];}];} # DNS01
-      ];
+      networkPolicy.toWAN = true; # acme-v02.api.letsencrypt.org
+      networkPolicy.toCluster = true; # apiserver
+      networkPolicy.toPorts = {
+        # DNS01
+        tcp = [53];
+        udp = [53];
+      };
     };
     az.server.rke2.namespaces."app-nameserver".networkPolicy.fromNamespaces = ["cert-manager"];
 

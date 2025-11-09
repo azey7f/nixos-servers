@@ -65,8 +65,8 @@ in {
     */
 
     az.server.rke2.namespaces."envoy-gateway" = {
-      networkPolicy.extraIngress = [{fromEntities = ["all"];}];
-      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+      networkPolicy.fromCIDR = ["::/0"];
+      networkPolicy.toCluster = true;
     };
 
     az.server.rke2.images = {

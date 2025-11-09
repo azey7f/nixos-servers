@@ -94,6 +94,8 @@ in {
               _false = "Disabled";
             in
               builtins.toJSON {
+                apiServer.enabled = _true;
+
                 installation = {
                   enabled = _true;
                   nonPrivileged = _false;
@@ -150,6 +152,9 @@ in {
         ];
       };
 
-    az.server.rke2.namespaces."calico-system" = {};
+    az.server.rke2.namespaces = {
+      "calico-system" = {};
+      "calico-apiserver" = {};
+    };
   };
 }

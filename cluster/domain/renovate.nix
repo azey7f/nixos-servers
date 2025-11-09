@@ -25,7 +25,7 @@ in {
     in
       lib.nameValuePair "app-renovate-${id}" {
         networkPolicy.fromNamespaces = ["envoy-gateway"];
-        networkPolicy.toDomains = ["git.${domain}"];
+        networkPolicy.toNamespaces = ["envoy-gateway"];
         networkPolicy.toWAN = true;
       })
     domains;

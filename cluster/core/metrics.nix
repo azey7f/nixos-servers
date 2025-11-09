@@ -31,11 +31,11 @@ in {
     az.server.rke2.namespaces."metrics-system" = {
       podSecurity = "privileged"; # https://github.com/prometheus-community/helm-charts/issues/4837
       networkPolicy.fromNamespaces = ["envoy-gateway"];
-      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
+      networkPolicy.toCluster = true;
 
-      networkPolicy.toNamespaces = lib.optional (cfg.mailDomain != null) "app-mail";
-      networkPolicy.toDomains =
-        lib.optional auth.enable "auth.${auth.domain}"; # grafana OIDC
+      networkPolicy.toNamespaces =
+        lib.optional auth.enable "envoy-gateway" # auth.${auth.domain} grafana OIDC
+        ++ lib.optional (cfg.mailDomain != null) "app-mail";
     };
 
     az.server.rke2.images = {

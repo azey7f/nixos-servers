@@ -11,9 +11,10 @@ in {
   config = lib.mkIf top.enable {
     az.server.rke2.namespaces."app-resolver" = {
       networkPolicy.toNamespaces = ["envoy-gateway"];
-      networkPolicy.extraEgress = [
-        {toPorts = [{ports = [{port = "53";}];}];} # unbound doesn't do doq for upstreams afaict
-      ];
+      networkPolicy.toPorts = {
+        tcp = [53];
+        udp = [53];
+      };
     };
     az.server.rke2.namespaces."envoy-gateway".networkPolicy.fromNamespaces = ["app-resolver"];
 

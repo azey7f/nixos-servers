@@ -32,7 +32,8 @@ in {
         lib.nameValuePair "app-forgejo-${id}" {
           networkPolicy = {
             fromNamespaces = ["envoy-gateway"];
-            toNamespaces = ["app-mail"];
+            toNamespaces = ["app-mail" "envoy-gateway"];
+            /*
             toDomains = [
               "auth.${domain}" # OIDC auto-discovery
               "codeberg.org" # push mirrors
@@ -41,6 +42,8 @@ in {
               "github.com"
               "*.github.com"
             ];
+            */
+            toWAN = true;
           };
         })
       domains)

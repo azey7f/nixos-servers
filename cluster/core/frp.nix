@@ -31,9 +31,7 @@ in {
 
     az.server.rke2.namespaces."app-frp" = {
       networkPolicy.toNamespaces = ["envoy-gateway" "app-nameserver"];
-      networkPolicy.extraEgress = [
-        {toCIDR = builtins.map (v: "${v}/32") cfg.remotes;} # rTODO: /128
-      ];
+      networkPolicy.toCIDR = builtins.map (v: "${v}/32") cfg.remotes; # rTODO: /128
     };
     az.server.rke2.namespaces."app-nameserver".networkPolicy.fromNamespaces = ["app-frp"];
 

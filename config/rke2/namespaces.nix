@@ -1,4 +1,3 @@
-# CRITICAL TODO
 {
   pkgs,
   config,
@@ -27,8 +26,6 @@ in {
             };
 
             networkPolicy = {
-              mutualAuth = optBool true;
-
               # allow from/to specific namespace, always includes self
               fromNamespaces = mkOption {
                 type = listOf str;
@@ -39,15 +36,39 @@ in {
                 default = [];
               };
 
-              # https://docs.cilium.io/en/stable/security/policy/language/#dns-based
-              toDomains = mkOption {
+              /*
+              # enterprise-only feature in calico :/
+                     toDomains = mkOption {
+                       type = listOf str;
+                       default = [];
+                     };
+              */
+
+              toPorts = {
+                tcp = mkOption {
+                  type = listOf (oneOf [str int]);
+                  default = [];
+                };
+                udp = mkOption {
+                  type = listOf (oneOf [str int]);
+                  default = [];
+                };
+              };
+
+              toCIDR = mkOption {
+                type = listOf str;
+                default = [];
+              };
+              fromCIDR = mkOption {
                 type = listOf str;
                 default = [];
               };
 
-              # allow from/to all non-LAN addrs
+              # allow to/from cluster prefix
+              toCluster = optBool false;
+              fromCluster = optBool false;
+              # allow to all non-LAN addrs
               toWAN = optBool false;
-              fromWAN = optBool false;
 
               # custom
               extraIngress = mkOption {
@@ -69,15 +90,22 @@ in {
     az.server.rke2.namespaces = {
       "default".create = false; # nothing should be running in default anyways
       "kube-system" = {
-        networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
-        networkPolicy.extraEgress = [
-          {toEntities = ["cluster"];}
-          {toPorts = [{ports = [{port = "53";}];}];} # coredns
-        ];
+        networkPolicy.fromCluster = true;
+        networkPolicy.toCluster = true;
+        networkPolicy.toPorts = {
+          # coredns
+          tcp = [53];
+          udp = [53];
+        };
       };
     };
 
     az.server.rke2.manifests."00-namespaces" = let
+      clusterPrefixes = [
+        "${config.az.cluster.net.prefix}::/${toString config.az.cluster.net.prefixSize}"
+        "${config.az.cluster.net.mullvad.ipv6}::/64"
+      ];
+
       # https://en.wikipedia.org/wiki/Reserved_IP_addresses as of this commit
       # IPv6 list not needed since publicly routable addrs are just 2000::/3 (yay!)
       # 2000::/3 includes some non-routable stuff like 2001:db8::/32, but not ULAs/link-locals/etc which is what's important
@@ -123,88 +151,107 @@ in {
                   "cni.projectcalico.org/ipv4pools" = builtins.toJSON ["mullvad-legacy"];
                 };
             }
-          /*
-          ++ [
-            {
-              apiVersion = "cilium.io/v2";
-              kind = "CiliumNetworkPolicy";
-              metadata = {
-                name = "az-network-policy";
-                namespace = ns.name;
-              };
-              spec = {
-                endpointSelector = {};
-                ingress =
-                  ns.networkPolicy.extraIngress
-                  ++ [
-                    (lib.attrsets.optionalAttrs ns.networkPolicy.mutualAuth {authentication.mode = "required";}
-                      // {
-                        fromEndpoints =
-                          builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
-                          (ns.networkPolicy.fromNamespaces ++ [ns.name]);
-                      })
-                  ];
-                egress =
-                  ns.networkPolicy.extraEgress
-                  ++ [
-                    {
-                      toEndpoints =
-                        # toNamespaces
-                        builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
-                        (ns.networkPolicy.toNamespaces ++ [ns.name]);
+            ++ [
+              {
+                apiVersion = "projectcalico.org/v3";
+                kind = "NetworkPolicy";
+                metadata = {
+                  name = "az-network-policy";
+                  namespace = ns.name;
+                };
+                spec = {
+                  performanceHints = ["AssumeNeededOnEveryNode"];
+                  ingress =
+                    ns.networkPolicy.extraIngress
+                    # fromNamespaces
+                    ++ [
+                      {
+                        action = "Allow";
+                        source.namespaceSelector = "name in { ${
+                          lib.concatMapStringsSep ", " (name: "'${name}'") (
+                            ns.networkPolicy.fromNamespaces ++ [ns.name]
+                          )
+                        } }";
+                      }
+                    ]
+                    # fromCluster
+                    ++ lib.optional ns.networkPolicy.fromCluster {
+                      action = "Allow";
+                      source.nets = clusterPrefixes;
                     }
-                    {
-                      # allow DNS lookups - https://docs.cilium.io/en/stable/security/policy/language/#example
-                      toEndpoints = [
-                        {
-                          matchLabels = {
-                            "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                            "k8s:k8s-app" = "kube-dns";
-                          };
-                        }
-                      ];
-                      toPorts = [
-                        {
-                          ports = [
-                            {
-                              port = "53";
-                              protocol = "ANY";
-                            }
-                          ];
-                          rules.dns = [{matchPattern = "*";}];
-                        }
-                      ];
+                    # fromCIDR
+                    ++ lib.lists.optional (ns.networkPolicy.fromCIDR != []) {
+                      action = "Allow";
+                      source.nets = ns.networkPolicy.fromCIDR;
+                    };
+                  egress =
+                    ns.networkPolicy.extraEgress
+                    # allow DNS lookups
+                    ++ [
+                      {
+                        action = "Allow";
+                        protocol = "UDP";
+                        destination = {
+                          selector = "k8s-app == 'kube-dns'";
+                          namespaceSelector = "name == 'kube-system'";
+                          ports = [53];
+                        };
+                      }
+                      {
+                        action = "Allow";
+                        protocol = "TCP";
+                        destination = {
+                          selector = "k8s-app == 'kube-dns'";
+                          namespaceSelector = "name == 'kube-system'";
+                          ports = [53];
+                        };
+                      }
+                      # toNamespaces
+                      {
+                        action = "Allow";
+                        destination.namespaceSelector = "name in { ${
+                          lib.concatMapStringsSep ", " (name: "'${name}'") (
+                            ns.networkPolicy.toNamespaces ++ [ns.name]
+                          )
+                        } }";
+                      }
+                    ]
+                    # toPorts
+                    ++ lib.optional (ns.networkPolicy.toPorts.tcp != []) {
+                      action = "Allow";
+                      protocol = "TCP";
+                      destination.ports = ns.networkPolicy.toPorts.tcp;
                     }
-                    # toDomains
-                    {toFQDNs = builtins.map (name: {matchPattern = name;}) ns.networkPolicy.toDomains;}
-                  ]
-                  # toWAN
-                  ++ lib.lists.optionals ns.networkPolicy.toWAN [
-                    {toCIDR = ["2000::/3"];}
-                    {
-                      toCIDRSet = [
-                        {
-                          cidr = "0.0.0.0/0";
-                          except = lanCIDRs;
-                        }
-                      ];
+                    ++ lib.optional (ns.networkPolicy.toPorts.udp != []) {
+                      action = "Allow";
+                      protocol = "UDP";
+                      destination.ports = ns.networkPolicy.toPorts.udp;
                     }
-                  ]
-                  ++ lib.lists.optionals ns.networkPolicy.fromWAN [
-                    {fromCIDR = ["2000::/3"];}
-                    {
-                      fromCIDRSet = [
-                        {
-                          cidr = "0.0.0.0/0";
-                          except = lanCIDRs;
-                        }
-                      ];
+                    # toCluster
+                    ++ lib.optional ns.networkPolicy.toCluster {
+                      action = "Allow";
+                      destination.nets = clusterPrefixes;
                     }
-                  ];
-              };
-            }
-          ]
-          */
+                    # toCIDR
+                    ++ lib.lists.optional (ns.networkPolicy.toCIDR != []) {
+                      action = "Allow";
+                      destination.nets = ns.networkPolicy.toCIDR;
+                    }
+                    # toWAN
+                    ++ lib.lists.optionals ns.networkPolicy.toWAN [
+                      {
+                        action = "Allow";
+                        destination.nets = ["2000::/3"];
+                        destination.notNets = clusterPrefixes;
+                      }
+                      {
+                        action = "Allow";
+                        destination.notNets = lanCIDRs;
+                      }
+                    ];
+                };
+              }
+            ]
         )
         cfg.namespaces);
   };
