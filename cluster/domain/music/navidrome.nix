@@ -28,9 +28,9 @@ in {
     az.server.rke2.images = {
       navidrome = {
         imageName = "deluan/navidrome";
-        finalImageTag = "0.58.0";
-        imageDigest = "sha256:2ae037d464de9f802d047165a13b1c9dc2bdbb14920a317ae4aef1233adc0a3c";
-        hash = "sha256-gqHFoDTkXsy6glM8kizYdd/OTKnNWrKSXYG7o93JR34="; # renovate: deluan/navidrome 0.58.0
+        finalImageTag = "0.58.5";
+        imageDigest = "sha256:648ebd45c50c58edc7ad9f0cc3b4411a1bece16c81f0b3630a0ab0a739c6d7ec";
+        hash = "sha256-wJuEOKuBVNwvJa0+QN5nbNa266itBWaLzUmPg4uWVl8="; # renovate: deluan/navidrome 0.58.5
       };
     };
     services.rke2.manifests."navidrome".content = lib.flatten (
