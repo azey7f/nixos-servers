@@ -149,5 +149,7 @@ in {
           }
         ];
       };
+
+    az.server.rke2.namespaces."calico-system" = {};
   };
 }

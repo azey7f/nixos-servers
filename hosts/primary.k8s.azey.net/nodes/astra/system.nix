@@ -88,6 +88,7 @@
 
       FORWARD.rules = [
         "-m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
+        "-i cali+ -j ACCEPT"
         "-i vbr-uplink -j ACCEPT"
       ];
     };

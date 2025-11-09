@@ -134,10 +134,27 @@
         "type": "github"
       }
     },
+    "rke2_1_34": {
+      "locked": {
+        "lastModified": 1762341086,
+        "narHash": "sha256-zH9sbOpct16lkmu3nqfpGDEwNBaVhCKvmyl2UpBMm4A=",
+        "owner": "rorosen",
+        "repo": "nixpkgs",
+        "rev": "2c3b4887bcb7626300137db36512fc7b1fd2128c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rorosen",
+        "ref": "rke2_1_34",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "core": "core",
         "rke2-k3s-merge": "rke2-k3s-merge",
+        "rke2_1_34": "rke2_1_34",
         "sops-nix": "sops-nix"
       }
     },

@@ -5,14 +5,14 @@
   lib,
   azLib,
   outputs,
-  rke2-k3s-merge,
+  inputs,
   ...
 }:
 with lib; let
   cfg = config.az.server.rke2;
 in {
   disabledModules = ["services/cluster/rke2/default.nix" "services/cluster/k3s/default.nix"];
-  imports = azLib.scanPath ./. ++ ["${rke2-k3s-merge}/nixos/modules/services/cluster/rancher/default.nix"];
+  imports = azLib.scanPath ./. ++ ["${inputs.rke2-k3s-merge}/nixos/modules/services/cluster/rancher/default.nix"];
 
   options.az.server.rke2 = with azLib.opt; {
     enable = optBool false;
@@ -50,7 +50,7 @@ in {
       serverAddr = "https://api.${config.networking.domain}";
       nodeName = config.networking.fqdn;
 
-      package = pkgs.rke2_1_32;
+      package = (import inputs.rke2_1_34 {system = "x86_64-linux";}).rke2_1_34; # calico 3.30, for IPPool assignmentMode
 
       cisHardening = true;
 

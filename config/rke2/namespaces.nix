@@ -19,6 +19,7 @@ in {
             create = optBool true;
 
             mullvadRouted = optBool false;
+            legacyIP = optBool false;
 
             podSecurity = mkOption {
               type = nullOr str;
@@ -68,7 +69,6 @@ in {
     az.server.rke2.namespaces = {
       "default".create = false; # nothing should be running in default anyways
       "kube-system" = {
-        create = false;
         networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
         networkPolicy.extraEgress = [
           {toEntities = ["cluster"];}
@@ -108,9 +108,20 @@ in {
                 {name = ns.name;}
                 // lib.attrsets.optionalAttrs (ns.podSecurity != null)
                 {"pod-security.kubernetes.io/enforce" = ns.podSecurity;};
-              metadata.annotations = lib.optionalAttrs (config.az.cluster.net.mullvad.enable && ns.mullvadRouted) {
-                "ipam.cilium.io/ip-pool" = "mullvad";
-              };
+              metadata.annotations = let
+                mullvad = config.az.cluster.net.mullvad.enable;
+              in
+                {
+                  "cni.projectcalico.org/ipFamilies" = builtins.toJSON (
+                    ["IPv6"] ++ lib.optional (mullvad && ns.legacyIP) "IPv4"
+                  );
+                }
+                // lib.optionalAttrs (mullvad && ns.mullvadRouted) {
+                  "cni.projectcalico.org/ipv6pools" = builtins.toJSON ["mullvad"];
+                }
+                // lib.optionalAttrs (mullvad && ns.legacyIP) {
+                  "cni.projectcalico.org/ipv4pools" = builtins.toJSON ["mullvad-legacy"];
+                };
             }
           /*
           ++ [

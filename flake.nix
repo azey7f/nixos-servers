@@ -4,6 +4,7 @@
     core.url = "./core";
 
     rke2-k3s-merge.url = "github:azey7f/nixpkgs/rke2-k3s-merge";
+    rke2_1_34.url = "github:rorosen/nixpkgs/rke2_1_34";
 
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "core/nixpkgs";
@@ -12,7 +13,6 @@
   outputs = {
     self,
     core,
-    rke2-k3s-merge,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -43,8 +43,7 @@
                   {networking = {inherit domain hostName;};}
                 ];
 
-                extraArgs = {inherit inputs outputs;};
-                specialArgs = {inherit rke2-k3s-merge;};
+                specialArgs = {inherit inputs outputs;};
               }
               hostName;
           })
