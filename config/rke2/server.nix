@@ -19,14 +19,12 @@ in {
         then (config.az.cluster.meta.nodes.${config.networking.hostName}.id == 1)
         else false
       ); # init only on first node
-
-      l2Announcements = optBool false;
     };
   };
 
   config = mkIf cfg.enable {
-    # https://docs.rke2.io/install/requirements?cni-rules=Cilium
-    networking.firewall.allowedTCPPorts = [2379 2380 2381 6443];
+    # https://docs.rke2.io/install/requirements?cni-rules=Calico
+    networking.firewall.allowedTCPPorts = [2379 2380 2381 6443 9345];
 
     environment.sessionVariables.KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
 
@@ -54,6 +52,7 @@ in {
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
             "--tls-san=${config.networking.fqdn}"
+            "--tls-san=${net.prefix}${net.static}::ffff"
             "--embedded-registry"
           ]
           ++ lib.optionals config.az.cluster.core.metrics.enable [
@@ -62,133 +61,93 @@ in {
             "--kube-controller-manager-arg=bind-address=::"
           ];
 
-        cni = "none"; # cilium deployed manually for image version pinning
+        cni = "calico";
 
-        autoDeployCharts."cilium" = {
-          repo = "https://helm.cilium.io";
-          name = "cilium";
-          version = "1.19.0-pre.2";
-          hash = "sha256-eReMFKw3eREker4LbYVam4y0xFTCiAC1St604QQ8D0Y="; # renovate: https://helm.cilium.io cilium 1.19.0-pre.2
-
-          targetNamespace = "kube-system";
-
-          # TODO: remove operator.replicas whenever I get multiple nodes
-          # renovate-args: --set authentication.mutual.spire.enabled=true --set envoy.enabled=false
-          values = let
-            imageOpts = {
-              pullPolicy = "Never";
-              useDigest = false;
+        manifests."calico-config".content = let
+          inherit (config.az.cluster) net;
+        in [
+          /*
+          {
+            apiVersion = "v1";
+            kind = "ConfigMap";
+            metadata = {
+              name = "kubernetes-services-endpoint";
+              namespace = "tigera-operator";
             };
-            inherit (config.az.cluster) net;
-          in {
-            envoy.enabled = false;
+            data = {
+              #KUBERNETES_SERVICE_HOST = "api.${config.networking.domain}";
+              KUBERNETES_SERVICE_HOST = "${net.prefix}${net.static}::ffff";
+              KUBERNETES_SERVICE_PORT = "8443";
+            };
+          }
+          */
+          {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-calico";
+              namespace = "kube-system";
+            };
+            spec.valuesContent = let
+              inherit (config.az.cluster) net;
+              _true = "Enabled";
+              _false = "Disabled";
+            in
+              builtins.toJSON {
+                installation = {
+                  enabled = _true;
+                  nonPrivileged = _false;
+                  controlPlaneReplicas = 1;
 
-            extraArgs = let
-              interfaces = lib.concatStringsSep "," ([top.primaryInterface] ++ top.extraInterfaces);
-            in [
-	      "--devices=${interfaces}" # https://github.com/cilium/cilium/issues/37427
-	      #"--ipv6-cluster-alloc-cidr=${net.prefix}${net.pods}::/${toString net.subnetSize}"
-	    ];
+                  calicoNetwork = {
+                    linuxDataplane = "Nftables";
+                    #linuxDataplane = "BPF"; # TODO: for some reason completely kills vbr-uplink networking + pod routing doesn't even work?
+                    #bpfNetworkBootstrap = _true;
+                    #linuxDataplane = "VPP"; # TODO?: doesn't seem to be any way to set up without a bunch of boilerplate
+                    bgp = _true;
 
-            image = imageOpts;
-            operator.image = imageOpts;
+                    nodeAddressAutodetectionV6.cidrs = ["${net.prefix}${net.nodes}::/${toString net.subnetSize}"];
 
-            operator.replicas = 1;
-
-            kubeProxyReplacement = true;
-            k8sServiceHost = "api.${config.networking.domain}";
-            k8sServicePort = 8443;
-
-            ipv4.enabled = false;
-            ipv6.enabled = true;
-            underlayProtocol = "ipv6";
-
-            routingMode = "native";
-            tunnelProtocol = "";
-
-            # TODO: hack to masq mullvad IPs until https://github.com/cilium/cilium/pull/40132 gets merged
-            enableIPv6Masquerade = false;
-            ipv6NativeRoutingCIDR = "::/0";
-            autoDirectNodeRoutes = true;
-
-	    #bpf.masquerade = true;
-
-            ipam.mode = "multi-pool";
-            ipam.operator.autoCreateCiliumPodIPPools =
-              {
-                default.ipv6 = {
-                  cidrs = ["${net.prefix}${net.pods}::/${toString net.subnetSize}"];
-                  maskSize = net.subnetSize + 16;
+                    ipPools =
+                      [
+                        {
+                          name = "default";
+                          cidr = "${net.prefix}${net.pods}::/${toString net.subnetSize}";
+                          assignmentMode = "Automatic";
+                          blockSize = 116;
+                          natOutgoing = _false;
+                          encapsulation = "None";
+                        }
+                      ]
+                      ++ lib.optionals net.mullvad.enable [
+                        {
+                          name = "mullvad";
+                          cidr = "${net.mullvad.ipv6}::/64";
+                          assignmentMode = "Manual";
+                          blockSize = 116;
+                          natOutgoing = _true;
+                          encapsulation = "None";
+                        }
+                        {
+                          name = "mullvad-legacy";
+                          cidr = "${net.mullvad.ipv4}/16";
+                          assignmentMode = "Manual";
+                          blockSize = 26;
+                          natOutgoing = _true;
+                          encapsulation = "None";
+                        }
+                      ];
+                  };
                 };
-              }
-              // lib.optionalAttrs net.mullvad.enable {
-                mullvad = {
-		  ipv6 = {
-                    cidrs = ["${net.mullvad.ipv6}::/64"];
-                    maskSize = 64 + 16;
-                  };
-                  ipv4 = {
-                    cidrs = ["${net.mullvad.ipv4}/16"];
-                    maskSize = 24;
-                  };
+                felixConfiguration = {
+                  featureDetectOverride = "ChecksumOffloadBroken=false";
+                  #bpfExternalServiceMode = "DSR";
+                  wireguardEnabled = true;
+                  wireguardEnabledV6 = true;
                 };
               };
-
-            # TODO https://docs.cilium.io/en/stable/operations/performance/tuning/
-            #bpf = {
-            #datapathMode = "netkit";
-            #distributedLRU.enabled = true;
-            #mapDynamicSizeRatio = 0.08;
-            #};
-            #bpfClockProbe = true;
-            # TODO loadBalancer.acceleration
-
-            encryption = {
-              enabled = true;
-              nodeEncryption = true;
-              type = "wireguard";
-            };
-            # CRITICAL TODO policyEnforcementMode = "always";
-
-            authentication.mutual.spire = {
-              # TODO?: use a cnpg DB
-              enabled = true;
-              install.enabled = true;
-              install.existingNamespace = true;
-              install.namespace = "cilium-spire";
-
-              install.initImage = imageOpts;
-              install.agent.image = imageOpts;
-              install.server.image = imageOpts;
-            };
-
-            bgpControlPlane.enabled = top.bgp.enable;
-            l2announcements = {
-              enabled = cfg.l2Announcements;
-              leaseDuration = "10s";
-              leaseRenewDeadline = "5s";
-              leaseRetryPeriod = "1s";
-            };
-          };
-
-          extraDeploy =
-            lib.lists.optional cfg.l2Announcements
-            {
-              apiVersion = "cilium.io/v2alpha1";
-              kind = "CiliumL2AnnouncementPolicy";
-              metadata.name = "default";
-              spec = {
-                loadBalancerIPs = false;
-                externalIPs = true;
-              };
-            };
-        };
+          }
+        ];
       };
-
-    az.server.rke2.namespaces."cilium-spire" = {
-      podSecurity = "privileged";
-      networkPolicy.extraEgress = [{toEntities = ["cluster"];}];
-      networkPolicy.extraIngress = [{fromEntities = ["cluster"];}];
-    };
   };
 }
