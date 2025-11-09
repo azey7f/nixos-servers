@@ -182,6 +182,8 @@ in {
             }
           ];
           csp = "strict";
+          customCSP.img-src = ["'self' data: blob: http: https:"];
+          responseHeaders.cross-origin-embedder-policy = "credentialless";
         }
       )
       domains;
