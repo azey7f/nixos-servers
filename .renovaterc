@@ -190,7 +190,6 @@
 			  "nixos/nix",
 			  "appleboy/drone-git-push"
 			],
-			"matchManagers": ["woodpecker"],
 			"enabled": false
 		}
 	]
