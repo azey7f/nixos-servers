@@ -27,18 +27,19 @@ in {
         {
           "app-woodpecker-${id}".networkPolicy = {
             fromNamespaces = ["envoy-gateway"];
-            toDomains = ["git.${domain}"];
-            extraEgress = [{toEntities = ["kube-apiserver"];}];
+            toCIDR = ["${config.az.cluster.core.envoyGateway.address}/128"];
+            toCluster = true; # apiserver
           };
         }
         // lib.optionalAttrs (config.az.cluster.domainSpecific.forgejo.${domain}.enable or false) {
-          "app-forgejo-${id}".networkPolicy.toDomains = ["woodpecker.${domain}"]; # push events
+          # "woodpecker.${domain}" push events
+          "app-forgejo-${id}".networkPolicy.toCIDR = ["${config.az.cluster.core.envoyGateway.address}/128"];
         })
       domains)
       // {
         "app-woodpecker-steps" = {
           podSecurity = "baseline"; # TODO: there doesn't seem to be any way to set securityContext for steps
-          networkPolicy.toDomains = lib.mapAttrsToList (domain: cfg: "git.${domain}") domains;
+          networkPolicy.toCIDR = ["${config.az.cluster.core.envoyGateway.address}/128"];
           networkPolicy.toWAN = true; # nix flake updates
         };
       };

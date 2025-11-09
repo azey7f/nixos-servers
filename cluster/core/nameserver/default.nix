@@ -28,10 +28,8 @@ in {
 
   config = lib.mkIf cfg.enable {
     az.server.rke2.namespaces."app-nameserver" = {
-      networkPolicy.extraIngress = [{fromEntities = ["all"];}];
-      networkPolicy.extraEgress = [
-        {toCIDR = lib.concatMap (v: ["${v.ip}/128"]) (builtins.attrValues cfg.secondaryServers);}
-      ];
+      networkPolicy.fromCIDR = ["::/0"];
+      networkPolicy.toCIDR = lib.concatMap (v: ["${v.ip}/128"]) (builtins.attrValues cfg.secondaryServers);
     };
 
     az.server.rke2.images = {

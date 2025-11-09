@@ -33,6 +33,7 @@ in {
           networkPolicy = {
             fromNamespaces = ["envoy-gateway"];
             toNamespaces = ["app-mail"];
+            /*
             toDomains = [
               "auth.${domain}" # OIDC auto-discovery
               "codeberg.org" # push mirrors
@@ -41,6 +42,8 @@ in {
               "github.com"
               "*.github.com"
             ];
+            */
+            toWAN = true;
           };
         })
       domains)

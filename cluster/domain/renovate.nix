@@ -25,7 +25,7 @@ in {
     in
       lib.nameValuePair "app-renovate-${id}" {
         networkPolicy.fromNamespaces = ["envoy-gateway"];
-        networkPolicy.toDomains = ["git.${domain}"];
+        networkPolicy.toCIDR = ["${config.az.cluster.core.envoyGateway.address}/128"];
         networkPolicy.toWAN = true;
       })
     domains;

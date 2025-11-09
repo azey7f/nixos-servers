@@ -22,7 +22,8 @@ in {
   config = lib.mkIf cfg.enable {
     az.server.rke2.namespaces."app-mail" = {
       podSecurity = "baseline"; # https://github.com/bokysan/docker-postfix/issues/199
-      networkPolicy.toDomains = [cfg.host];
+      #networkPolicy.toDomains = [cfg.host];
+      networkPolicy.toWAN = true;
     };
 
     services.rke2.autoDeployCharts."mail" = {

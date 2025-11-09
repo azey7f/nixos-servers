@@ -13,7 +13,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     az.server.rke2.namespaces."cnpg-system" = {
-      networkPolicy.extraEgress = [{toEntities = ["kube-apiserver"];}];
+      networkPolicy.toCluster = true; # apiserver
     };
 
     services.rke2.autoDeployCharts."cnpg" = {
@@ -46,42 +46,24 @@ in {
           };
         }
 
-        /*
-        # CRITICAL TODO
-               {
-                 apiVersion = "cilium.io/v2";
-                 kind = "CiliumClusterwideNetworkPolicy";
-                 metadata = {
-                   name = "cnpg-instance";
-                 };
-                 spec = {
-                   endpointSelector.matchLabels."cnpg.io/podRole" = "instance";
-                   egress = [{toEntities = ["kube-apiserver"];}];
-                 };
-               }
-               {
-                 apiVersion = "cilium.io/v2";
-                 kind = "CiliumClusterwideNetworkPolicy";
-                 metadata = {
-                   name = "cnpg-initdb";
-                 };
-                 spec = {
-                   endpointSelector.matchLabels."cnpg.io/jobRole" = "initdb";
-                   egress = [{toEntities = ["kube-apiserver"];}];
-                 };
-               }
-               {
-                 apiVersion = "cilium.io/v2";
-                 kind = "CiliumClusterwideNetworkPolicy";
-                 metadata = {
-                   name = "cnpg-import";
-                 };
-                 spec = {
-                   endpointSelector.matchLabels."cnpg.io/jobRole" = "import";
-                   egress = [{toEntities = ["kube-apiserver"];}];
-                 };
-               }
-        */
+        {
+          apiVersion = "projectcalico.org/v3";
+          kind = "GlobalNetworkPolicy";
+          metadata = {
+            name = "cnpg";
+          };
+          spec = {
+            selector = "cnpg.io/podRole == 'instance' || cnpg.io/jobRole in { 'initdb', 'import' }";
+            egress = [
+              # only needs access to the apiserver, but generic
+              # access to the cluster subnet is much easier to manage
+              {
+                action = "Allow";
+                destination.nets = ["${config.az.cluster.net.prefix}::/${config.az.cluster.net.prefix}"];
+              }
+            ];
+          };
+        }
       ];
     };
 
