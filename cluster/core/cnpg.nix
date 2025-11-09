@@ -46,39 +46,42 @@ in {
           };
         }
 
-        {
-          apiVersion = "cilium.io/v2";
-          kind = "CiliumClusterwideNetworkPolicy";
-          metadata = {
-            name = "cnpg-instance";
-          };
-          spec = {
-            endpointSelector.matchLabels."cnpg.io/podRole" = "instance";
-            egress = [{toEntities = ["kube-apiserver"];}];
-          };
-        }
-        {
-          apiVersion = "cilium.io/v2";
-          kind = "CiliumClusterwideNetworkPolicy";
-          metadata = {
-            name = "cnpg-initdb";
-          };
-          spec = {
-            endpointSelector.matchLabels."cnpg.io/jobRole" = "initdb";
-            egress = [{toEntities = ["kube-apiserver"];}];
-          };
-        }
-        {
-          apiVersion = "cilium.io/v2";
-          kind = "CiliumClusterwideNetworkPolicy";
-          metadata = {
-            name = "cnpg-import";
-          };
-          spec = {
-            endpointSelector.matchLabels."cnpg.io/jobRole" = "import";
-            egress = [{toEntities = ["kube-apiserver"];}];
-          };
-        }
+        /*
+        # CRITICAL TODO
+               {
+                 apiVersion = "cilium.io/v2";
+                 kind = "CiliumClusterwideNetworkPolicy";
+                 metadata = {
+                   name = "cnpg-instance";
+                 };
+                 spec = {
+                   endpointSelector.matchLabels."cnpg.io/podRole" = "instance";
+                   egress = [{toEntities = ["kube-apiserver"];}];
+                 };
+               }
+               {
+                 apiVersion = "cilium.io/v2";
+                 kind = "CiliumClusterwideNetworkPolicy";
+                 metadata = {
+                   name = "cnpg-initdb";
+                 };
+                 spec = {
+                   endpointSelector.matchLabels."cnpg.io/jobRole" = "initdb";
+                   egress = [{toEntities = ["kube-apiserver"];}];
+                 };
+               }
+               {
+                 apiVersion = "cilium.io/v2";
+                 kind = "CiliumClusterwideNetworkPolicy";
+                 metadata = {
+                   name = "cnpg-import";
+                 };
+                 spec = {
+                   endpointSelector.matchLabels."cnpg.io/jobRole" = "import";
+                   egress = [{toEntities = ["kube-apiserver"];}];
+                 };
+               }
+        */
       ];
     };
 

@@ -41,15 +41,15 @@
       nodes = ":f0"; # :f0
 
       mullvad = {
-        enable = false;
+        enable = true;
         ipv6 = "fd33:7b36:fc28";
       };
     };
 
     core = {
       # networking
-      nameserver.enable = true; # rTODO namespace
-      envoyGateway.enable = true; # rTODO Gateway rename
+      nameserver.enable = true;
+      envoyGateway.enable = true;
 
       # monitoring, notifs
       metrics = {

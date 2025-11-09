@@ -83,15 +83,28 @@
 
     firewall.all.filter = {
       INPUT.rules = [
-        "-i wg+ -m conntrack ! --ctstate RELATED,ESTABLISHED -j DROP"
+        "-i wg+ -m conntrack ! --ctstate RELATED,ESTABLISHED -j DROP" # drop to override later nixos-fw accept rules
       ];
 
-      FORWARD.default = lib.mkForce "ACCEPT"; # desktop vm - TODO
       FORWARD.rules = [
-        "-i wg+ -m conntrack ! --ctstate RELATED,ESTABLISHED -j DROP"
-        "-i vbr-uplink -j ACCEPT"
+        "-m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
+        "-i vbr-uplink ! -o cali+ -j ACCEPT"
       ];
     };
+    firewall.v6.filter.FORWARD.rules = [
+      # necessary ICMP
+      "-p ipv6-icmp -m icmp6 --icmpv6-type 137 -j DROP"
+      "-p ipv6-icmp -m icmp6 --icmpv6-type 139 -j DROP"
+      "-p ipv6-icmp -j ACCEPT"
+
+      # public static IPs - since they're DNATed by calico, we need to check the original IP with conntrack
+      # envoy
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p tcp -m multiport --dports 80,443 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p udp -m udp --dport 443 -j ACCEPT"
+      # nameserver
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp -m multiport --dports 53,853 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p tcp -m tcp --dport 53 -j ACCEPT"
+    ];
     firewall.v4.nat.POSTROUTING.rules = [
       "-o wg+ -s ${config.az.cluster.net.mullvad.ipv4}/16 -j MASQUERADE"
     ];

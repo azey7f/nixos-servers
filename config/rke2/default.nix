@@ -28,10 +28,10 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # https://docs.rke2.io/install/requirements?cni-rules=Cilium
-    networking.firewall.allowedTCPPorts = [4240 5001 10250 9345];
+    # https://docs.rke2.io/install/requirements?cni-rules=Calico
+    networking.firewall.allowedTCPPorts = [179 5473 9098 9099 10250];
     networking.firewall.allowedUDPPorts = [51871];
-    networking.firewall.checkReversePath = lib.mkForce false; # doesn't play well with cilium
+    networking.firewall.checkReversePath = lib.mkForce false; # doesn't play well with CNIs
 
     environment.systemPackages = with pkgs; [kubectl calicoctl];
 
@@ -54,8 +54,12 @@ in {
 
       cisHardening = true;
 
+      extraKubeProxyConfig = {
+        clientConnection.kubeconfig = "/var/lib/rancher/rke2/agent/kubeproxy.kubeconfig";
+        mode = "nftables";
+      };
       extraFlags = [
-        "--disable-kube-proxy" # replaced w/ cilium
+        #"--disable-kube-proxy" # TODO
         "--disable-default-registry-endpoint" # see environment.etc
         #"--snapshotter=native"
         #"--kubelet-arg=resolv-conf=/etc/resolv.conf"
@@ -64,7 +68,7 @@ in {
 
       images = [
         config.services.rke2.package.images-core-linux-amd64-tar-zst
-        # config.services.rke2.package.images-cilium-linux-amd64-tar-zst
+        config.services.rke2.package.images-calico-linux-amd64-tar-zst
       ];
 
       extraKubeletConfig = {

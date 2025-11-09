@@ -1,3 +1,4 @@
+# CRITICAL TODO
 {
   pkgs,
   config,
@@ -111,86 +112,88 @@ in {
                 "ipam.cilium.io/ip-pool" = "mullvad";
               };
             }
-            ++ [
-              {
-                apiVersion = "cilium.io/v2";
-                kind = "CiliumNetworkPolicy";
-                metadata = {
-                  name = "az-network-policy";
-                  namespace = ns.name;
-                };
-                spec = {
-                  endpointSelector = {};
-                  ingress =
-                    ns.networkPolicy.extraIngress
-                    ++ [
-                      (lib.attrsets.optionalAttrs ns.networkPolicy.mutualAuth {authentication.mode = "required";}
-                        // {
-                          fromEndpoints =
-                            builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
-                            (ns.networkPolicy.fromNamespaces ++ [ns.name]);
-                        })
-                    ];
-                  egress =
-                    ns.networkPolicy.extraEgress
-                    ++ [
-                      {
-                        toEndpoints =
-                          # toNamespaces
+          /*
+          ++ [
+            {
+              apiVersion = "cilium.io/v2";
+              kind = "CiliumNetworkPolicy";
+              metadata = {
+                name = "az-network-policy";
+                namespace = ns.name;
+              };
+              spec = {
+                endpointSelector = {};
+                ingress =
+                  ns.networkPolicy.extraIngress
+                  ++ [
+                    (lib.attrsets.optionalAttrs ns.networkPolicy.mutualAuth {authentication.mode = "required";}
+                      // {
+                        fromEndpoints =
                           builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
-                          (ns.networkPolicy.toNamespaces ++ [ns.name]);
-                      }
-                      {
-                        # allow DNS lookups - https://docs.cilium.io/en/stable/security/policy/language/#example
-                        toEndpoints = [
-                          {
-                            matchLabels = {
-                              "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                              "k8s:k8s-app" = "kube-dns";
-                            };
-                          }
-                        ];
-                        toPorts = [
-                          {
-                            ports = [
-                              {
-                                port = "53";
-                                protocol = "ANY";
-                              }
-                            ];
-                            rules.dns = [{matchPattern = "*";}];
-                          }
-                        ];
-                      }
-                      # toDomains
-                      {toFQDNs = builtins.map (name: {matchPattern = name;}) ns.networkPolicy.toDomains;}
-                    ]
-                    # toWAN
-                    ++ lib.lists.optionals ns.networkPolicy.toWAN [
-                      {toCIDR = ["2000::/3"];}
-                      {
-                        toCIDRSet = [
-                          {
-                            cidr = "0.0.0.0/0";
-                            except = lanCIDRs;
-                          }
-                        ];
-                      }
-                    ]
-                    ++ lib.lists.optionals ns.networkPolicy.fromWAN [
-                      {fromCIDR = ["2000::/3"];}
-                      {
-                        fromCIDRSet = [
-                          {
-                            cidr = "0.0.0.0/0";
-                            except = lanCIDRs;
-                          }
-                        ];
-                      }
-                    ];
-                };
-              }
-            ]
+                          (ns.networkPolicy.fromNamespaces ++ [ns.name]);
+                      })
+                  ];
+                egress =
+                  ns.networkPolicy.extraEgress
+                  ++ [
+                    {
+                      toEndpoints =
+                        # toNamespaces
+                        builtins.map (namespace: {matchLabels."k8s:io.kubernetes.pod.namespace" = namespace;})
+                        (ns.networkPolicy.toNamespaces ++ [ns.name]);
+                    }
+                    {
+                      # allow DNS lookups - https://docs.cilium.io/en/stable/security/policy/language/#example
+                      toEndpoints = [
+                        {
+                          matchLabels = {
+                            "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                            "k8s:k8s-app" = "kube-dns";
+                          };
+                        }
+                      ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "53";
+                              protocol = "ANY";
+                            }
+                          ];
+                          rules.dns = [{matchPattern = "*";}];
+                        }
+                      ];
+                    }
+                    # toDomains
+                    {toFQDNs = builtins.map (name: {matchPattern = name;}) ns.networkPolicy.toDomains;}
+                  ]
+                  # toWAN
+                  ++ lib.lists.optionals ns.networkPolicy.toWAN [
+                    {toCIDR = ["2000::/3"];}
+                    {
+                      toCIDRSet = [
+                        {
+                          cidr = "0.0.0.0/0";
+                          except = lanCIDRs;
+                        }
+                      ];
+                    }
+                  ]
+                  ++ lib.lists.optionals ns.networkPolicy.fromWAN [
+                    {fromCIDR = ["2000::/3"];}
+                    {
+                      fromCIDRSet = [
+                        {
+                          cidr = "0.0.0.0/0";
+                          except = lanCIDRs;
+                        }
+                      ];
+                    }
+                  ];
+              };
+            }
+          ]
+          */
         )
         cfg.namespaces);
   };
