@@ -88,7 +88,7 @@
 
       FORWARD.rules = [
         "-m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
-        "-i vbr-uplink ! -o cali+ -j ACCEPT"
+        "-i vbr-uplink -j ACCEPT"
       ];
     };
     firewall.v6.filter.FORWARD.rules = [
@@ -97,15 +97,18 @@
       "-p ipv6-icmp -m icmp6 --icmpv6-type 139 -j DROP"
       "-p ipv6-icmp -j ACCEPT"
 
-      # public static IPs - since they're DNATed by calico, we need to check the original IP with conntrack
+      # public static IPs - since they're DNATed by calico, we need to check the original IP/port with conntrack
       # envoy
-      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p tcp -m multiport --dports 80,443 -j ACCEPT"
-      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p udp -m udp --dport 443 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p tcp --ctorigdstport 80 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p tcp --ctorigdstport 443 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.envoyGateway.address}/128 --ctdir ORIGINAL -p udp --ctorigdstport 443 -j ACCEPT"
       # nameserver
-      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp -m multiport --dports 53,853 -j ACCEPT"
-      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p tcp -m tcp --dport 53 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp --ctorigdstport 53 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp --ctorigdstport 853 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p tcp --ctorigdstport 53 -j ACCEPT"
     ];
     firewall.v4.nat.POSTROUTING.rules = [
+      "-o wg+ -s 192.168.0.0/24 -j MASQUERADE"
       "-o wg+ -s ${config.az.cluster.net.mullvad.ipv4}/16 -j MASQUERADE"
     ];
     firewall.v6.nat.POSTROUTING.rules = [
