@@ -38,8 +38,8 @@ in {
 
         repo = "https://docs.renovatebot.com/helm-charts";
         name = "renovate";
-        version = "45.1.0";
-        hash = "sha256-XLDztScf++OxnKGrIuwLlXbvGHlC4Q8anQGgRsiEHBw="; # renovate: https://docs.renovatebot.com/helm-charts renovate 45.1.0
+        version = "45.3.0";
+        hash = "sha256-jOacQ/n5f3R23sPl1TQ9GyUrwzC1DI2D0v6YHigyWqI="; # renovate: https://docs.renovatebot.com/helm-charts renovate 45.3.0
 
         # renovate-args: --set renovate.config=\"{}\"
         values = {
