@@ -153,8 +153,8 @@ in {
       };
 
     az.server.rke2.namespaces = {
-      "calico-system" = {};
-      "calico-apiserver" = {};
+      "calico-system".networkPolicy.toCluster = true;
+      "calico-apiserver".networkPolicy.toCluster = true;
     };
   };
 }
