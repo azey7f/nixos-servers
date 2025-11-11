@@ -287,12 +287,21 @@ in {
         policy = "bypass";
       })
       domains;
+
+    az.cluster.core.auth.authelia.oidcClientSecrets =
+      lib.mapAttrs' (domain: cfg: let
+        id = builtins.replaceStrings ["."] ["-"] domain;
+      in {
+        name = "forgejo-${id}";
+        value = "rke2/forgejo-${domain}/oidc-secret-digest";
+      })
+      domains;
+
     az.cluster.core.auth.authelia.oidcClients = lib.mapAttrs' (domain: cfg: let
       id = builtins.replaceStrings ["."] ["-"] domain;
     in
       lib.nameValuePair "forgejo-${id}" {
         client_id = config.sops.placeholder."rke2/forgejo-${domain}/oidc-id";
-        client_secret = config.sops.placeholder."rke2/forgejo-${domain}/oidc-secret-digest";
 
         require_pkce = true;
         pkce_challenge_method = "S256";

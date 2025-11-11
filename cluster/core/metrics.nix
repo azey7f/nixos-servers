@@ -284,9 +284,9 @@ in {
     az.cluster.core.auth.authelia.oidcClaims."grafana" = {
       id_token = ["email" "name" "groups" "preferred_username"];
     };
+    az.cluster.core.auth.authelia.oidcClientSecrets."grafana" = "rke2/metrics/oidc-secret-digest";
     az.cluster.core.auth.authelia.oidcClients."grafana" = {
       client_id = config.sops.placeholder."rke2/metrics/oidc-id";
-      client_secret = config.sops.placeholder."rke2/metrics/oidc-secret-digest";
 
       require_pkce = true;
       pkce_challenge_method = "S256";

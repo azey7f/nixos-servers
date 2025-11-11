@@ -17,12 +17,20 @@ in {
         });
       default = [];
     };
+    oidcClientSecrets = lib.mkOption {
+      type = with lib.types; attrsOf str;
+      default = {};
+    };
     oidcClients = lib.mkOption {
       type = with lib.types;
         attrsOf (submodule ({name, ...}: {
           freeformType = attrsOf anything;
           options = {
             client_name = optStr name;
+            client_secret = lib.mkOption {
+              type = oneOf [str attrs];
+              default.path = "/secrets/authelia-oidc/${name}";
+            };
 
             public = optBool false;
             authorization_policy = optStr "two_factor";
@@ -51,6 +59,34 @@ in {
       };
     };
 
+    services.rke2.autoDeployCharts."authelia-valkey" = {
+      repo = "https://valkey.io/valkey-helm";
+      name = "valkey";
+      version = "0.7.7";
+      hash = "sha256-u16EI5qM8Y2AzvQK0BeWEjbN9m4Ohko6NlsPGFs3J7E="; # renovate: https://valkey.io/valkey-helm valkey 0.7.7
+
+      targetNamespace = "app-authelia";
+      values = {
+        podSecurityContext.seccompProfile.type = "RuntimeDefault";
+        securityContext.allowPrivilegeEscalation = false;
+
+        dataStorage.enabled = true;
+
+        valkeyConfig = ''
+          bind * -::*
+          aclfile /users/acl
+        ''; # TODO: github.com/valkey-io/valkey-helm/pull/68
+
+        # https://github.com/valkey-io/valkey-helm/issues/20#issuecomment-3380630048
+        auth.enabled = false;
+        extraValkeySecrets = [
+          {
+            name = "authelia-valkey-users";
+            mountPath = "/users";
+          }
+        ];
+      };
+    };
     services.rke2.autoDeployCharts."authelia" = {
       repo = "https://charts.authelia.com";
       name = "authelia";
@@ -58,7 +94,7 @@ in {
       hash = "sha256-ktKqQLAjMc4BkEVYU1+5r+RZhk9NkUrKzQigdhq/JrY="; # renovate: https://charts.authelia.com authelia 0.10.46
 
       targetNamespace = "app-authelia";
-      # values defined in HelmChartConfig due to sops values
+      # values defined in HelmChartConfig due to sops values in oidcClients
 
       extraDeploy = [
         {
@@ -87,6 +123,71 @@ in {
             storage.size = "1Gi"; # really shouldn't need more than this
           };
         }
+
+        # https://www.authelia.com/integration/proxies/envoy/#secure-gateway
+        {
+          apiVersion = "gateway.envoyproxy.io/v1alpha1";
+          kind = "SecurityPolicy";
+          metadata = {
+            name = "authelia-extauth";
+            namespace = "envoy-gateway";
+          };
+          spec = {
+            targetRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "envoy-gateway";
+                sectionName = "https";
+              }
+            ];
+            extAuth = {
+              http = {
+                path = "/api/authz/ext-authz/";
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "authelia";
+                    namespace = "app-authelia";
+                    port = 80;
+                  }
+                ];
+              };
+              failOpen = false;
+              headersToExtAuth = [
+                "X-Forwarded-Proto"
+                "Authorization"
+                "Proxy-Authorization"
+                "Accept"
+                "Cookie"
+              ];
+            };
+          };
+        }
+        {
+          apiVersion = "gateway.networking.k8s.io/v1beta1";
+          kind = "ReferenceGrant";
+          metadata = {
+            name = "envoy-extauth";
+            namespace = "app-authelia";
+          };
+          spec = {
+            from = [
+              {
+                group = "gateway.envoyproxy.io";
+                kind = "SecurityPolicy";
+                namespace = "envoy-gateway";
+              }
+            ];
+            to = [
+              {
+                group = "";
+                kind = "Service";
+              }
+            ];
+          };
+        }
       ];
     };
     az.server.rke2.secrets = [
@@ -107,6 +208,26 @@ in {
         apiVersion = "v1";
         kind = "Secret";
         metadata = {
+          name = "authelia-valkey-users";
+          namespace = "app-authelia";
+        };
+        stringData."acl" = ''
+          user authelia on >${config.sops.placeholder."rke2/authelia/valkey-passwd"} ~*  &* +@all
+        '';
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
+          name = "authelia-oidc";
+          namespace = "app-authelia";
+        };
+        stringData = lib.mapAttrs (_: secret: config.sops.placeholder.${secret}) cfg.oidcClientSecrets;
+      }
+      {
+        apiVersion = "v1";
+        kind = "Secret";
+        metadata = {
           name = "authelia-misc";
           namespace = "app-authelia";
         };
@@ -117,10 +238,10 @@ in {
         stringData = {
           lldap-passwd = config.sops.placeholder."rke2/authelia/lldap-passwd";
           cnpg-passwd = config.sops.placeholder."rke2/authelia/cnpg-passwd";
+          valkey-passwd = config.sops.placeholder."rke2/authelia/valkey-passwd";
           storage-encryption-key = config.sops.placeholder."rke2/authelia/storage-encryption-key";
         };
       }
-
       {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChartConfig";
@@ -207,12 +328,16 @@ in {
                 }
               ];
 
-              /*
-              redis = { # TODO
+              redis = {
                 enabled = true;
-                deploy = true;
+                deploy = false;
+                host = "authelia-valkey.app-authelia.svc";
+                username = "authelia";
+                password = {
+                  secret_name = "authelia-misc";
+                  path = "valkey-passwd";
+                };
               };
-              */
             };
 
             regulation = {
@@ -271,77 +396,11 @@ in {
           };
 
           secret.additionalSecrets = {
+            authelia-oidc = {};
             authelia-misc = {};
           };
         };
       }
-
-      # https://www.authelia.com/integration/proxies/envoy/#secure-gateway
-      # rTODO: replaced w/ per-route policies because of the HTTP->HTTPS redirect + https://github.com/envoyproxy/gateway/issues/5384
-      /*
-      {
-        apiVersion = "gateway.envoyproxy.io/v1alpha1";
-        kind = "SecurityPolicy";
-        metadata = {
-          name = "authelia-extauth";
-          namespace = "envoy-gateway";
-        };
-        spec = {
-          targetRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "envoy-gateway";
-            }
-          ];
-          extAuth = {
-            http = {
-              path = "/api/authz/ext-authz/";
-              backendRefs = [
-                {
-                  group = "";
-                  kind = "Service";
-                  name = "authelia";
-                  namespace = "app-authelia";
-                  port = 80;
-                }
-              ];
-            };
-            failOpen = false;
-            headersToExtAuth = [
-              "X-Forwarded-Proto"
-              "Authorization"
-              "Proxy-Authorization"
-              "Accept"
-              "Cookie"
-            ];
-          };
-        };
-      }
-      {
-        apiVersion = "gateway.networking.k8s.io/v1beta1";
-        kind = "ReferenceGrant";
-        metadata = {
-          name = "envoy-extauth";
-          namespace = "app-authelia";
-        };
-        spec = {
-          from = [
-            {
-              group = "gateway.envoyproxy.io";
-              kind = "SecurityPolicy";
-              namespace = "envoy-gateway";
-            }
-          ];
-          to = [
-            {
-              group = "";
-              kind = "Service";
-            }
-          ];
-        };
-      }
-      */
     ];
 
     az.cluster.core.envoyGateway.httpRoutes = [
@@ -367,76 +426,6 @@ in {
     az.server.rke2.clusterWideSecrets."rke2/authelia/storage-encryption-key" = {};
     az.server.rke2.clusterWideSecrets."rke2/authelia/lldap-passwd" = {};
     az.server.rke2.clusterWideSecrets."rke2/authelia/cnpg-passwd" = {};
-
-    services.rke2.manifests."envoy-gateway-routes".content =
-      lib.concatMap (route: [
-        {
-          apiVersion = "gateway.envoyproxy.io/v1alpha1";
-          kind = "SecurityPolicy";
-          metadata = {
-            name = "authelia-extauth-${route.name}";
-            namespace = route.namespace;
-          };
-          spec = {
-            targetRefs = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "HTTPRoute";
-                name = route.name;
-              }
-            ];
-            extAuth = {
-              http = {
-                path = "/api/authz/ext-authz/";
-                backendRefs = [
-                  {
-                    group = "";
-                    kind = "Service";
-                    name = "authelia";
-                    namespace = "app-authelia";
-                    port = 80;
-                  }
-                ];
-                headersToBackend = [
-                  "remote-*"
-                  "authelia-*"
-                ];
-              };
-              failOpen = false;
-              headersToExtAuth = [
-                "x-forwarded-proto"
-                "authorization"
-                "header-authorization"
-                "accept"
-                "cookie"
-              ];
-            };
-          };
-        }
-        {
-          apiVersion = "gateway.networking.k8s.io/v1beta1";
-          kind = "ReferenceGrant";
-          metadata = {
-            name = "envoy-extauth-${route.name}";
-            namespace = "app-authelia";
-          };
-          spec = {
-            from = [
-              {
-                group = "gateway.envoyproxy.io";
-                kind = "SecurityPolicy";
-                namespace = route.namespace;
-              }
-            ];
-            to = [
-              {
-                group = "";
-                kind = "Service";
-              }
-            ];
-          };
-        }
-      ])
-      config.az.cluster.core.envoyGateway.httpRoutes;
+    az.server.rke2.clusterWideSecrets."rke2/authelia/valkey-passwd" = {};
   };
 }
