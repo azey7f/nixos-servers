@@ -127,7 +127,7 @@ in {
                           cidr = "${net.mullvad.ipv6}::/64";
                           assignmentMode = "Manual";
                           blockSize = 116;
-                          natOutgoing = _true;
+                          natOutgoing = _false; # managed with iptables
                           encapsulation = "None";
                         }
                         {
@@ -135,7 +135,7 @@ in {
                           cidr = "${net.mullvad.ipv4}/16";
                           assignmentMode = "Manual";
                           blockSize = 26;
-                          natOutgoing = _true;
+                          natOutgoing = _false; # managed with iptables
                           encapsulation = "None";
                         }
                       ];

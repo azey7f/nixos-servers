@@ -27,6 +27,7 @@ in {
         in
           lib.nameValuePair "app-media-${id}" {
             networkPolicy.fromNamespaces = ["envoy-gateway"];
+            #legacyIP = true; # initial jellyfin setup
           }
       )
       domains;

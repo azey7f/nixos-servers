@@ -70,6 +70,7 @@ Setting up cluster from scratch:
         - the cache is public so feel free to use it if you want, just be aware that at time of writing my upload is like 10mbps, so... yeah
       - server: `kubectl exec -n app-attic attic-0 -- /bin/sh -c 'atticadm -f /config/config.toml make-token --pull main --push main --validity 100y --sub woodpecker-ci'`
         - add to woodpecker as `ATTIC_TOKEN`
+    - jellyfin: enable `legacyIP` for the media namespace, run the initial setup & enable IPv6
 
 [^1]: See `config/rke2/default.nix`, but the TLDR is that it's possible to use the RKE2 [embedded registry](https://docs.rke2.io/install/registry_mirror) to completely disable pulling any images and rely on those preinstalled on the node(s). Runtime airgappiness is handled with network policies.
 [^2]: In this example specifically I mean *only* for the public proxy, at time of writing this isn't implemented yet but eventually I'd like to run a local step-ca instance for local network connections

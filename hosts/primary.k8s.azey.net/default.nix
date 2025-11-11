@@ -107,7 +107,7 @@
       # media
       navidrome.enable = true;
       feishin.enable = true;
-      # TODO: jellyfin.enable = true;
+      jellyfin.enable = true;
 
       # source control, CI
       forgejo.enable = true;
