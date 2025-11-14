@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 79.2.1
+  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 79.5.0
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/bats/bats";
@@ -21,9 +21,9 @@
     }
     {
       imageName = "quay.io/prometheus-operator/prometheus-operator";
-      imageDigest = "sha256:8f132dc8c2e8a5c852e864231fc85bcb8edecea184dfff34c77593f8f454cb06";
-      hash = "sha256-4lH/u6Ipg7rEhNbJgs17oy3lXmgPdUCZstIm9VY3w5g=";
-      finalImageTag = "v0.86.1";
+      imageDigest = "sha256:92757e4b90027e153dc09f2e01254c8402fd5268827d95532760836c2a117062";
+      hash = "sha256-UhHDtvBTzVC+x4g5XcWYyxwidxKPOoTv7hO5vW3co/4=";
+      finalImageTag = "v0.86.2";
     }
     {
       imageName = "quay.io/prometheus/alertmanager";
