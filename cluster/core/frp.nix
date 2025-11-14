@@ -38,9 +38,9 @@ in {
     az.server.rke2.images = {
       frpc = {
         imageName = "snowdreamtech/frpc";
-        finalImageTag = "0.64";
-        imageDigest = "sha256:ad5419c376c38e74fa5e58e65aeff09f1d3c75f65116833ef0901b3026b14e4e";
-        hash = "sha256-CC4VaPaLtz0uZxgOIvXbznAZW9af9gsf6hFNm6pirHM="; # renovate: snowdreamtech/frpc 0.64
+        finalImageTag = "0.65";
+        imageDigest = "sha256:b2f6766c6ceda45ba8a366ceef8bc82dd554aa9193d646a420fe2c8f06cda279";
+        hash = "sha256-CRYOh4oU1Ywhfl5fT+iYVhCHc+0Mi932s9AHCBs0A/o="; # renovate: snowdreamtech/frpc 0.65
       };
     };
 
