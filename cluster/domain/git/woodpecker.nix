@@ -169,6 +169,7 @@ in {
             ];
           }
         ];
+        customCSP.img-src = ["'self' data: blob: https://git.${domain}"];
       })
       domains;
 
