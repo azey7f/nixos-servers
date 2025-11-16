@@ -30,9 +30,9 @@ in {
     az.server.rke2.images = {
       blocky = {
         imageName = "spx01/blocky";
-        finalImageTag = "v0.27.0";
-        imageDigest = "sha256:d4bb3ad54b5b3471341d11609eabb8b3d9da0faf3244da7bb2d210107b2fbc30";
-        hash = "sha256-mWgXIribJJqnVs66LCOqAUJovyTqryuW+oRYUkuKb+4="; # renovate: spx01/blocky v0.27.0
+        finalImageTag = "v0.28.1";
+        imageDigest = "sha256:e9af552da2b0849f9b3b48ae3169acb2696fdf0ddc65df52e4025c9deef04a60";
+        hash = "sha256-geG9/FH4Ye8Puzz798zziuVcelcRiSPfie0o0N4lIas="; # renovate: spx01/blocky v0.28.1
       };
     };
     services.rke2.manifests."resolver".content =
