@@ -131,7 +131,7 @@
 				"snowdreamtech/frpc",
 				"registry.k8s.io/git-sync/git-sync",
 				"nginxinc/nginx-unprivileged",
-				"px01/blocky",
+				"spx01/blocky",
 				"klutchell/unbound",
 				"ghcr.io/cloudnative-pg/postgresql",
 				"docker.io/envoyproxy/envoy",
