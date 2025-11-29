@@ -28,5 +28,5 @@ steps:
       ATTIC_TOKEN:
         from_secret: ATTIC_TOKEN
     commands:
-      - ./core/scripts/ci/do-build
+      - ./core/scripts/ci/check-build # TODO
     backend_options: *secctx-backend-options
