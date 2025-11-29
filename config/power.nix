@@ -12,11 +12,11 @@ in {
   };
 
   config = mkIf cfg.ignoreKeys {
-    services.logind = {
-      powerKey = "ignore";
-      powerKeyLongPress = "ignore";
-      rebootKey = "ignore";
-      rebootKeyLongPress = "ignore";
+    services.logind.settings.Login = {
+      HandlePowerKey = "ignore";
+      HandlePowerKeyLongPress = "ignore";
+      HandleRebootKey = "ignore";
+      HandleRebootKeyLongPress = "ignore";
     };
   };
 }
