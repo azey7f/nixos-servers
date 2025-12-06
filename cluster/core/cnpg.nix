@@ -70,9 +70,9 @@ in {
     az.server.rke2.images = {
       pg-14 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "14.19";
-        imageDigest = "sha256:6fa1874107542e970f3a603caf311ae32d275cd8406c97e8ab6eeaede9b8e655";
-        hash = "sha256-u+VydqTt/fmQUxv4m03TOAvl7EbC7iEaWliFDPSKGKc="; # renovate: ghcr.io/cloudnative-pg/postgresql 14.19
+        finalImageTag = "14.20";
+        imageDigest = "sha256:a79ad4b3c96108d1b0386bf62a23f45fc904f5d5af878a5a55bc45a9cd532c1f";
+        hash = "sha256-/erQ6cQI7Bvivt36+ziSV9POgJ97haTrz1exk2BmOxg="; # renovate: ghcr.io/cloudnative-pg/postgresql 14.20
       };
       pg-15 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
