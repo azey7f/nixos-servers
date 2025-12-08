@@ -35,9 +35,9 @@ in {
     az.server.rke2.images = {
       knot = {
         imageName = "cznic/knot";
-        finalImageTag = "v3.5.1";
-        imageDigest = "sha256:c49f1a7bf78bf6382ca959f0b42147ab02db27ec1805517896b769f52ba683ee";
-        hash = "sha256-GhxKKMpiy9CWlUUGqIBVc/xbjp/ZaRruyGYb6t1Utqc="; # renovate: cznic/knot v3.5.1
+        finalImageTag = "v3.5.2";
+        imageDigest = "sha256:5563807d7e2be33e2f667847dfcebfc6372a0d180e9f5ad13579d928a725a542";
+        hash = "sha256-pmUk2YPoTKYvzQDJAJVppkDPEXpK9ffGjmlEXlMJ+PA="; # renovate: cznic/knot v3.5.2
       };
     };
     services.rke2.manifests."nameserver".content = [
