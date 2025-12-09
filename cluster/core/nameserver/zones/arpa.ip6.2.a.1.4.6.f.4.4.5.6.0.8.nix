@@ -18,8 +18,9 @@ domain: {
   @                     IN  NS            ns1.azey.net.
   @                     IN  NS            ns2.azey.net.
 
-  ; misc
+  ; RFC violations
   _discord              IN  TXT           dh=78652b928789fa5a52c6a8a3b1b6af804c7033b0
+  @                     IN  AAAA          ${config.az.cluster.core.envoyGateway.address}
 
   ; static IPs
   1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0    IN  PTR    azey.net.

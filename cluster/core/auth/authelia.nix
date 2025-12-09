@@ -45,6 +45,11 @@ in {
       type = with lib.types; attrsOf anything;
       default = {};
     };
+
+    domains = lib.mkOption {
+      type = with lib.types; listOf str;
+      default = [top.domain];
+    };
   };
 
   config = lib.mkIf top.enable {
@@ -320,13 +325,11 @@ in {
               inactivity = "5m";
               remember_me = "1M";
 
-              cookies = [
-                {
-                  domain = top.domain;
+              cookies = builtins.map (domain: {
+                  domain = domain;
                   subdomain = "auth";
-                  default_redirection_url = "https://${top.domain}";
-                }
-              ];
+                  default_redirection_url = "https://${domain}";
+                }) cfg.domains;
 
               redis = {
                 enabled = true;

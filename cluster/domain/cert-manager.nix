@@ -4,14 +4,17 @@
   azLib,
   ...
 }: let
-  domains = lib.filterAttrs (_: v: v.enable) config.az.cluster.domainSpecific.certManager;
+  domains = config.az.cluster.domainSpecific.certManager;
   nsConfig = config.az.cluster.core.nameserver;
 in {
   options.az.cluster.domainSpecific.certManager = lib.mkOption {
     type = with lib.types;
       attrsOf (submodule {
         options = with azLib.opt; {
-          enable = optBool false;
+          issuer = lib.mkOption {
+	    type = with lib.types; enum ["letsencrypt" "selfsigned"];
+	    # must be set
+	  };
         };
       });
     default = {};
@@ -73,12 +76,12 @@ in {
               {
                 selector.dnsNames = lib.flatten (lib.mapAttrsToList (domain: _:
                   if !nsConfig.enable || !(builtins.elem domain nsConfig.zones)
-                  then throw "certManager enabled on domain not managed by local nameserver"
+                  then throw "letsencrypt issuer enabled on domain not managed by local nameserver"
                   else [
                     "*.${domain}"
                     "${domain}"
                   ])
-                domains);
+                (lib.filterAttrs (_: d: d.issuer == "letsencrypt") domains));
 
                 dns01.rfc2136 = {
                   nameserver = "knot.app-nameserver.svc";
@@ -92,6 +95,17 @@ in {
               }
             ];
           };
+        }
+        {
+          apiVersion = "cert-manager.io/v1";
+          kind = "ClusterIssuer";
+          metadata = {
+	    # used for sites that can't easily get valid TLS certs
+	    # e.g. .arpa rDNS zones
+            name = "selfsigned-issuer";
+            namespace = "cert-manager";
+          };
+          spec.selfSigned = {};
         }
       ];
     };

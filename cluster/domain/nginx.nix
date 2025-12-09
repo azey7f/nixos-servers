@@ -11,21 +11,34 @@
 in {
   options.az.cluster.domainSpecific.nginx = lib.mkOption {
     type = with lib.types;
-      attrsOf (submodule ({name, ...}: let
-        id = builtins.replaceStrings ["."] ["-"] name;
-      in {
+      attrsOf (submodule ({name, ...}: {
         options = with azLib.opt; {
           enable = optBool false;
+
+          extraNetworkPolicy = lib.mkOption {
+            # for cluster-external forges
+            type = with lib.types; attrsOf anything;
+            default = {};
+          };
 
           # sites by subdomain, e.g. "www"
           # "root" is a special value that means the root site
           sites = lib.mkOption {
-            type = attrsOf (submodule {
+            type = attrsOf (submodule ({config, ...}: {
               options = {
                 git = {
                   enable = optBool true; # if false, default config is empty
 
-                  forge = optStr "http://forgejo-${id}-http.app-forgejo-${id}.svc:3000/";
+                  forgeDomain = lib.mkOption {
+                    # if null, forge is not within cluster & should be set explicitly
+                    type = with lib.types; nullOr str;
+                    default = name;
+                  };
+                  forge = let
+                    id = builtins.replaceStrings ["."] ["-"] config.git.forgeDomain;
+                  in
+                    optStr "http://forgejo-${id}-http.app-forgejo-${id}.svc:3000/";
+
                   repo = lib.mkOption {
                     type = lib.types.str;
                     # must be set
@@ -45,7 +58,7 @@ in {
                   default = {};
                 };
               };
-            });
+            }));
             default = {};
           };
         };
@@ -54,20 +67,30 @@ in {
   };
 
   config = lib.mkIf (domains != {}) {
-    az.server.rke2.namespaces =
+    az.server.rke2.namespaces = let
+      namespaces = lib.uniqueStrings (
+        lib.concatMap (cfg: (
+          builtins.map (site: "app-forgejo-${builtins.replaceStrings ["."] ["-"] site.git.forgeDomain}") (
+            builtins.filter (site: site.git.enable && site.git.forgeDomain != null) (builtins.attrValues cfg.sites)
+          )
+        ))
+        (builtins.attrValues domains)
+      );
+    in
       {
-        "app-nginx" = {
-          networkPolicy.fromNamespaces = ["envoy-gateway"];
-          networkPolicy.toNamespaces = lib.mapAttrsToList (domain: cfg: "app-forgejo-${builtins.replaceStrings ["."] ["-"] domain}") domains; # source code fetching
-        };
+        "app-nginx" = lib.mkMerge ([
+            {
+              networkPolicy.fromNamespaces = ["envoy-gateway"];
+              # source code fetching
+              networkPolicy.toNamespaces = namespaces;
+            }
+          ]
+          ++ builtins.map (cfg: {networkPolicy = cfg.extraNetworkPolicy;}) (builtins.attrValues domains));
       }
-      // lib.mapAttrs' (domain: cfg: let
-        id = builtins.replaceStrings ["."] ["-"] domain;
-      in
-        lib.nameValuePair "app-forgejo-${id}" {
-          networkPolicy.fromNamespaces = ["app-nginx"];
-        })
-      domains;
+      // lib.listToAttrs (builtins.map (ns: (
+          lib.nameValuePair ns {networkPolicy.fromNamespaces = ["app-nginx"];}
+        ))
+        namespaces);
 
     az.server.rke2.images = {
       git-sync = {
@@ -135,28 +158,29 @@ in {
           template.spec.containers =
             lib.flatten (
               lib.mapAttrsToList (domain: cfg: (
-                lib.mapAttrsToList (sub: site: {
-                  name = "git-sync-${sub}";
-                  image = images.git-sync.imageString;
-                  args = [
-                    "--repo=${site.git.forge}${site.git.repo}"
-                    "--depth=1"
-                    "--period=300s"
-                    "--link=current"
-                    "--root=/srv"
-                  ];
-                  volumeMounts = [
-                    {
-                      name = "nginx-srv";
-                      mountPath = "/srv";
-                      subPath = sub;
-                    }
-                  ];
-                  securityContext = {
-                    allowPrivilegeEscalation = false;
-                    capabilities.drop = ["ALL"];
-                  };
-                })
+                lib.mapAttrsToList (sub: site:
+                  lib.optional (site.git.enable) {
+                    name = "git-sync-${sub}";
+                    image = images.git-sync.imageString;
+                    args = [
+                      "--repo=${site.git.forge}${site.git.repo}"
+                      "--depth=1"
+                      "--period=300s"
+                      "--link=current"
+                      "--root=/srv"
+                    ];
+                    volumeMounts = [
+                      {
+                        name = "nginx-srv";
+                        mountPath = "/srv";
+                        subPath = sub;
+                      }
+                    ];
+                    securityContext = {
+                      allowPrivilegeEscalation = false;
+                      capabilities.drop = ["ALL"];
+                    };
+                  })
                 cfg.sites
               ))
               domains

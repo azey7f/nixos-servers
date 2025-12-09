@@ -23,7 +23,15 @@ in {
       default = [];
     };
 
-    domains = mkOption {type = with types; listOf str;};
+    domains = mkOption {
+      type = with types; attrsOf (submodule {
+        options = {
+	  # if true, redirects HTTPS to HTTP instead of the other way around.
+	  # authelia is also disabled
+	  httpOnly = optBool false;
+	};
+      });
+    };
 
     httpRoutes = mkOption {
       type = with types;
@@ -147,7 +155,7 @@ in {
             };
           }
 
-          # HTTP -> HTTPS redirect
+          # HTTP -> HTTPS redirect (and vice versa for HTTP-only sites)
           {
             apiVersion = "gateway.networking.k8s.io/v1";
             kind = "HTTPRoute";
@@ -163,6 +171,9 @@ in {
                   sectionName = "http";
                 }
               ];
+              hostnames = lib.concatMap (domain: ["*.${domain}" domain]) (
+                builtins.attrNames (lib.filterAttrs (domain: cfg: !cfg.httpOnly) cfg.domains)
+              );
               rules = [
                 {
                   filters = [
@@ -170,6 +181,39 @@ in {
                       type = "RequestRedirect";
                       requestRedirect = {
                         scheme = "https";
+                        statusCode = 301;
+                      };
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+          {
+            apiVersion = "gateway.networking.k8s.io/v1";
+            kind = "HTTPRoute";
+            metadata = {
+              name = "https-redirect";
+              namespace = "envoy-gateway";
+            };
+            spec = {
+              parentRefs = [
+                {
+                  name = "envoy-gateway";
+                  namespace = "envoy-gateway";
+                  sectionName = "https";
+                }
+              ];
+              hostnames = lib.concatMap (domain: ["*.${domain}" domain]) (
+                builtins.attrNames (lib.filterAttrs (domain: cfg: cfg.httpOnly) cfg.domains)
+              );
+              rules = [
+                {
+                  filters = [
+                    {
+                      type = "RequestRedirect";
+                      requestRedirect = {
+                        scheme = "http";
                         statusCode = 301;
                       };
                     }
@@ -206,13 +250,13 @@ in {
         ]
         ++ lib.flatten (builtins.map (domain: let
             id = builtins.replaceStrings ["."] ["-"] domain;
-          in (
+          in [
             # 404 redirect to root
-            lib.singleton {
+            {
               apiVersion = "gateway.networking.k8s.io/v1";
               kind = "HTTPRoute";
               metadata = {
-                name = "https-default-redirect";
+                name = "https-default-redirect-${id}";
                 namespace = "envoy-gateway";
               };
               spec = {
@@ -243,8 +287,8 @@ in {
                 ];
               };
             }
+            {
             # wildcard cert
-            ++ lib.optional (config.az.cluster.domains.${domain}.certManager.enable) {
               apiVersion = "cert-manager.io/v1";
               kind = "Certificate";
               metadata = {
@@ -268,12 +312,12 @@ in {
 
                 issuerRef = {
                   kind = "ClusterIssuer";
-                  name = "letsencrypt-issuer";
+                  name = "${config.az.cluster.domains.${domain}.certManager.issuer}-issuer";
                 };
               };
             }
-          ))
-          cfg.domains);
+          ])
+          (builtins.attrNames cfg.domains));
     };
 
     # default value of listeners
@@ -282,7 +326,7 @@ in {
         name = "http";
         protocol = "HTTP";
         port = 80;
-        allowedRoutes.namespaces.from = "Same";
+        allowedRoutes.namespaces.from = "All"; # TODO: selector? used for rdns site
       }
       {
         name = "https";
@@ -291,12 +335,11 @@ in {
         allowedRoutes.namespaces.from = "All";
         tls = {
           mode = "Terminate";
-          certificateRefs =
-            builtins.map (domain: {
+          certificateRefs = builtins.map (domain: {
               kind = "Secret";
               name = "wildcard-tlscert-${builtins.replaceStrings ["."] ["-"] domain}";
             })
-            cfg.domains;
+          (builtins.attrNames cfg.domains);
         };
       }
     ];

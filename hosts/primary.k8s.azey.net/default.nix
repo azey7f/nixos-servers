@@ -50,14 +50,12 @@
       # networking
       nameserver = {
         enable = true;
-        zones = [
-          "azey.net"
-          "8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa"
-        ];
+        zones = ["azey.net" "8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa"];
       };
       envoyGateway = {
         enable = true;
-        domains = ["azey.net"];
+        domains."azey.net" = {};
+        domains."8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa".httpOnly = true;
       };
 
       # monitoring, notifs
@@ -104,11 +102,40 @@
       auth = {
         enable = true;
         domain = "azey.net";
+        authelia.domains = [
+          "azey.net"
+          "8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa"
+        ];
+      };
+    };
+
+    domains."8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa" = {
+      certManager.issuer = "selfsigned";
+      nginx = {
+        enable = true;
+        sites.root = {
+          git.enable = false;
+          nginxExtraConfig = let
+            content = builtins.replaceStrings ["\n"] ["\\n"] ''
+                  |\__/,|   (`\${" "}
+                _.|o o  |_   ) )
+              -(((---(((--------
+
+                       meow
+            '';
+          in ''
+            location = / {
+              add_header content-type 'text/plain; charset=US-ASCII';
+              return 200 '${content}';
+            }
+          '';
+          envoyExtraConfig.gatewaySection = "http";
+        };
       };
     };
 
     domains."azey.net" = {
-      certManager.enable = true; # TODO: handle deployment without local nameserver, internal step-ca
+      certManager.issuer = "letsencrypt";
 
       # web core
       nginx = {
