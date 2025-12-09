@@ -121,7 +121,23 @@
     "root": {
       "inputs": {
         "core": "core",
+        "self-meta": "self-meta",
         "sops-nix": "sops-nix"
+      }
+    },
+    "self-meta": {
+      "locked": {
+        "lastModified": 1762801234,
+        "narHash": "sha256-4YgdUPG0TeLHyrZFzWZ4uxHWaGlY+gODby6eAXZjL4w=",
+        "ref": "refs/heads/main",
+        "rev": "f0ee0a342bb164d0c457ab3d7d1f33ed76f3bf62",
+        "revCount": 11,
+        "type": "git",
+        "url": "https://git.azey.net/azey/self"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.azey.net/azey/self"
       }
     },
     "sops-nix": {

@@ -12,9 +12,9 @@ in {
       attrsOf (submodule {
         options = with azLib.opt; {
           issuer = lib.mkOption {
-	    type = with lib.types; enum ["letsencrypt" "selfsigned"];
-	    # must be set
-	  };
+            type = with lib.types; enum ["letsencrypt" "selfsigned"];
+            # must be set
+          };
         };
       });
     default = {};
@@ -100,8 +100,8 @@ in {
           apiVersion = "cert-manager.io/v1";
           kind = "ClusterIssuer";
           metadata = {
-	    # used for sites that can't easily get valid TLS certs
-	    # e.g. .arpa rDNS zones
+            # used for sites that can't easily get valid TLS certs
+            # e.g. .arpa rDNS zones
             name = "selfsigned-issuer";
             namespace = "cert-manager";
           };

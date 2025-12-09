@@ -325,11 +325,13 @@ in {
               inactivity = "5m";
               remember_me = "1M";
 
-              cookies = builtins.map (domain: {
+              cookies =
+                builtins.map (domain: {
                   domain = domain;
                   subdomain = "auth";
                   default_redirection_url = "https://${domain}";
-                }) cfg.domains;
+                })
+                cfg.domains;
 
               redis = {
                 enabled = true;

@@ -24,13 +24,14 @@ in {
     };
 
     domains = mkOption {
-      type = with types; attrsOf (submodule {
-        options = {
-	  # if true, redirects HTTPS to HTTP instead of the other way around.
-	  # authelia is also disabled
-	  httpOnly = optBool false;
-	};
-      });
+      type = with types;
+        attrsOf (submodule {
+          options = {
+            # if true, redirects HTTPS to HTTP instead of the other way around.
+            # authelia is also disabled
+            httpOnly = optBool false;
+          };
+        });
     };
 
     httpRoutes = mkOption {
@@ -288,7 +289,7 @@ in {
               };
             }
             {
-            # wildcard cert
+              # wildcard cert
               apiVersion = "cert-manager.io/v1";
               kind = "Certificate";
               metadata = {
@@ -335,11 +336,12 @@ in {
         allowedRoutes.namespaces.from = "All";
         tls = {
           mode = "Terminate";
-          certificateRefs = builtins.map (domain: {
+          certificateRefs =
+            builtins.map (domain: {
               kind = "Secret";
               name = "wildcard-tlscert-${builtins.replaceStrings ["."] ["-"] domain}";
             })
-          (builtins.attrNames cfg.domains);
+            (builtins.attrNames cfg.domains);
         };
       }
     ];

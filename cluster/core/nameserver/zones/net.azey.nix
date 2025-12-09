@@ -27,6 +27,7 @@ in ''
   ns1                   IN  AAAA          ${config.az.cluster.core.nameserver.address}
   @                     IN  AAAA          ${gateway}
   *                     IN  AAAA          ${gateway}
+  me                    IN  AAAA          ${gateway}
 
   ; VPS records added in ../default.nix
 

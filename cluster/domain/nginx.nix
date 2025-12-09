@@ -45,7 +45,13 @@ in {
                   };
 
                   path = optStr ""; # path inside the repo
-                  index = optStr "index.html";
+                };
+
+                index = optStr "index.html";
+                content = lib.mkOption {
+                  # raw strings to serve
+                  type = with lib.types; attrsOf str;
+                  default = {};
                 };
 
                 nginxExtraConfig = lib.mkOption {
@@ -106,149 +112,202 @@ in {
         hash = "sha256-fOuqeQIxgc31vGoKzQHcqfh/TRDxvMMC3wUTAtRYpiw="; # renovate: nginxinc/nginx-unprivileged 1.29
       };
     };
-    services.rke2.manifests."nginx".content = [
-      {
-        apiVersion = "v1";
-        kind = "ConfigMap";
-        metadata = {
-          name = "nginx-cm";
-          namespace = "app-nginx";
-        };
-        data =
-          lib.mapAttrs' (domain: cfg: {
-            name = "${domain}.conf";
-            value = lib.concatStringsSep "\n\n" (
-              lib.mapAttrsToList (sub: site: ''
-                server {
-                	listen 8080;
-                	listen [::]:8080;
-                	server_name ${mkFQDN sub domain};
-
-                ${lib.optionalString site.git.enable ''
-                  root /srv/${sub}/current${site.git.path};
-                  index ${site.git.index};
-                ''}
-                ${builtins.replaceStrings ["\n"] ["\n\t"] site.nginxExtraConfig}
-                }
-              '')
-              cfg.sites
-            );
-          })
-          domains;
-      }
-      {
-        apiVersion = "apps/v1";
-        kind = "Deployment";
-        metadata = {
-          name = "nginx";
-          namespace = "app-nginx";
-        };
-        spec = {
-          selector.matchLabels.app = "nginx";
-          template.metadata.labels.app = "nginx";
-
-          template.spec.securityContext = {
-            runAsNonRoot = true;
-            seccompProfile.type = "RuntimeDefault";
-            runAsUser = 65534;
-            runAsGroup = 65534;
-            fsGroup = 65534;
+    services.rke2.manifests."nginx".content = let
+      contentCMs = lib.flatten (
+        lib.mapAttrsToList (domain: cfg:
+          lib.mapAttrsToList (sub: site:
+            if site.content != {}
+            then
+              if site.git.enable
+              then throw "nginx: ${domain}: ${sub}: git.enable and content can't be set at the same time"
+              else {
+                apiVersion = "v1";
+                kind = "ConfigMap";
+                metadata = {
+                  name = "nginx-content-${builtins.replaceStrings ["."] ["-"] (mkFQDN sub domain)}";
+                  namespace = "app-nginx";
+                };
+                data = site.content;
+              }
+            else [])
+          cfg.sites)
+        domains
+      );
+    in
+      contentCMs
+      ++ [
+        {
+          apiVersion = "v1";
+          kind = "ConfigMap";
+          metadata = {
+            name = "nginx-cm";
+            namespace = "app-nginx";
           };
+          data =
+            lib.mapAttrs' (domain: cfg: {
+              name = "${domain}.conf";
+              value = lib.concatStringsSep "\n\n" (
+                lib.mapAttrsToList (sub: site: ''
+                  server {
+                  	listen 8080;
+                  	listen [::]:8080;
+                  	server_name ${mkFQDN sub domain};
 
-          template.spec.containers =
-            lib.flatten (
-              lib.mapAttrsToList (domain: cfg: (
-                lib.mapAttrsToList (sub: site:
-                  lib.optional (site.git.enable) {
-                    name = "git-sync-${sub}";
-                    image = images.git-sync.imageString;
-                    args = [
-                      "--repo=${site.git.forge}${site.git.repo}"
-                      "--depth=1"
-                      "--period=300s"
-                      "--link=current"
-                      "--root=/srv"
-                    ];
-                    volumeMounts = [
-                      {
-                        name = "nginx-srv";
-                        mountPath = "/srv";
-                        subPath = sub;
-                      }
-                    ];
-                    securityContext = {
-                      allowPrivilegeEscalation = false;
-                      capabilities.drop = ["ALL"];
-                    };
-                  })
+                  ${
+                    if site.git.enable
+                    then ''
+                      root /srv/git/${sub}/current${site.git.path};
+                      index ${site.index};
+                    ''
+                    else if site.content != {}
+                    then ''
+                      root /srv/raw/nginx-content-${builtins.replaceStrings ["."] ["-"] (mkFQDN sub domain)};
+                      index ${site.index};
+                    ''
+                    else ""
+                  }
+                  ${builtins.replaceStrings ["\n"] ["\n\t"] site.nginxExtraConfig}
+                  }
+                '')
                 cfg.sites
-              ))
-              domains
-            )
-            ++ [
+              );
+            })
+            domains;
+        }
+        {
+          apiVersion = "apps/v1";
+          kind = "Deployment";
+          metadata = {
+            name = "nginx";
+            namespace = "app-nginx";
+          };
+          spec = {
+            selector.matchLabels.app = "nginx";
+            template.metadata.labels.app = "nginx";
+
+            template.spec.securityContext = {
+              runAsNonRoot = true;
+              seccompProfile.type = "RuntimeDefault";
+              runAsUser = 65534;
+              runAsGroup = 65534;
+              fsGroup = 65534;
+            };
+
+            template.spec.containers =
+              lib.flatten (
+                lib.mapAttrsToList (domain: cfg: (
+                  lib.mapAttrsToList (sub: site:
+                    lib.optional (site.git.enable) {
+                      name = "git-sync-${sub}";
+                      image = images.git-sync.imageString;
+                      args = [
+                        "--repo=${site.git.forge}${site.git.repo}"
+                        "--depth=1"
+                        "--period=300s"
+                        "--link=current"
+                        "--root=/srv/git"
+                      ];
+                      volumeMounts = [
+                        {
+                          name = "nginx-git";
+                          mountPath = "/srv/git";
+                          subPath = sub;
+                        }
+                      ];
+                      securityContext = {
+                        allowPrivilegeEscalation = false;
+                        capabilities.drop = ["ALL"];
+                      };
+                    })
+                  cfg.sites
+                ))
+                domains
+              )
+              ++ [
+                {
+                  name = "nginx";
+                  image = images.nginx.imageString;
+                  volumeMounts =
+                    [
+                      {
+                        name = "nginx-git";
+                        mountPath = "/srv/git";
+                        readOnly = true;
+                      }
+                      {
+                        name = "nginx-cm";
+                        mountPath = "/etc/nginx/conf.d";
+                      }
+                    ]
+                    ++ builtins.map (cm: {
+                      name = cm.metadata.name;
+                      mountPath = "/srv/raw/${cm.metadata.name}";
+                      readOnly = true;
+                    })
+                    contentCMs;
+                  securityContext = {
+                    allowPrivilegeEscalation = false;
+                    capabilities.drop = ["ALL"];
+                  };
+                }
+              ];
+
+            template.spec.volumes =
+              [
+                {
+                  name = "nginx-cm";
+                  configMap = {
+                    name = "nginx-cm";
+                    items =
+                      lib.mapAttrsToList (domain: cfg: {
+                        key = "${domain}.conf";
+                        path = "${domain}.conf";
+                      })
+                      domains;
+                  };
+                }
+                {
+                  name = "nginx-git";
+                  emptyDir = {};
+                }
+              ]
+              ++ builtins.map (cm: {
+                name = cm.metadata.name;
+                configMap = {
+                  name = cm.metadata.name;
+                  items =
+                    lib.mapAttrsToList (file: _: {
+                      key = file;
+                      path = file;
+                    })
+                    cm.data;
+                };
+              })
+              contentCMs;
+          };
+        }
+
+        {
+          apiVersion = "v1";
+          kind = "Service";
+          metadata = {
+            name = "nginx";
+            namespace = "app-nginx";
+          };
+          spec = {
+            selector.app = "nginx";
+            ipFamilyPolicy = "SingleStack";
+            ipFamilies = ["IPv6"];
+            ports = [
               {
                 name = "nginx";
-                image = images.nginx.imageString;
-                volumeMounts = [
-                  {
-                    name = "nginx-srv";
-                    mountPath = "/srv";
-                    readOnly = true;
-                  }
-                  {
-                    name = "nginx-cm";
-                    mountPath = "/etc/nginx/conf.d";
-                  }
-                ];
-                securityContext = {
-                  allowPrivilegeEscalation = false;
-                  capabilities.drop = ["ALL"];
-                };
+                port = 8080;
+                protocol = "TCP";
               }
             ];
-
-          template.spec.volumes = [
-            {
-              name = "nginx-cm";
-              configMap = {
-                name = "nginx-cm";
-                items =
-                  lib.mapAttrsToList (domain: cfg: {
-                    key = "${domain}.conf";
-                    path = "${domain}.conf";
-                  })
-                  domains;
-              };
-            }
-            {
-              name = "nginx-srv";
-              emptyDir = {};
-            }
-          ];
-        };
-      }
-
-      {
-        apiVersion = "v1";
-        kind = "Service";
-        metadata = {
-          name = "nginx";
-          namespace = "app-nginx";
-        };
-        spec = {
-          selector.app = "nginx";
-          ipFamilyPolicy = "SingleStack";
-          ipFamilies = ["IPv6"];
-          ports = [
-            {
-              name = "nginx";
-              port = 8080;
-              protocol = "TCP";
-            }
-          ];
-        };
-      }
-    ];
+          };
+        }
+      ];
 
     az.cluster.core.envoyGateway.httpRoutes = lib.flatten (
       lib.mapAttrsToList (domain: cfg: (

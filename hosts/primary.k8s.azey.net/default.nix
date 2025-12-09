@@ -1,7 +1,9 @@
 {
+  pkgs,
   config,
   lib,
   azLib,
+  inputs,
   ...
 }: {
   config.az.svc.mail = {
@@ -144,8 +146,8 @@
           git = {
             repo = "infra/azey.net";
             path = "/static";
-            index = "________________none";
           };
+          index = "________________none";
           nginxExtraConfig = ''
             rewrite ^(?<path>.*)/__autoindex\.json$	$path/			last;
             rewrite ^(?<path>.*)/$			$path/index.html	last;
@@ -164,6 +166,14 @@
             responseHeaders.x-robots-tag = "all";
           };
         };
+        sites."me" = {
+          git.enable = false;
+          index = "self.json";
+          content = {
+            "self.json" = builtins.readFile ((pkgs.formats.json {}).generate "self" inputs.self-meta.outputs);
+          };
+        };
+
         sites."miku".git.repo = "mirrors/ifd3f--ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
       };
       searxng.enable = true;
