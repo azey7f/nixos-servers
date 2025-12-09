@@ -59,7 +59,7 @@ in {
               # access to the cluster subnet is much easier to manage
               {
                 action = "Allow";
-                destination.nets = ["${config.az.cluster.net.prefix}::/${toString config.az.cluster.net.prefixSize}"];
+                destination.nets = ["${config.az.cluster.net.prefix}00::/${toString config.az.cluster.net.prefixSize}"];
               }
             ];
           };

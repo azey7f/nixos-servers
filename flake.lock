@@ -134,15 +134,15 @@
       "locked": {
         "lastModified": 1764021963,
         "narHash": "sha256-1m84V2ROwNEbqeS9t37/mkry23GBhfMt8qb6aHHmjuc=",
-        "owner": "Mic92",
-        "repo": "sops-nix",
+        "ref": "refs/heads/master",
         "rev": "c482a1c1bbe030be6688ed7dc84f7213f304f1ec",
-        "type": "github"
+        "revCount": 1080,
+        "type": "git",
+        "url": "https://git.azey.net/mirrors/Mic92--sops-nix"
       },
       "original": {
-        "owner": "Mic92",
-        "repo": "sops-nix",
-        "type": "github"
+        "type": "git",
+        "url": "https://git.azey.net/mirrors/Mic92--sops-nix"
       }
     }
   },

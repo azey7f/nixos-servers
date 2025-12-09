@@ -102,7 +102,7 @@ in {
 
     az.server.rke2.manifests."00-namespaces" = let
       clusterPrefixes = [
-        "${config.az.cluster.net.prefix}::/${toString config.az.cluster.net.prefixSize}"
+        "${config.az.cluster.net.prefix}00::/${toString config.az.cluster.net.prefixSize}"
         "${config.az.cluster.net.mullvad.ipv6}::/64"
       ];
 

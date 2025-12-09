@@ -3,7 +3,7 @@
     self.submodules = true;
     core.url = "./core";
 
-    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.url = "git+https://git.azey.net/mirrors/Mic92--sops-nix";
     sops-nix.inputs.nixpkgs.follows = "core/nixpkgs";
   };
 

@@ -15,10 +15,7 @@ in {
       type = with lib.types; listOf str;
       default = ["unbound.app-resolver.svc"];
     };
-    httpDomains = lib.mkOption {
-      type = with lib.types; listOf str;
-      default = builtins.attrNames config.az.cluster.domains;
-    };
+    httpDomains = lib.mkOption {type = with lib.types; listOf str;};
   };
 
   config = lib.mkIf top.enable {

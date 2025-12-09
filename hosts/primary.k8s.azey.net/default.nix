@@ -19,7 +19,7 @@
 
       vps = {
         "ns2" = {
-          # backup ns, uptime status page & legacy IP site mirror
+          # backup ns, uptime status page, legacy IP site mirror & v4 mail proxy
           zones."azey.net" = ["ns2" "status" "v4"];
           ip = "2a01:4f9:c012:dc23::1";
           ipv4 = "95.217.221.156";
@@ -32,24 +32,33 @@
 
     net = {
       # see ../../README.md for full breakdown
-      prefix = "2a14:6f44:5608";
+      prefix = "2a14:6f44:5608:";
       prefixSize = 56;
 
-      static = ""; # :00
-      pods = ":1"; # :01
-      services = ":2"; # :02
-      nodes = ":f0"; # :f0
+      static = "00";
+      pods = "01";
+      services = "02";
+      nodes = "f0";
 
       mullvad = {
         enable = true;
-        ipv6 = "fd33:7b36:fc28";
+        ipv6 = "fd33:7b36:fc28:00";
       };
     };
 
     core = {
       # networking
-      nameserver.enable = true;
-      envoyGateway.enable = true;
+      nameserver = {
+        enable = true;
+        zones = [
+          "azey.net"
+          "8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa"
+        ];
+      };
+      envoyGateway = {
+        enable = true;
+        domains = ["azey.net"];
+      };
 
       # monitoring, notifs
       metrics = {
@@ -57,11 +66,38 @@
         webuiDomain = "azey.net";
       };
 
+      mailserver = {
+        enable = true;
+        primaryDomain = "azey.net";
+        domains."azey.net".accounts = {
+          "admin" = {};
+          "me" = {
+            fullName = "azey";
+            destinations."@azey.net" = {};
+          };
+          "noreply" = {
+            quota = 1;
+            destinations = builtins.listToAttrs (builtins.map (
+                dest:
+                  lib.nameValuePair "${dest}@azey.net" {smtpError = 550;} # noreply means *no* reply, dammit.
+              ) (
+                [
+                  "noreply"
+                  "git"
+                  "metrics"
+                  "status"
+                ]
+                ++ builtins.attrNames (builtins.readDir ./nodes)
+              ));
+          };
+        };
+      };
       mail = {
         enable = true;
         host = "smtp.zoho.eu";
         username = "noreply@azey.net";
         passwordPlaceholder = "rke2/mail/zoho-passwd";
+        senderDomains = ["azey.net"];
       };
 
       # authelia
@@ -78,10 +114,11 @@
       nginx = {
         enable = true;
         sites.root = {
-          repo = "infra/azey.net";
-          path = "/static";
-
-          index = "________________none";
+          git = {
+            repo = "infra/azey.net";
+            path = "/static";
+            index = "________________none";
+          };
           nginxExtraConfig = ''
             rewrite ^(?<path>.*)/__autoindex\.json$	$path/			last;
             rewrite ^(?<path>.*)/$			$path/index.html	last;
@@ -100,7 +137,7 @@
             responseHeaders.x-robots-tag = "all";
           };
         };
-        sites."miku".repo = "mirrors/ifd3f--ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
+        sites."miku".git.repo = "mirrors/ifd3f--ooo.eeeee.ooo"; # im thinking miku miku oo eee oo
       };
       searxng.enable = true;
 

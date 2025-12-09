@@ -14,10 +14,7 @@ in {
     address = optStr "${config.az.cluster.net.prefix}${config.az.cluster.net.static}::53";
 
     # see ./zones, files are named by reversed FQDN for sorting reasons
-    zones = lib.mkOption {
-      type = with lib.types; listOf str;
-      default = builtins.attrNames config.az.cluster.domains;
-    };
+    zones = lib.mkOption {type = with lib.types; listOf str;};
 
     secondaryServers = lib.mkOption {
       type = with lib.types; attrsOf anything; # see cluster/default.nix meta.vps def

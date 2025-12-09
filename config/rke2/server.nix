@@ -47,7 +47,9 @@ in {
             "--cluster-domain=${config.networking.domain}"
             "--cluster-cidr=${net.prefix}${net.pods}::/${toString net.subnetSize}"
             "--service-cidr=${net.prefix}${net.services}::/112" # largest supported by k3s, probably also by rke2
-            "--node-ip=${builtins.elemAt config.az.core.net.interfaces.${top.primaryInterface}.ipv6.addr 0}"
+            "--node-ip=${net.prefix}${net.nodes}::${
+              azLib.math.decToHex config.az.cluster.meta.nodes.${config.networking.hostName}.id ""
+            }"
             "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString net.subnetSize}"
             "--tls-san-security"
             "--tls-san=api.${config.networking.domain}"
@@ -65,91 +67,148 @@ in {
 
         manifests."calico-config".content = let
           inherit (config.az.cluster) net;
-        in [
-          /*
-          {
-            apiVersion = "v1";
-            kind = "ConfigMap";
-            metadata = {
-              name = "kubernetes-services-endpoint";
-              namespace = "tigera-operator";
-            };
-            data = {
-              #KUBERNETES_SERVICE_HOST = "api.${config.networking.domain}";
-              KUBERNETES_SERVICE_HOST = "${net.prefix}${net.static}::ffff";
-              KUBERNETES_SERVICE_PORT = "8443";
-            };
-          }
-          */
-          {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "rke2-calico";
-              namespace = "kube-system";
-            };
-            spec.valuesContent = let
-              inherit (config.az.cluster) net;
-              _true = "Enabled";
-              _false = "Disabled";
-            in
-              builtins.toJSON {
-                apiServer.enabled = _true;
 
-                installation = {
-                  enabled = _true;
-                  nonPrivileged = _false;
-                  controlPlaneReplicas = 1;
+          ipPools =
+            [
+              {
+                name = "default";
+                cidr = "${net.prefix}${net.pods}::/${toString net.subnetSize}";
+                assignmentMode = "Automatic";
+                blockSize = 116;
+                #natOutgoing = _false;
+                #encapsulation = "None";
+              }
+              {
+                name = "static";
+                cidr = "${net.prefix}${net.static}::/${toString net.subnetSize}";
+                assignmentMode = "Manual"; # only used for ipAddrs annotations
+                blockSize = 116;
+              }
+            ]
+            ++ lib.optionals net.mullvad.enable [
+              {
+                name = "mullvad";
+                cidr = "${net.mullvad.ipv6}${net.pods}::/64";
+                assignmentMode = "Manual";
+                blockSize = 116;
+              }
+              {
+                name = "mullvad-legacy";
+                cidr = "${net.mullvad.ipv4}/16";
+                assignmentMode = "Manual";
+                blockSize = 26;
+              }
+            ];
+        in
+          [
+            /*
+            {
+              apiVersion = "v1";
+              kind = "ConfigMap";
+              metadata = {
+                name = "kubernetes-services-endpoint";
+                namespace = "tigera-operator";
+              };
+              data = {
+                #KUBERNETES_SERVICE_HOST = "api.${config.networking.domain}";
+                KUBERNETES_SERVICE_HOST = "${net.prefix}${net.static}::ffff";
+                KUBERNETES_SERVICE_PORT = "8443";
+              };
+            }
+            */
+            {
+              apiVersion = "helm.cattle.io/v1";
+              kind = "HelmChartConfig";
+              metadata = {
+                name = "rke2-calico";
+                namespace = "kube-system";
+              };
+              spec.valuesContent = let
+                inherit (config.az.cluster) net;
+                _true = "Enabled";
+                _false = "Disabled";
+              in
+                builtins.toJSON {
+                  apiServer.enabled = _true;
 
-                  calicoNetwork = {
-                    linuxDataplane = "Nftables";
-                    #linuxDataplane = "BPF"; # TODO: for some reason completely kills vbr-uplink networking + pod routing doesn't even work?
-                    #bpfNetworkBootstrap = _true;
-                    #linuxDataplane = "VPP"; # TODO?: doesn't seem to be any way to set up without a bunch of boilerplate
-                    bgp = _true;
+                  installation = {
+                    enabled = _true;
+                    nonPrivileged = _false;
+                    controlPlaneReplicas = 1;
 
-                    nodeAddressAutodetectionV6.cidrs = ["${net.prefix}${net.nodes}::/${toString net.subnetSize}"];
+                    calicoNetwork = {
+                      linuxDataplane = "Nftables";
+                      #linuxDataplane = "BPF"; # TODO: for some reason completely kills vbr-uplink networking + pod routing doesn't even work?
+                      #bpfNetworkBootstrap = _true;
+                      #linuxDataplane = "VPP"; # TODO?: doesn't seem to be any way to set up without a bunch of boilerplate
+                      bgp = _true;
 
-                    ipPools =
-                      [
-                        {
-                          name = "default";
-                          cidr = "${net.prefix}${net.pods}::/${toString net.subnetSize}";
-                          assignmentMode = "Automatic";
-                          blockSize = 116;
-                          natOutgoing = _false;
-                          encapsulation = "None";
-                        }
-                      ]
-                      ++ lib.optionals net.mullvad.enable [
-                        {
-                          name = "mullvad";
-                          cidr = "${net.mullvad.ipv6}::/64";
-                          assignmentMode = "Manual";
-                          blockSize = 116;
-                          natOutgoing = _false; # managed with iptables
-                          encapsulation = "None";
-                        }
-                        {
-                          name = "mullvad-legacy";
-                          cidr = "${net.mullvad.ipv4}/16";
-                          assignmentMode = "Manual";
-                          blockSize = 26;
-                          natOutgoing = _false; # managed with iptables
-                          encapsulation = "None";
-                        }
-                      ];
+                      nodeAddressAutodetectionV6.cidrs = ["${net.prefix}${net.nodes}::/${toString net.subnetSize}"];
+
+                      /*
+                      ipPools =
+                        [
+                          {
+                            name = "default";
+                            cidr = "${net.prefix}${net.pods}::/${toString net.subnetSize}";
+                            assignmentMode = "Automatic";
+                            blockSize = 116;
+                            natOutgoing = _false;
+                            encapsulation = "None";
+                          }
+                          {
+                            name = "static";
+                            cidr = "${net.prefix}${net.static}::/${toString net.subnetSize}";
+                            assignmentMode = "Manual"; # only used for ipAddrs annotations
+                            blockSize = 116;
+                            natOutgoing = _false;
+                            encapsulation = "None";
+                          }
+                        ]
+                        ++ lib.optionals net.mullvad.enable [
+                          {
+                            name = "mullvad";
+                            cidr = "${net.mullvad.ipv6}${net.pods}::/64";
+                            assignmentMode = "Manual";
+                            blockSize = 116;
+                            natOutgoing = _false;
+                            encapsulation = "None";
+                          }
+                          {
+                            name = "mullvad-legacy";
+                            cidr = "${net.mullvad.ipv4}/16";
+                            assignmentMode = "Manual";
+                            blockSize = 26;
+                            natOutgoing = _false;
+                            encapsulation = "None";
+                          }
+                        ];
+                      */
+                    };
+                  };
+                  felixConfiguration = {
+                    featureDetectOverride = "ChecksumOffloadBroken=false";
+                    #bpfExternalServiceMode = "DSR";
+                    wireguardEnabled = true;
+                    wireguardEnabledV6 = true;
                   };
                 };
-                felixConfiguration = {
-                  featureDetectOverride = "ChecksumOffloadBroken=false";
-                  #bpfExternalServiceMode = "DSR";
-                  wireguardEnabled = true;
-                  wireguardEnabledV6 = true;
-                };
-              };
-          }
-        ];
+            }
+          ]
+          ++ builtins.map (pool: {
+            apiVersion = "crd.projectcalico.org/v1";
+            kind = "IPPool";
+            metadata.name = pool.name;
+            spec =
+              {
+                allowedUses = ["Workload" "Tunnel"];
+                nodeSelector = "all()";
+                ipipMode = "Never"; # encap either not needed or handled via iptables
+                vxlanMode = "Never";
+              }
+              // lib.filterAttrs (name: _: name != "name") pool;
+          })
+          ipPools;
       };
 
     az.server.rke2.namespaces = {

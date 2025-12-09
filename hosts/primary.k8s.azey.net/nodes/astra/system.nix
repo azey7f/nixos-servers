@@ -1,6 +1,7 @@
 {
-  lib,
+  pkgs,
   config,
+  lib,
   ...
 }: {
   networking.hostId = "a6b703c2";
@@ -72,7 +73,9 @@
     };
   };
 
-  az.core.net = {
+  az.core.net = let
+    mullvad-v6-prefix = "fd33:7b36:fc28";
+  in {
     dns.nameservers = [
       # https://nat64.net
       # TODO: perform nat64 locally?
@@ -107,13 +110,18 @@
       "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp --ctorigdstport 53 -j ACCEPT"
       "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p udp --ctorigdstport 853 -j ACCEPT"
       "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.nameserver.address}/128 --ctdir ORIGINAL -p tcp --ctorigdstport 53 -j ACCEPT"
+      # mailserver
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.mailserver.prefix}::/128 --ctdir ORIGINAL -p tcp --ctorigdstport 25 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.mailserver.prefix}::/128 --ctdir ORIGINAL -p tcp --ctorigdstport 465 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.mailserver.prefix}::/128 --ctdir ORIGINAL -p tcp --ctorigdstport 993 -j ACCEPT"
+      "-m conntrack --ctstate DNAT --ctorigdst ${config.az.cluster.core.mailserver.prefix}::/128 --ctdir ORIGINAL -p tcp --ctorigdstport 443 -j ACCEPT"
     ];
     firewall.v4.nat.POSTROUTING.rules = [
       "-o wg+ -s 192.168.0.0/24 -j MASQUERADE"
       "-o wg+ -s ${config.az.cluster.net.mullvad.ipv4}/16 -j MASQUERADE"
     ];
     firewall.v6.nat.POSTROUTING.rules = [
-      "-o wg+ -s ${config.az.cluster.net.mullvad.ipv6}::/48 -j MASQUERADE"
+      "-o wg+ -s ${mullvad-v6-prefix}::/48 -j MASQUERADE"
     ];
 
     bridges."vbr-uplink".interfaces = ["eno1"];
@@ -123,7 +131,7 @@
           addr = "192.168.0.254";
           subnetSize = 24;
         };
-        ipv6.addr = ["${config.az.cluster.net.mullvad.ipv6}:1000::1"];
+        ipv6.addr = ["${mullvad-v6-prefix}:1000::1"];
         extraRoutes = [
           # wg-uplink endpoint
           {

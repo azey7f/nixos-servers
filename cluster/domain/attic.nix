@@ -149,6 +149,7 @@ in {
             runAsUser = 65534;
             runAsGroup = 65534;
             fsGroup = 65534;
+            fsGroupChangePolicy = "OnRootMismatch";
           };
 
           template.spec.containers = [

@@ -23,6 +23,8 @@ in {
       default = [];
     };
 
+    domains = mkOption {type = with types; listOf str;};
+
     httpRoutes = mkOption {
       type = with types;
         listOf (submodule {
@@ -202,7 +204,7 @@ in {
             };
           }
         ]
-        ++ lib.flatten (lib.mapAttrsToList (domain: svc: let
+        ++ lib.flatten (builtins.map (domain: let
             id = builtins.replaceStrings ["."] ["-"] domain;
           in (
             # 404 redirect to root
@@ -242,7 +244,7 @@ in {
               };
             }
             # wildcard cert
-            ++ lib.optional (svc.certManager.enable) {
+            ++ lib.optional (config.az.cluster.domains.${domain}.certManager.enable) {
               apiVersion = "cert-manager.io/v1";
               kind = "Certificate";
               metadata = {
@@ -271,7 +273,7 @@ in {
               };
             }
           ))
-          config.az.cluster.domains);
+          cfg.domains);
     };
 
     # default value of listeners
@@ -290,11 +292,11 @@ in {
         tls = {
           mode = "Terminate";
           certificateRefs =
-            lib.mapAttrsToList (domain: _: {
+            builtins.map (domain: {
               kind = "Secret";
               name = "wildcard-tlscert-${builtins.replaceStrings ["."] ["-"] domain}";
             })
-            config.az.cluster.domains;
+            cfg.domains;
         };
       }
     ];

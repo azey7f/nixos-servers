@@ -175,7 +175,7 @@ in {
             {
               backendRefs = [
                 {
-                  name = "searxng-azey-net";
+                  name = "searxng-${id}";
                   port = 8080;
                 }
               ];

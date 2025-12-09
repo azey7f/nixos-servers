@@ -22,14 +22,18 @@ in {
           sites = lib.mkOption {
             type = attrsOf (submodule {
               options = {
-                forge = optStr "http://forgejo-${id}-http.app-forgejo-${id}.svc:3000/";
-                repo = lib.mkOption {
-                  type = lib.types.str;
-                  # must be set
-                };
+                git = {
+                  enable = optBool true; # if false, default config is empty
 
-                path = optStr ""; # path inside the repo
-                index = optStr "index.html";
+                  forge = optStr "http://forgejo-${id}-http.app-forgejo-${id}.svc:3000/";
+                  repo = lib.mkOption {
+                    type = lib.types.str;
+                    # must be set
+                  };
+
+                  path = optStr ""; # path inside the repo
+                  index = optStr "index.html";
+                };
 
                 nginxExtraConfig = lib.mkOption {
                   # extra nginx config
@@ -97,8 +101,10 @@ in {
                 	listen [::]:8080;
                 	server_name ${mkFQDN sub domain};
 
-                	root /srv/${sub}/current${site.path};
-                	index ${site.index};
+                ${lib.optionalString site.git.enable ''
+                  root /srv/${sub}/current${site.git.path};
+                  index ${site.git.index};
+                ''}
                 ${builtins.replaceStrings ["\n"] ["\n\t"] site.nginxExtraConfig}
                 }
               '')
@@ -133,7 +139,7 @@ in {
                   name = "git-sync-${sub}";
                   image = images.git-sync.imageString;
                   args = [
-                    "--repo=${site.forge}${site.repo}"
+                    "--repo=${site.git.forge}${site.git.repo}"
                     "--depth=1"
                     "--period=300s"
                     "--link=current"

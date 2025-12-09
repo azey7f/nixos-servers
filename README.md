@@ -20,6 +20,8 @@ Network layout:
         - `::1` - envoy gateway
         - `::53` - knot.app-nameserver.svc, aka ns1.azey.net
         - `::ffff` - k8s apiserver VIP
+        - `:25::/72` - mail servers - collectively exposed as mx.azey.net
+          - `:25::` itself is used for the k8s service, `:25::1` and up for individual pods
       - `:01::/64` - pods CIDR
       - `:02::/64` - services CIDR (though only the first /112 of that is actually used because RKE2)
       - `:f0::/60` - node addrs, really a /64 but reserved as /60 for possible future routing shenanigans
@@ -27,7 +29,7 @@ Network layout:
   - `:1000::/52` - misc personal devices - desktops/laptops/etc
 - `fd33:7b36:fc28::/48` - ULA prefix routed through mullvad
   - uses same addressing scheme as public prefix, though only the /64 pod CIDRs are actually used
-- `2a01:4f9:c012:dc23::1/64` - ns2.azey.net, also hosts the legacy mirror & status page
+- `2a01:4f9:c012:dc23::1/64` - ns2.azey.net, also hosts the legacy mirror + status page & proxies IPv4 mail
 
 ### Guides for future me:
 

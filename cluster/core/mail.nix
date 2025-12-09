@@ -1,3 +1,5 @@
+# NOTE: this is the client other apps use, see ./mailserver
+# TODO: let apps connect to the server directly, maybe?
 {
   pkgs,
   config,
@@ -17,6 +19,8 @@ in {
     };
     username = lib.mkOption {type = lib.types.str;};
     passwordPlaceholder = lib.mkOption {type = lib.types.str;};
+
+    senderDomains = lib.mkOption {type = with lib.types; listOf str;};
   };
 
   config = lib.mkIf cfg.enable {
@@ -44,8 +48,8 @@ in {
           namespace = "app-mail";
         };
         stringData = {
-          ALLOWED_SENDER_DOMAINS = lib.concatStringsSep " " (builtins.attrNames config.az.cluster.domains);
-          POSTFIX_mynetworks = "[${config.az.cluster.net.prefix}::]/${toString config.az.cluster.net.prefixSize}";
+          ALLOWED_SENDER_DOMAINS = lib.concatStringsSep " " cfg.senderDomains;
+          POSTFIX_mynetworks = "[${config.az.cluster.net.prefix}00::]/${toString config.az.cluster.net.prefixSize}";
 
           RELAYHOST = "${cfg.host}:${toString cfg.port}";
           RELAYHOST_USERNAME = cfg.username;

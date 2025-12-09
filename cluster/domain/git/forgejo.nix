@@ -133,6 +133,7 @@ in {
               SMTP_PORT = 587;
               FORCE_TRUST_SERVER_CERT = true;
               FROM = "git@${domain}";
+              SEND_AS_PLAIN_TEXT = true;
             };
           };
 

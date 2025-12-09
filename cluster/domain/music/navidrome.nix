@@ -68,6 +68,7 @@ in {
               runAsUser = 65534;
               runAsGroup = 65534;
               fsGroup = 65534;
+              fsGroupChangePolicy = "OnRootMismatch"; # don't need to check all 100k files every mount
             };
 
             template.spec.containers = [
