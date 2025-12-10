@@ -19,8 +19,8 @@ in {
     services.rke2.autoDeployCharts."cnpg" = {
       repo = "https://cloudnative-pg.github.io/charts";
       name = "cloudnative-pg";
-      version = "0.26.1";
-      hash = "sha256-hkaaSse56AZgLX4ORajhfwjXyifMVbRdWwhOCE6koHU="; # renovate: https://cloudnative-pg.github.io/charts cloudnative-pg 0.26.1
+      version = "0.27.0";
+      hash = "sha256-ObGgzQzGuWT4VvuMgZzFiI8U+YX/JM868lZpZnrFBGw="; # renovate: https://cloudnative-pg.github.io/charts cloudnative-pg 0.27.0
 
       targetNamespace = "cnpg-system";
 
