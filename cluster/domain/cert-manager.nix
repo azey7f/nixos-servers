@@ -37,8 +37,8 @@ in {
     services.rke2.autoDeployCharts."cert-manager" = {
       repo = "https://charts.jetstack.io";
       name = "cert-manager";
-      version = "v1.19.1";
-      hash = "sha256-9ypyexdJ3zUh56Za9fGFBfk7Vy11iEGJAnCxUDRLK0E="; # renovate: https://charts.jetstack.io cert-manager v1.19.1
+      version = "v1.19.2";
+      hash = "sha256-h+La+pRr0FxWvol7L+LhcfK7+tlsnUhAnUsRiNJAr28="; # renovate: https://charts.jetstack.io cert-manager v1.19.2
 
       targetNamespace = "cert-manager";
       values = {
