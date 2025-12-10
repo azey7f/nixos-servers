@@ -21,9 +21,9 @@ in {
     az.server.rke2.images = {
       unbound = {
         imageName = "klutchell/unbound";
-        finalImageTag = "1.24.1";
-        imageDigest = "sha256:e506a417d3e3673a259bb1c2cd2e843cf20b3847f3f33853f785395766a5d3c4";
-        hash = "sha256-GIse0o3Ao8049yhZ16XuWtdqQHSjXK2jdVbzfmsUVnM="; # renovate: klutchell/unbound 1.24.1
+        finalImageTag = "1.24.2";
+        imageDigest = "sha256:cb9a0f06c803c764395e2ff50bd8a244470601290c78fb2cdcf1bd200a027cd6";
+        hash = "sha256-1YbRXqwldUecrBhko8o4d9gEo3sG40TjtFuc6u7rtVI="; # renovate: klutchell/unbound 1.24.2
       };
     };
     services.rke2.manifests."resolver".content = [
