@@ -76,9 +76,9 @@ in {
       };
       pg-15 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "15.14";
-        imageDigest = "sha256:d17bae91908c8a6beeae0feba64d26cc2dbf8b6477db87093ee3de9f05f5ac75";
-        hash = "sha256-dOdnH7pgsdnjN+KNf/kqmM+tM2wZyS24JaZJXbwT+Fc="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.14
+        finalImageTag = "15.15";
+        imageDigest = "sha256:241a9455535b1eb13220d98265463c48a696fb6e1d3d15ff59d1ac4b0bd55842";
+        hash = "sha256-+q8tdrv2omU8vNFulCCboeHD3UW8zqCXqPsnoTRfelY="; # renovate: ghcr.io/cloudnative-pg/postgresql 15.15
       };
       pg-16 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
