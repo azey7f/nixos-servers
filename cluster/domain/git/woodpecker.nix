@@ -76,8 +76,8 @@ in {
     in
       lib.nameValuePair "woodpecker" {
         repo = "oci://ghcr.io/woodpecker-ci/helm/woodpecker";
-        version = "3.4.1";
-        hash = "sha256-VWdzWPcndB64kGhPQWnGFOLwu6x+u6n0UR8ZqD3dEv4="; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker 3.4.1
+        version = "3.4.2";
+        hash = "sha256-Nme2gDLHS0x5XOEIKX39nwdS4gBYajf6xnIFJr00TVg="; # renovate: ghcr.io/woodpecker-ci/helm/woodpecker 3.4.2
 
         targetNamespace = "app-woodpecker-${id}";
         values = let
