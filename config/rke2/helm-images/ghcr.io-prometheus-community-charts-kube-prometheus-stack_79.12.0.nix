@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 79.5.0
+  # args: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack --version 79.12.0
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/bats/bats";
@@ -9,15 +9,15 @@
     }
     {
       imageName = "docker.io/grafana/grafana";
-      imageDigest = "sha256:35c41e0fd0295f5d0ee5db7e780cf33506abfaf47686196f825364889dee878b";
-      hash = "sha256-W1UMbHsxfDTdPlEm5ecksfMgWsBP+DNhY7cHDA4ymLY=";
-      finalImageTag = "12.2.1";
+      imageDigest = "sha256:70d9599b186ce287be0d2c5ba9a78acb2e86c1a68c9c41449454d0fc3eeb84e8";
+      hash = "sha256-Xb2w+84hqftHblYYEVW0BOwtTK2dADf2+SHhVV8kU6w=";
+      finalImageTag = "12.3.0";
     }
     {
       imageName = "quay.io/kiwigrid/k8s-sidecar";
-      imageDigest = "sha256:835d79d8fbae62e42d8a86929d4e3c5eec2e869255dd37756b5a3166c2f22309";
-      hash = "sha256-ANZagFsIAerqFLeRFL6JC1gt7O2GpxYd0Ym61uIYDSc=";
-      finalImageTag = "1.30.10";
+      imageDigest = "sha256:716b0b33ff2dc938a3f2bc64e5ea791d81fb09760bcd27cec1eb896968d6e134";
+      hash = "sha256-RtpisI0+q+mon7mBXB0f1U2lI6usv87kK7X1ZBbamJQ=";
+      finalImageTag = "2.1.2";
     }
     {
       imageName = "quay.io/prometheus-operator/prometheus-operator";
@@ -39,15 +39,15 @@
     }
     {
       imageName = "quay.io/prometheus/prometheus";
-      imageDigest = "sha256:49214755b6153f90a597adcbff0252cc61069f8ab69ce8411285cd4a560e8038";
-      hash = "sha256-FiRygVk9FRRKsHA4kpkiDre2ORLYI7CSkV7+odUcBSw=";
-      finalImageTag = "v3.7.3";
+      imageDigest = "sha256:d936808bdea528155c0154a922cd42fd75716b8bb7ba302641350f9f3eaeba09";
+      hash = "sha256-KF83v0OoDEnwzUdTNpd3092Rkk94IG/57ehr8jAMKZ0=";
+      finalImageTag = "v3.8.0";
     }
     {
       imageName = "registry.k8s.io/ingress-nginx/kube-webhook-certgen";
-      imageDigest = "sha256:bcfc926ed57831edf102d62c5c0e259572591df4796ef1420b87f9cf6092497f";
-      hash = "sha256-UupAvyZMUlJQMZnAMe4QKxPZUw9ejpZ4FQQ57FvmyT0=";
-      finalImageTag = "v1.6.4";
+      imageDigest = "sha256:03a00eb0e255e8a25fa49926c24cde0f7e12e8d072c445cdf5136ec78b546285";
+      hash = "sha256-7uy74L/+RtE3cRjPPl0cE7/FEe1yL7zTrlMv7JyUCrA=";
+      finalImageTag = "v1.6.5";
     }
     {
       imageName = "registry.k8s.io/kube-state-metrics/kube-state-metrics";
