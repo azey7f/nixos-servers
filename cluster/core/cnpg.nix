@@ -94,9 +94,9 @@ in {
       };
       pg-18 = {
         imageName = "ghcr.io/cloudnative-pg/postgresql";
-        finalImageTag = "18.0";
-        imageDigest = "sha256:f06cae6ae14e2f101392130dce800b504bf9c5110b5db5fc0266782464882dbb";
-        hash = "sha256-M0q0+WsJv88D93a1VSnS58F8vv6OOQx87qlN1PpLzpo="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.0
+        finalImageTag = "18.1";
+        imageDigest = "sha256:7f374e054e46fdefd64b52904e32362949703a75c05302dca8ffa1eb78d41891";
+        hash = "sha256-DlOUjOVyL2/KtWD9fZ2wtBUWkXs08uzCXC28rjS2GtQ="; # renovate: ghcr.io/cloudnative-pg/postgresql 18.1
       };
     };
   };
