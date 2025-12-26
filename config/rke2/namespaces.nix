@@ -103,7 +103,7 @@ in {
     az.server.rke2.manifests."00-namespaces" = let
       clusterPrefixes = [
         "${config.az.cluster.net.prefix}00::/${toString config.az.cluster.net.prefixSize}"
-        "${config.az.cluster.net.mullvad.ipv6}::/64"
+        "${config.az.cluster.net.mullvad.ipv6}::/${toString config.az.cluster.net.prefixSize}"
       ];
 
       # https://en.wikipedia.org/wiki/Reserved_IP_addresses as of this commit
