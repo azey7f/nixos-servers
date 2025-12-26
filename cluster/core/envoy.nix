@@ -249,76 +249,39 @@ in {
             };
           }
         ]
-        ++ lib.flatten (builtins.map (domain: let
+        ++ builtins.map (
+          domain: let
             id = builtins.replaceStrings ["."] ["-"] domain;
-          in [
-            # 404 redirect to root
-            {
-              apiVersion = "gateway.networking.k8s.io/v1";
-              kind = "HTTPRoute";
-              metadata = {
-                name = "https-default-redirect-${id}";
-                namespace = "envoy-gateway";
-              };
-              spec = {
-                parentRefs = [
-                  {
-                    name = "envoy-gateway";
-                    namespace = "envoy-gateway";
-                    sectionName = "https";
-                  }
-                ];
-                hostnames = ["*.${domain}"];
-                rules = [
-                  {
-                    filters = [
-                      {
-                        type = "RequestRedirect";
-                        requestRedirect = {
-                          hostname = domain;
-                          path = {
-                            type = "ReplaceFullPath";
-                            replaceFullPath = "/";
-                          };
-                          statusCode = 302;
-                        };
-                      }
-                    ];
-                  }
-                ];
-              };
-            }
-            {
-              # wildcard cert
-              apiVersion = "cert-manager.io/v1";
-              kind = "Certificate";
-              metadata = {
-                name = "wildcard-${id}";
-                namespace = "envoy-gateway";
-              };
-              spec = {
-                secretName = "wildcard-tlscert-${id}";
+          in {
+            # wildcard cert
+            apiVersion = "cert-manager.io/v1";
+            kind = "Certificate";
+            metadata = {
+              name = "wildcard-${id}";
+              namespace = "envoy-gateway";
+            };
+            spec = {
+              secretName = "wildcard-tlscert-${id}";
 
-                privateKey = {
-                  algorithm = "ECDSA";
-                  size = 384;
-                };
-                signatureAlgorithm = "ECDSAWithSHA384";
-                usages = ["server auth"];
-
-                dnsNames = [
-                  "${domain}"
-                  "*.${domain}"
-                ];
-
-                issuerRef = {
-                  kind = "ClusterIssuer";
-                  name = "${config.az.cluster.domains.${domain}.certManager.issuer}-issuer";
-                };
+              privateKey = {
+                algorithm = "ECDSA";
+                size = 384;
               };
-            }
-          ])
-          (builtins.attrNames cfg.domains));
+              signatureAlgorithm = "ECDSAWithSHA384";
+              usages = ["server auth"];
+
+              dnsNames = [
+                "${domain}"
+                "*.${domain}"
+              ];
+
+              issuerRef = {
+                kind = "ClusterIssuer";
+                name = "${config.az.cluster.domains.${domain}.certManager.issuer}-issuer";
+              };
+            };
+          }
+        ) (builtins.attrNames cfg.domains);
     };
 
     # default value of listeners
