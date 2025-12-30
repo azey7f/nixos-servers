@@ -101,9 +101,9 @@ in {
     az.server.rke2.images = {
       git-sync = {
         imageName = "registry.k8s.io/git-sync/git-sync";
-        finalImageTag = "v4.5.0";
-        imageDigest = "sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f";
-        hash = "sha256-G4vi0NiCPc4+AyvY1S5Wf3tCBq2u9V+AhVwgvZTFIZ0="; # renovate: registry.k8s.io/git-sync/git-sync v4.5.0
+        finalImageTag = "v4.5.1";
+        imageDigest = "sha256:1df295fdab03031f932f2b7dae82fa19bd77334e2510c311bbdfc7e09ef49ece";
+        hash = "sha256-mdgqygH312bGpuV+RKqiXsu5BEjxLzk74HQP/1Av9TU="; # renovate: registry.k8s.io/git-sync/git-sync v4.5.1
       };
       nginx = {
         imageName = "nginxinc/nginx-unprivileged";
