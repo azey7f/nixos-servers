@@ -99,9 +99,9 @@ in {
     az.server.rke2.images = {
       openebs-linux-utils = {
         imageName = "openebs/linux-utils";
-        finalImageTag = "4.2.0";
-        imageDigest = "sha256:f205fb89c88aaa35a1d46490b7ebbdac45d5c48d2924ca73b67d8eb14d4e735e";
-        hash = "sha256-J7DiBQCph/D5QNAby+XE/f0bkLzZt5Py9gblJDHv/uo="; # renovate: openebs/linux-utils 4.2.0
+        finalImageTag = "4.3.0";
+        imageDigest = "sha256:834e45ca87b252151127e3d643f9f06ca2c7e5c1bb7e620ab6451162705e9d69";
+        hash = "sha256-pSGLMpISeZ65QS3AU5EyaBDasYjuc2OcNJC7pXfVB/o="; # renovate: openebs/linux-utils 4.3.0
       };
     };
     services.rke2.autoDeployCharts."openebs" = {
