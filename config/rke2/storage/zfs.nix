@@ -107,8 +107,8 @@ in {
     services.rke2.autoDeployCharts."openebs" = {
       repo = "https://openebs.github.io/openebs";
       name = "openebs";
-      version = "4.3.3";
-      hash = "sha256-w38hJuDcezhzkDAOuTbM0Q6Vz6x1rdRPPK2B8kg9YnM="; # renovate: https://openebs.github.io/openebs openebs 4.3.3
+      version = "4.4.0";
+      hash = "sha256-mrxD80vqkPh2NcBzDYz/b0I1WUp2GJirBmbdgSQB5cg="; # renovate: https://openebs.github.io/openebs openebs 4.4.0
 
       targetNamespace = "openebs-system";
 

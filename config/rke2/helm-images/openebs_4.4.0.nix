@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  # args: --repo https://openebs.github.io/openebs openebs --version 4.3.3 --set engines.replicated.mayastor.enabled=false --set engines.local.lvm.enabled=false --set engines.local.zfs.enabled=true
+  # args: --repo https://openebs.github.io/openebs openebs --version 4.4.0 --set engines.replicated.mayastor.enabled=false --set engines.local.lvm.enabled=false --set engines.local.zfs.enabled=true --set loki.enabled=false
   config.services.rke2.images = builtins.map pkgs.dockerTools.pullImage [
     {
       imageName = "docker.io/grafana/alloy";
@@ -8,46 +8,16 @@
       finalImageTag = "v1.8.1";
     }
     {
-      imageName = "docker.io/grafana/loki";
-      imageDigest = "sha256:58a6c186ce78ba04d58bfe2a927eff296ba733a430df09645d56cdc158f3ba08";
-      hash = "sha256-bSG6i2ePbp1X6YdDQFpNMNByCvPOn4jQZbd2KVDzeTY=";
-      finalImageTag = "3.4.2";
+      imageName = "docker.io/openebs/provisioner-localpv";
+      imageDigest = "sha256:a9f0aa574700379fd56f7597be4493fab1bd2423e8a5eaca4eeafd377763e9df";
+      hash = "sha256-rdtzRm2+Bh9uwb/vPHpyKdvmLmk8ttGBltgIlypV85Y=";
+      finalImageTag = "4.4.0";
     }
     {
-      imageName = "docker.io/openebs/kubectl";
-      imageDigest = "sha256:7a8d6955f40da47707896368ec4e7f9029ca643986af4ebcf4cbeb7798f0f896";
-      hash = "sha256-nxKZY3srOFu4+WaJgLPrVNPvvUbr5i5gu7ZQ13yZynM=";
-      finalImageTag = "1.25.15";
-    }
-    {
-      imageName = "kiwigrid/k8s-sidecar";
-      imageDigest = "sha256:cdb361e67b1b5c4945b6e943fbf5909badaaeb51595eaf75fb7493b3abbbe10f";
-      hash = "sha256-cPS3BL8NxZAMauZobrjYFYyjRWq113hLFHyJGZcNOIY=";
-      finalImageTag = "1.30.2";
-    }
-    {
-      imageName = "openebs/provisioner-localpv";
-      imageDigest = "sha256:e898af5631b64cba55be0d478cee3f422cdaf03e95c55f95d38193cac5dc1fe6";
-      hash = "sha256-wGK6l+MU067PygfXkR3ZtFnHKxyM7FsPYiILYlpp7ks=";
-      finalImageTag = "4.3.0";
-    }
-    {
-      imageName = "openebs/zfs-driver";
-      imageDigest = "sha256:e2284cf97d0c47e79267731bdf9e71f0ca1ae529a6a541f222b66e5d5b794edd";
-      hash = "sha256-6PNLwj37Jd1wQ6tC6Blg+9cRZZE4lvooPLSmBojFJ+4=";
-      finalImageTag = "2.8.0";
-    }
-    {
-      imageName = "quay.io/minio/mc";
-      imageDigest = "sha256:993e8c454a7ec632923f7e3e61adf1d473261da6354cefd641aedd33a2cfe112";
-      hash = "sha256-NN72Mn1ssOgycJ0nGtaKCKu7SR6KZC1tSX6S2tVD+pI=";
-      finalImageTag = "RELEASE.2024-11-21T17-21-54Z";
-    }
-    {
-      imageName = "quay.io/minio/minio";
-      imageDigest = "sha256:1dce27c494a16bae114774f1cec295493f3613142713130c2d22dd5696be6ad3";
-      hash = "sha256-YkE+S5AKQIrZwriMnc7btYgyy7dgVZvbHhlSFUp9ywQ=";
-      finalImageTag = "RELEASE.2024-12-18T13-15-44Z";
+      imageName = "docker.io/openebs/zfs-driver";
+      imageDigest = "sha256:1f74d09d6e6e2aeb10e048a5214bbadda2bf29602428a534e98bb0a4b1c3be05";
+      hash = "sha256-4RWx17eyjG21vrFR1EhqfJF/+ekSc2ypkVCVqRGvyiU=";
+      finalImageTag = "2.9.0";
     }
     {
       imageName = "quay.io/prometheus-operator/prometheus-config-reloader";
