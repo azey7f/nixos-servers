@@ -41,9 +41,9 @@ in {
     az.server.rke2.images = {
       prometheus-config-reloader = {
         imageName = "quay.io/prometheus-operator/prometheus-config-reloader";
-        finalImageTag = "v0.86.2";
-        imageDigest = "sha256:ac120c862f20b4b45e705a42915a6ef6902f54e779c6a8d5e8be8ddd5a0eb741";
-        hash = "sha256-9E6ntogVnZjCLDkhOZszYvF7YC/twkSId52Cp+MAJoU="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader v0.86.2
+        finalImageTag = "v0.87.1";
+        imageDigest = "sha256:b992503d6ea3af233e6ae7455fe8e5a3d86ac3539440977465009ae028128b1a";
+        hash = "sha256-oNFjsIGyAQpQ9wqS3MIR0nFLn0d3SH8VNt3VduuHp6I="; # renovate: quay.io/prometheus-operator/prometheus-config-reloader v0.87.1
       };
       curl = {
         imageName = "curlimages/curl";
