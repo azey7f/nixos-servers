@@ -188,6 +188,9 @@
       woodpecker.enable = true;
       renovate.enable = true;
       attic.enable = true;
+
+      # misc
+      filebrowser.enable = true;
     };
   };
 }
