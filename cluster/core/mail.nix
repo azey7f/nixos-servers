@@ -33,8 +33,8 @@ in {
     services.rke2.autoDeployCharts."mail" = {
       repo = "https://bokysan.github.io/docker-postfix";
       name = "mail";
-      version = "4.4.0"; # no update
-      hash = "sha256-sBYpD7PGuMMjl0iUWK8ae+KQofyTxnBaHJNlKJJcfQw="; # renovate: https://bokysan.github.io/docker-postfix mail 4.4.0
+      version = "5.1.0"; # no update
+      hash = "sha256-ICyeIR3TE5kODPCKisLayzHC1rhaPiqz8pmlHo+gwnE="; # renovate: https://bokysan.github.io/docker-postfix mail 5.1.0
 
       targetNamespace = "app-mail";
       values.existingSecret = "mail-env";
