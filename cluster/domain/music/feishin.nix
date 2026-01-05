@@ -27,9 +27,9 @@ in {
     az.server.rke2.images = {
       feishin = {
         imageName = "ghcr.io/jeffvli/feishin";
-        finalImageTag = "0.22.0";
-        imageDigest = "sha256:23e186a75570562c20897099576a7a911975076728dcce19db73ab1948bd9b5c";
-        hash = "sha256-iEfq215xWUaMokmNDRzv+Xorf3Ri3Qnt/DWtaMWHVxI="; # renovate: ghcr.io/jeffvli/feishin 0.22.0
+        finalImageTag = "1.2.0";
+        imageDigest = "sha256:ac74207b4fb49c4b8c84234f4a593b1320e461602eface311050094956bdbc78";
+        hash = "sha256-4aBI/UzoRTjqbUSQsknMe5rDzaj8ez0aAYJsxNLm/HQ="; # renovate: ghcr.io/jeffvli/feishin 1.2.0
       };
     };
     services.rke2.manifests."feishin".content = lib.flatten (lib.mapAttrsToList (domain: cfg: let
