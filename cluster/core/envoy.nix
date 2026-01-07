@@ -22,6 +22,11 @@ in {
       type = with types; listOf attrs;
       default = [];
     };
+    
+    trustedProxies = mkOption {
+      type = with types; listOf str;
+      default = [];
+    };
 
     domains = mkOption {
       type = with types;
@@ -153,6 +158,8 @@ in {
               };
 
               connection.connectionLimit.value = 33000;
+
+	      clientIPDetection.xForwardedFor.trustedCIDRs = cfg.trustedProxies;
             };
           }
 

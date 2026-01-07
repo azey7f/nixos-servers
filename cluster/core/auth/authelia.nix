@@ -41,7 +41,16 @@ in {
         }));
       default = {};
     };
+    oidcScopes = lib.mkOption {
+      type = with lib.types; attrsOf anything;
+      default = {};
+    };
     oidcClaims = lib.mkOption {
+      type = with lib.types; attrsOf anything;
+      default = {};
+    };
+
+    userAttributes = lib.mkOption {
       type = with lib.types; attrsOf anything;
       default = {};
     };
@@ -299,6 +308,7 @@ in {
               };
             };
 
+	    definitions.user_attributes = cfg.userAttributes;
             identity_providers.oidc = {
               enabled = cfg.oidcClients != {};
 
@@ -314,6 +324,7 @@ in {
               ];
 
               #TODO?: authorization_policies = {};
+              scopes = cfg.oidcScopes;
               clients = cfg.oidcClients;
               claims_policies = cfg.oidcClaims;
             };

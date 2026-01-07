@@ -21,8 +21,8 @@
 
       vps = {
         "ns2" = {
-          # backup ns, uptime status page, legacy IP site mirror & v4 mail proxy
-          zones."azey.net" = ["ns2" "status" "v4"];
+          # backup ns, uptime status page, legacy IP site mirror & v4 webdav proxy
+          zones."azey.net" = ["ns2" "status" "v4" "webdav.v4"];
           ip = "2a01:4f9:c012:dc23::1";
           ipv4 = "95.217.221.156";
           knotPubkey = "jLWkMn4g5XD8oC4HRDzwGY8eWCkExNb/lDUPoiafyis=";
@@ -58,6 +58,9 @@
         enable = true;
         domains."azey.net" = {};
         domains."8.0.6.5.4.4.f.6.4.1.a.2.ip6.arpa".httpOnly = true;
+	trustedProxies = [
+	  "${config.az.cluster.meta.vps."ns2".ip}/128"
+	];
       };
 
       # monitoring, notifs
@@ -190,7 +193,7 @@
       attic.enable = true;
 
       # misc
-      filebrowser.enable = true;
+      files.enable = true;
     };
   };
 }
